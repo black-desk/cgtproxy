@@ -1,0 +1,3 @@
+version: 1
+rules:
+cgroup-root: /sys/fs/cgroup/unified/
