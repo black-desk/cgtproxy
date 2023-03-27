@@ -71,7 +71,10 @@ func (m *ruleManager) run() (err error) {
 }
 
 func (m *ruleManager) initializeNftableRuels() (err error) {
-        m.netlinkConn
+	if m.netlinkConn, err = nftables.New(); err != nil {
+		return
+	}
+
 	return
 }
 

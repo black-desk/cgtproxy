@@ -12,13 +12,12 @@ type ConfigV1 struct {
 type Rule struct {
 	Match string `yaml:"match" validate:"required"`
 
-	TProxy *TProxy   `yaml:"tproxy" validate:"required_without_all=Proxy Redir,excluded_with=Redir Proxy"`
-	Redir  *Redirect `yaml:"redir" validate:"required_without_all=TProxy Proxy,excluded_with=TProxy Proxy"`
-	Proxy  *Proxy    `yaml:"proxy" validate:"required_without_all=TProxy Redir,excluded_with=TProxy Redir"`
+	TProxy *TProxy   `yaml:"tproxy" validate:"required_without_all=Proxy Redir Drop,excluded_with=Redir Proxy Drop"`
+	Redir  *Redirect `yaml:"redir" validate:"required_without_all=TProxy Proxy Drop,excluded_with=TProxy Proxy Drop"`
+	Proxy  *Proxy    `yaml:"proxy" validate:"required_without_all=TProxy Redir Drop,excluded_with=TProxy Redir Drop"`
+	Drop   bool      `yaml:"drop" validate:"excluded_with=TProxy Redir Proxy Mark"`
 
 	Mark *string `yaml:"mark"`
-
-	Drop bool `yaml:"drop" validate:"excluded_with=TProxy Redir Proxy Mark"`
 }
 
 type Redirect struct {

@@ -1,5 +1,5 @@
 version: 1
-cgroup-root: /sys/fs/cgroup/unified/
+cgroup-root: /sys/fs/cgroup/
 rules:
   - match: /user.slice/user-1000.slice/user@1000.service/app.slice/
-    drop:
+    drop: true
