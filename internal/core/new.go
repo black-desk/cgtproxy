@@ -74,22 +74,50 @@ func (c *Core) initContext() (err error) {
 
 func (c *Core) initRegisterContainer() (err error) {
 
-	var watcher fswatch.FsWatcher
-
-	if watcher, err = demofswatch.New(
-		demofswatch.WithContext(c.ctx),
-		demofswatch.WithPath(c.cfg.CgroupRoot),
-		demofswatch.WithRecursive(),
-		demofswatch.WithEvents([]string{
-			"Created",
-		}),
-	); err != nil {
-		return
-	}
-
 	c.container = inject.New()
 
-	err = c.container.RegisterI(&watcher)
+	{
+		var watcher fswatch.FsWatcher
+
+		if watcher, err = demofswatch.New(
+			demofswatch.WithContext(c.ctx),
+			demofswatch.WithPath(c.cfg.CgroupRoot),
+			demofswatch.WithRecursive(),
+			demofswatch.WithEvents([]string{
+				"Created",
+			}),
+		); err != nil {
+			return
+		}
+
+		if err = c.container.RegisterI(&watcher); err != nil {
+			return
+		}
+	}
+
+	{
+		cgroupEventChan := make(chan *cgroupEvent)
+
+		var cgroupEventChanWrite chan<- *cgroupEvent
+		cgroupEventChanWrite = cgroupEventChan
+
+		if err = c.container.Register(cgroupEventChanWrite); err != nil {
+			return
+		}
+
+		var cgroupEventChanRead <-chan *cgroupEvent
+		cgroupEventChanRead = cgroupEventChan
+
+		if err = c.container.Register(cgroupEventChanRead); err != nil {
+			return
+		}
+	}
+
+	{
+		if err = c.container.RegisterI(&c.ctx); err != nil {
+			return
+		}
+	}
 
 	return
 }

@@ -47,6 +47,7 @@ func (w *FsWatcherDemo) run() {
 		if err != nil {
 			w.sendErr(err)
 		}
+
 		close(w.channel)
 	}()
 

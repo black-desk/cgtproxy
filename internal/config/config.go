@@ -16,7 +16,9 @@ type Rule struct {
 	Redir  *Redirect `yaml:"redir" validate:"required_without_all=TProxy Proxy,excluded_with=TProxy Proxy"`
 	Proxy  *Proxy    `yaml:"proxy" validate:"required_without_all=TProxy Redir,excluded_with=TProxy Redir"`
 
-	Mark *string `yaml:"mask"`
+	Mark *string `yaml:"mark"`
+
+	Drop bool `yaml:"drop" validate:"excluded_with=TProxy Redir Proxy Mark"`
 }
 
 type Redirect struct {
