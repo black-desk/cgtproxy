@@ -19,6 +19,7 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/google/nftables"
+	"github.com/google/nftables/expr"
 	"github.com/vishvananda/netlink"
 )
 
@@ -154,6 +155,50 @@ func (m *ruleManager) initializeNftableRuels() (err error) {
 	if m.netlinkConn, err = nftables.New(); err != nil {
 		return
 	}
+
+	table := &nftables.Table{
+		Name:   _nftTableName,
+		Family: nftables.TableFamilyINet,
+	}
+	m.netlinkConn.AddTable(table)
+
+	tproxyMarkChain := &nftables.Chain{
+		Table: table,
+		Name:  "tproxy_mark",
+	}
+	m.netlinkConn.AddChain(tproxyMarkChain)
+
+	tproxyMarkRules := &nftables.Rule{
+		Table: table,
+		Chain: tproxyMarkChain,
+		Exprs: []expr.Any{
+			&expr.Meta{
+				Key: expr.MetaKeyL4PROTO,
+			},
+		},
+	}
+
+	outputChainPolicy := nftables.ChainPolicyAccept
+	outputChain := &nftables.Chain{
+		Table:    table,
+		Name:     "mangle_output",
+		Type:     nftables.ChainTypeRoute,
+		Hooknum:  nftables.ChainHookOutput,
+		Priority: nftables.ChainPriorityMangle,
+		Policy:   &outputChainPolicy,
+	}
+	m.netlinkConn.AddChain(outputChain)
+
+	preroutingChainPolicy := nftables.ChainPolicyAccept
+	preroutingChain := &nftables.Chain{
+		Table:    table,
+		Name:     "mangle_prerouting",
+		Type:     nftables.ChainTypeFilter,
+		Hooknum:  nftables.ChainHookPrerouting,
+		Priority: nftables.ChainPriorityMangle,
+		Policy:   &preroutingChainPolicy,
+	}
+	m.netlinkConn.AddChain(preroutingChain)
 
 	buf := &bytes.Buffer{}
 	_nftInitTpl.Execute(buf, nftTplData{
