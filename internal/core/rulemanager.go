@@ -1,16 +1,50 @@
 package core
 
+/*
+#cgo pkg-config: libnftables
+#include <stdlib.h>
+#include <nftables/libnftables.h>
+*/
+import "C"
+
 import (
+	"bytes"
+	_ "embed"
 	"fmt"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"text/template"
+	"unsafe"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/google/nftables"
 )
 
+const (
+	_nftTableName = "deepin_proxy"
+	_tproxyFwMark = 0x64707470
+	_tproxyTable  = 7470
+	_cgroupBase   = "/sys/fs/cgroup" // TODO: detect the cgroup2 mountpoint
+)
+
+//go:embed assets/init_table.nft
+var _nftInitTplContent string
+
+var _nftInitTpl = template.Must(template.New("init_nft_table").Parse(_nftInitTplContent))
+
+type nftTplData struct {
+	TableName    string
+	TProxyHost   string
+	TProxyPort   uint16
+	TProxyFwMark uint32
+}
+
 type ruleManager struct {
 	EventChan <-chan *cgroupEvent `inject:"true"`
 
 	netlinkConn *nftables.Conn
+	nftCtx      *C.struct_nft_ctx
 }
 
 func (c *Core) newRuleManager() (m *ruleManager, err error) {
@@ -43,6 +77,12 @@ func (c *Core) runRuleManager() (err error) {
 		return
 	}
 
+	if m.nftCtx = C.nft_ctx_new(C.NFT_CTX_DEFAULT); m.nftCtx == nil {
+		err = fmt.Errorf("cannot allocate nft context")
+		return
+	}
+	defer C.nft_ctx_free(m.nftCtx)
+
 	err = m.run()
 	return
 }
@@ -64,8 +104,43 @@ func (m *ruleManager) run() (err error) {
 		return
 	}
 
+	ruleAddCmd := fmt.Sprintf("ip rule add fwmark 0x%x table %d", _tproxyFwMark, _tproxyTable)
+	if err = exec.Command("sh", "-c", ruleAddCmd).Run(); err != nil {
+		return
+	}
+	defer func() {
+		ruleDelCmd := fmt.Sprintf("ip rule delete fwmark 0x%x table %d", _tproxyFwMark, _tproxyTable)
+		if err := exec.Command("sh", "-c", ruleDelCmd).Run(); err != nil {
+			log.Warning().Printf("failed to delete rule: %v", err)
+		}
+	}()
+
+	routeAddCmd := fmt.Sprintf("ip route add local default dev lo table %d", _tproxyTable)
+	if err = exec.Command("sh", "-c", routeAddCmd).Run(); err != nil {
+		return
+	}
+	defer func() {
+		routeDelCmd := fmt.Sprintf("ip route delete local default dev lo table %d", _tproxyTable)
+		if err := exec.Command("sh", "-c", routeDelCmd).Run(); err != nil {
+			log.Warning().Printf("failed to delete route: %v", err)
+		}
+	}()
+
 	for event := range m.EventChan {
 		log.Debug().Printf("handle cgroup event %+v", event)
+
+		// strip '/sys/fs/cgroup'
+		cgroupPath, err := filepath.Rel(_cgroupBase, event.Path)
+		if err != nil {
+			log.Warning().Printf("wrong cgroup path: %s", event.Path)
+			continue
+		}
+		level := len(strings.Split(cgroupPath, "/"))
+		cmd := fmt.Sprintf(`add rule inet %s mangle_output socket cgroupv2 level %d "%s" jump tproxy_mark`, _nftTableName, level, cgroupPath)
+		if err := m.runNftCmd(cmd); err != nil {
+			log.Warning().Print(err)
+			continue
+		}
 	}
 	return
 }
@@ -75,9 +150,32 @@ func (m *ruleManager) initializeNftableRuels() (err error) {
 		return
 	}
 
+	buf := &bytes.Buffer{}
+	_nftInitTpl.Execute(buf, nftTplData{
+		TableName:    _nftTableName,
+		TProxyHost:   "127.0.0.1",
+		TProxyPort:   7893,
+		TProxyFwMark: _tproxyFwMark,
+	})
+
+	err = m.runNftCmd(buf.String())
+
 	return
 }
 
-func (m *ruleManager) removeNftableRules() {
-	return
+func (m *ruleManager) removeNftableRules() error {
+	cmd := fmt.Sprintf("delete table inet %s", _nftTableName)
+	return m.runNftCmd(cmd)
+}
+
+func (m *ruleManager) runNftCmd(cmd string) error {
+	cmdCStr := C.CString(cmd)
+	defer C.free(unsafe.Pointer(cmdCStr))
+
+	res := C.nft_run_cmd_from_buffer(m.nftCtx, cmdCStr)
+	if res < 0 {
+		return fmt.Errorf("failed to add nftable rule(%d): %s", res, cmd)
+	}
+
+	return nil
 }

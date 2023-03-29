@@ -1,0 +1,22 @@
+define tproxy_fwmark = {{ .TProxyFwMark }}
+define tproxy_host = {{ .TProxyHost }}
+define tproxy_port = {{ .TProxyPort }}
+
+add table inet {{ .TableName }}
+delete table inet {{ .TableName }}
+
+table inet {{ .TableName }} {
+	chain tproxy_mark {
+		meta l4proto { udp, tcp } mark set $tproxy_fwmark
+	}
+	chain mangle_output {
+		type route hook output priority mangle; policy accept;
+	}
+	chain mangle_prerouting {
+		type filter hook prerouting priority mangle; policy accept;
+		fib saddr type != local return
+		udp dport 53  tproxy ip to $tproxy_host:$tproxy_port
+		tcp dport 80  tproxy ip to $tproxy_host:$tproxy_port
+		tcp dport 443 tproxy ip to $tproxy_host:$tproxy_port
+	}
+}
