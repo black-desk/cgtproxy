@@ -19,6 +19,7 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/google/nftables"
+	"github.com/vishvananda/netlink"
 )
 
 const (
@@ -104,23 +105,27 @@ func (m *ruleManager) run() (err error) {
 		return
 	}
 
-	ruleAddCmd := fmt.Sprintf("ip rule add fwmark 0x%x table %d", _tproxyFwMark, _tproxyTable)
-	if err = exec.Command("sh", "-c", ruleAddCmd).Run(); err != nil {
+	rule := netlink.NewRule()
+	rule.Family = netlink.FAMILY_ALL
+	rule.Mark = _tproxyFwMark
+	rule.Table = _tproxyTable
+	if err = netlink.RuleAdd(rule); err != nil {
 		return
 	}
 	defer func() {
-		ruleDelCmd := fmt.Sprintf("ip rule delete fwmark 0x%x table %d", _tproxyFwMark, _tproxyTable)
-		if err := exec.Command("sh", "-c", ruleDelCmd).Run(); err != nil {
+		if err := netlink.RuleDel(rule); err != nil {
 			log.Warning().Printf("failed to delete rule: %v", err)
 		}
 	}()
 
-	routeAddCmd := fmt.Sprintf("ip route add local default dev lo table %d", _tproxyTable)
+	// route := new(netlink.Route)
+	// route.Table = _tproxyTable
+	routeAddCmd := fmt.Sprintf("ip route add default dev lo table %d", _tproxyTable)
 	if err = exec.Command("sh", "-c", routeAddCmd).Run(); err != nil {
 		return
 	}
 	defer func() {
-		routeDelCmd := fmt.Sprintf("ip route delete local default dev lo table %d", _tproxyTable)
+		routeDelCmd := fmt.Sprintf("ip route delete default dev lo table %d", _tproxyTable)
 		if err := exec.Command("sh", "-c", routeDelCmd).Run(); err != nil {
 			log.Warning().Printf("failed to delete route: %v", err)
 		}
