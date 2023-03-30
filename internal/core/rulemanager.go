@@ -11,7 +11,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"os/exec"
+	"net"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -19,8 +19,8 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/google/nftables"
-	"github.com/google/nftables/expr"
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -119,15 +119,22 @@ func (m *ruleManager) run() (err error) {
 		}
 	}()
 
-	// route := new(netlink.Route)
-	// route.Table = _tproxyTable
-	routeAddCmd := fmt.Sprintf("ip route add default dev lo table %d", _tproxyTable)
-	if err = exec.Command("sh", "-c", routeAddCmd).Run(); err != nil {
+	iface, err := net.InterfaceByName("lo")
+	if err != nil {
+		return
+	}
+	route := new(netlink.Route)
+	route.Table = _tproxyTable
+	route.Dst = &net.IPNet{IP: net.IPv4zero, Mask: net.CIDRMask(0, 32)}
+	route.Protocol = unix.RTPROT_BOOT
+	route.LinkIndex = iface.Index
+	route.Scope = unix.RT_SCOPE_HOST
+	route.Type = unix.RTN_LOCAL
+	if err = netlink.RouteAdd(route); err != nil {
 		return
 	}
 	defer func() {
-		routeDelCmd := fmt.Sprintf("ip route delete default dev lo table %d", _tproxyTable)
-		if err := exec.Command("sh", "-c", routeDelCmd).Run(); err != nil {
+		if err := netlink.RouteDel(route); err != nil {
 			log.Warning().Printf("failed to delete route: %v", err)
 		}
 	}()
@@ -156,49 +163,50 @@ func (m *ruleManager) initializeNftableRuels() (err error) {
 		return
 	}
 
-	table := &nftables.Table{
-		Name:   _nftTableName,
-		Family: nftables.TableFamilyINet,
-	}
-	m.netlinkConn.AddTable(table)
+	// table := &nftables.Table{
+	// 	Name:   _nftTableName,
+	// 	Family: nftables.TableFamilyINet,
+	// }
+	// m.netlinkConn.AddTable(table)
 
-	tproxyMarkChain := &nftables.Chain{
-		Table: table,
-		Name:  "tproxy_mark",
-	}
-	m.netlinkConn.AddChain(tproxyMarkChain)
+	// tproxyMarkChain := &nftables.Chain{
+	// 	Table: table,
+	// 	Name:  "tproxy_mark",
+	// }
+	// m.netlinkConn.AddChain(tproxyMarkChain)
 
-	tproxyMarkRules := &nftables.Rule{
-		Table: table,
-		Chain: tproxyMarkChain,
-		Exprs: []expr.Any{
-			&expr.Meta{
-				Key: expr.MetaKeyL4PROTO,
-			},
-		},
-	}
+	// tproxyMarkRules := &nftables.Rule{
+	// 	Table: table,
+	// 	Chain: tproxyMarkChain,
+	// 	Exprs: []expr.Any{
+	// 		// &expr.Meta{
+	// 		// 	Key: expr.MetaKeyL4PROTO,
+	// 		// },
+	// 		// &expr.Soc
+	// 	},
+	// }
 
-	outputChainPolicy := nftables.ChainPolicyAccept
-	outputChain := &nftables.Chain{
-		Table:    table,
-		Name:     "mangle_output",
-		Type:     nftables.ChainTypeRoute,
-		Hooknum:  nftables.ChainHookOutput,
-		Priority: nftables.ChainPriorityMangle,
-		Policy:   &outputChainPolicy,
-	}
-	m.netlinkConn.AddChain(outputChain)
+	// outputChainPolicy := nftables.ChainPolicyAccept
+	// outputChain := &nftables.Chain{
+	// 	Table:    table,
+	// 	Name:     "mangle_output",
+	// 	Type:     nftables.ChainTypeRoute,
+	// 	Hooknum:  nftables.ChainHookOutput,
+	// 	Priority: nftables.ChainPriorityMangle,
+	// 	Policy:   &outputChainPolicy,
+	// }
+	// m.netlinkConn.AddChain(outputChain)
 
-	preroutingChainPolicy := nftables.ChainPolicyAccept
-	preroutingChain := &nftables.Chain{
-		Table:    table,
-		Name:     "mangle_prerouting",
-		Type:     nftables.ChainTypeFilter,
-		Hooknum:  nftables.ChainHookPrerouting,
-		Priority: nftables.ChainPriorityMangle,
-		Policy:   &preroutingChainPolicy,
-	}
-	m.netlinkConn.AddChain(preroutingChain)
+	// preroutingChainPolicy := nftables.ChainPolicyAccept
+	// preroutingChain := &nftables.Chain{
+	// 	Table:    table,
+	// 	Name:     "mangle_prerouting",
+	// 	Type:     nftables.ChainTypeFilter,
+	// 	Hooknum:  nftables.ChainHookPrerouting,
+	// 	Priority: nftables.ChainPriorityMangle,
+	// 	Policy:   &preroutingChainPolicy,
+	// }
+	// m.netlinkConn.AddChain(preroutingChain)
 
 	buf := &bytes.Buffer{}
 	_nftInitTpl.Execute(buf, nftTplData{
