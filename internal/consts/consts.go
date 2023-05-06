@@ -1,5 +1,8 @@
 package consts
 
-const CfgPath = "/etc/deepin/network-proxy/config.yaml"
-const RepeaterMarkBase int32 = 3000
-const RepeaterMaxMarks uint32 = 20
+const (
+	CfgPath                 = "/etc/deepin/network-proxy/config.yaml"
+	RepeaterMarkBase int32  = 3000
+	RepeaterMaxMarks uint32 = 20
+	RuleInsertHandle        = 1000
+)
