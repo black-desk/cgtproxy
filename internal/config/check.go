@@ -22,6 +22,9 @@ func (c *ConfigV1) Check() (err error) {
 		)
 	}()
 
+	c.Proxies = map[*Proxy]struct{}{}
+	c.TProxies = map[*TProxy]struct{}{}
+
 	if c == nil {
 		err = fmt.Errorf("config is required.")
 		return
