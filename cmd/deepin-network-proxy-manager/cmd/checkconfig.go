@@ -8,7 +8,6 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 // checkConfigCmd represents the config command
@@ -52,13 +51,7 @@ func checkConfigCmdRun() (err error) {
 		return
 	}
 
-	var cfg *config.Config
-	if err = yaml.Unmarshal(content, &cfg); err != nil {
-		err = fmt.Errorf("failed to unmarshal configuration:\n%w", err)
-		return
-	}
-
-	if err = cfg.Check(); err != nil {
+	if _, err = config.Load(content); err != nil {
 		return
 	}
 

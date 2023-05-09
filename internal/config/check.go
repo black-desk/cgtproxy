@@ -12,7 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func (c *ConfigV1) Check() (err error) {
+func (c *ConfigV1) check() (err error) {
 	defer func() {
 		if err == nil {
 			return
