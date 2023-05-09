@@ -2,7 +2,7 @@ package config
 
 // NOTE(black_desk): Always call Check before use Config.
 type Config struct {
-	ConfigV1
+	ConfigV1 `yaml:",inline"`
 }
 
 type ConfigV1 struct {
