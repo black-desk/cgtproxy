@@ -79,7 +79,7 @@ func (c *Core) initRegisterContainer() (err error) {
 
 		watcher.Add(c.cfg.CgroupRoot + "/...")
 
-		if err = c.container.RegisterI(&watcher); err != nil {
+		if err = c.container.Register(watcher); err != nil {
 			return
 		}
 	}
