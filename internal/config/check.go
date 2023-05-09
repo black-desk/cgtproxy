@@ -17,7 +17,7 @@ func (c *ConfigV1) Check() (err error) {
 			return
 		}
 		err = fmt.Errorf(
-			"invalid configuration: %w",
+			"invalid configuration:\n%w",
 			err,
 		)
 	}()

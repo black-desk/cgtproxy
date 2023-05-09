@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
@@ -19,6 +20,15 @@ var rootCmd = &cobra.Command{
 	Use:   "deepin-network-proxy-manager",
 	Short: "A transparent network proxy manager for deepin",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		defer func() {
+			if err == nil {
+				return
+			}
+
+			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
+
+			return
+		}()
 		err = rootCmdRun()
 		return
 	},

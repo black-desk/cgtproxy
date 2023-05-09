@@ -64,7 +64,7 @@ func (c *Container) Fill(v any) (err error) {
 			return
 		}
 
-		err = fmt.Errorf("failed to fill %#v: %w", v, err)
+		err = fmt.Errorf("failed to fill %#v:\n%w", v, err)
 	}()
 
 	if v == nil {
@@ -100,7 +100,7 @@ func (c *Container) Fill(v any) (err error) {
 				unsafe.Pointer(elem.Field(i).Addr().Pointer()),
 			).Interface(),
 		); err != nil {
-			err = fmt.Errorf("failed on field %d: %w", i, err)
+			err = fmt.Errorf("failed on field %d:\n%w", i, err)
 			return
 		}
 	}

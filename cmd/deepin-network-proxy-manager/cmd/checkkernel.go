@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +19,16 @@ var checkKernelCmd = &cobra.Command{
 	Short: "Check kernel configuration",
 	Long:  `Check required kernel features.`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		defer func() {
+			if err == nil {
+				return
+			}
+
+			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
+
+			return
+		}()
+
 		err = checkKernelCmdRun()
 		return
 	},
@@ -29,7 +40,7 @@ func checkKernelCmdRun() (err error) {
 			return
 		}
 		err = fmt.Errorf(
-			"failed to check kernel config: %w",
+			"failed to check kernel config:\n%w",
 			err,
 		)
 	}()
