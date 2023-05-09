@@ -49,7 +49,7 @@ func (c *ConfigV1) Check() (err error) {
 
 	matchs := rangeExp.FindStringSubmatch(c.Repeater.TProxyPorts)
 
-	if len(matchs) != 2 {
+	if len(matchs) != 3 {
 		err = fmt.Errorf(
 			"`tproxy-ports` must be range like [10080,10090), but we get %s",
 			c.Repeater.TProxyPorts,
@@ -64,7 +64,7 @@ func (c *ConfigV1) Check() (err error) {
 		tmp uint64
 	)
 
-	if tmp, err = strconv.ParseUint(matchs[0], 10, 16); err != nil {
+	if tmp, err = strconv.ParseUint(matchs[1], 10, 16); err != nil {
 		err = fmt.Errorf(
 			"failed to parse port range begin from %s: %w",
 			matchs[0], err,
@@ -73,7 +73,7 @@ func (c *ConfigV1) Check() (err error) {
 	}
 	begin = uint16(tmp)
 
-	if tmp, err = strconv.ParseUint(matchs[1], 10, 16); err != nil {
+	if tmp, err = strconv.ParseUint(matchs[2], 10, 16); err != nil {
 		err = fmt.Errorf(
 			"failed to parse port range end from %s: %w",
 			matchs[1], err,
