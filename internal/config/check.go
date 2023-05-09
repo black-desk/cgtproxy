@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	fstab "github.com/deniswernert/go-fstab"
 	"github.com/go-playground/validator/v10"
@@ -16,8 +17,8 @@ func (c *ConfigV1) Check() (err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(
-			"invalid configuration:\n%w",
+		err = fmt.Errorf(location.Catch()+
+			"Invalid configuration:\n%w",
 			err,
 		)
 	}()
@@ -26,7 +27,8 @@ func (c *ConfigV1) Check() (err error) {
 	c.TProxies = map[*TProxy]struct{}{}
 
 	if c == nil {
-		err = fmt.Errorf("config is required.")
+		err = fmt.Errorf(location.Catch() +
+			"Config is required.")
 		return
 	}
 
@@ -53,7 +55,7 @@ func (c *ConfigV1) Check() (err error) {
 	matchs := rangeExp.FindStringSubmatch(c.Repeater.TProxyPorts)
 
 	if len(matchs) != 3 {
-		err = fmt.Errorf(
+		err = fmt.Errorf(location.Catch()+
 			"`tproxy-ports` must be range like [10080,10090), but we get %s",
 			c.Repeater.TProxyPorts,
 		)
@@ -68,8 +70,8 @@ func (c *ConfigV1) Check() (err error) {
 	)
 
 	if tmp, err = strconv.ParseUint(matchs[1], 10, 16); err != nil {
-		err = fmt.Errorf(
-			"failed to parse port range begin from %s: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to parse port range begin from %s:\n%w",
 			matchs[0], err,
 		)
 		return
@@ -77,8 +79,8 @@ func (c *ConfigV1) Check() (err error) {
 	begin = uint16(tmp)
 
 	if tmp, err = strconv.ParseUint(matchs[2], 10, 16); err != nil {
-		err = fmt.Errorf(
-			"failed to parse port range end from %s: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to parse port range end from %s:\n%w",
 			matchs[1], err,
 		)
 		return
@@ -97,8 +99,8 @@ func getCgroupRoot() (cgroupRoot string, err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(
-			"failed to get cgroupv2 mount point: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to get cgroupv2 mount point:\n%w",
 			err,
 		)
 	}()

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/google/uuid"
 )
@@ -12,8 +13,8 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(
-			"failed to allocate mark for proxy: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to allocate mark for proxy: %w",
 			err,
 		)
 	}()
@@ -26,11 +27,13 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 		}
 
 		if begin >= end {
-			err = fmt.Errorf("we do not have enough port for %#v", tp)
+			err = fmt.Errorf(location.Catch()+
+				"We do not have enough port for %#v", tp,
+			)
 			return
 		}
 		tp.Port = begin
-		log.Debug().Printf("allocate port for tproxy %#v", tp)
+		log.Debug().Printf("Allocate port for tproxy %#v", tp)
 		begin++
 	}
 

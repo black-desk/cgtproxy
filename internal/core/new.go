@@ -12,6 +12,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager/table"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 )
 
 type Core struct {
@@ -30,8 +31,8 @@ func New(opts ...Opt) (core *Core, err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(
-			"failed to create new deepin-network-proxy-manager core: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to create new deepin-network-proxy-manager core:\n%w",
 			err,
 		)
 	}()
@@ -144,10 +145,6 @@ func (c *Core) initRegisterContainer() (err error) {
 
 func WithConfig(cfg *config.Config) Opt {
 	return func(core *Core) (ret *Core, err error) {
-		if err = cfg.Check(); err != nil {
-			return
-		}
-
 		core.cfg = cfg
 		ret = core
 

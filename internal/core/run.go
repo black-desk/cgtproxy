@@ -9,6 +9,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/repeater"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 )
 
 func (c *Core) Run() (err error) {
@@ -17,8 +18,8 @@ func (c *Core) Run() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"error occurs while running the core: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Error occurs while running the core:\n%w",
 			err,
 		)
 	}()

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -34,8 +35,8 @@ func New(container *inject.Container) (m *Monitor, err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to create the cgroup monitor: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to create the cgroup monitor:\n%w",
 			err,
 		)
 	}()
@@ -56,8 +57,8 @@ func (m *Monitor) Run() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"error occurs while running the cgroup monitor: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Error occurs while running the cgroup monitor:\n%w",
 			err,
 		)
 	}()
@@ -78,8 +79,8 @@ func (m *Monitor) Run() (err error) {
 			}
 
 		} else {
-			err = fmt.Errorf(
-				"unexpected fs event: %v",
+			err = fmt.Errorf(location.Catch()+
+				"Unexpected fs event: %v",
 				fsEvent.Op.String(),
 			)
 			return

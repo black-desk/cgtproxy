@@ -37,7 +37,10 @@ var rootCmd = &cobra.Command{
 func rootCmdRun() (err error) {
 	content, err := os.ReadFile(flags.CfgPath)
 	if err != nil {
-		log.Err().Printf("Failed to read configuration [ %s ]: %v", flags.CfgPath, err)
+		log.Err().Printf(
+			"Failed to read configuration from %s:\n%s",
+			flags.CfgPath, err.Error(),
+		)
 		return err
 	}
 
@@ -53,7 +56,7 @@ func rootCmdRun() (err error) {
 		core.WithConfig(cfg),
 	)
 	if err != nil {
-		log.Err().Printf("Failed to init core: %v", err)
+		log.Err().Printf("Failed to init core:\n%s", err.Error())
 		return err
 	}
 

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +40,7 @@ func checkKernelCmdRun() (err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(
+		err = fmt.Errorf(location.Catch()+
 			"failed to check kernel config:\n%w",
 			err,
 		)
@@ -76,7 +77,8 @@ func checkKernelCmdRun() (err error) {
 
 			components := strings.SplitN(line, "=", 2)
 			if len(components) != 2 {
-				err = fmt.Errorf("unexpected format of /proc/config.gz (line: %s)", line)
+				err = fmt.Errorf(location.Catch()+
+					"unexpected format of /proc/config.gz (line: %s)", line)
 				return
 			}
 
@@ -144,7 +146,8 @@ func checkKernelCmdRun() (err error) {
 
 			components := strings.Split(line, " ")
 			if len(components) != 6 {
-				err = fmt.Errorf("unexpected format of /proc/modules. (line: %s)", line)
+				err = fmt.Errorf(location.Catch()+
+					"unexpected format of /proc/modules. (line: %s)", line)
 				return
 			}
 

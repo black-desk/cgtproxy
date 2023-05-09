@@ -6,6 +6,7 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 )
 
@@ -26,7 +27,8 @@ func New() *Container {
 func (c *Container) Register(v any) (err error) {
 	rtype := reflect.TypeOf(v)
 	if _, loaded := c.store.LoadOrStore(rtype, reflect.ValueOf(v)); loaded {
-		err = fmt.Errorf(`type "%s" had been registered.`, rtype.String())
+		err = fmt.Errorf(location.Catch()+
+			`Type "%s" had been registered.`, rtype.String())
 		return
 	} else {
 		log.Debug().Printf(`register type "%s"`, rtype.String())
@@ -38,21 +40,24 @@ func (c *Container) Register(v any) (err error) {
 func (c *Container) RegisterI(ptrToI any) (err error) {
 	rtype := reflect.TypeOf(ptrToI)
 	if rtype.Kind() != reflect.Pointer {
-		err = fmt.Errorf(`wrong type: %s`, rtype.String())
+		err = fmt.Errorf(location.Catch()+
+			`Wrong type: %s`, rtype.String())
 		return
 	}
 
 	elem := rtype.Elem()
 	if elem.Kind() != reflect.Interface {
-		err = fmt.Errorf(`wrong type: %s`, rtype.String())
+		err = fmt.Errorf(location.Catch()+
+			`Wrong type: %s`, rtype.String())
 		return
 	}
 
 	if _, loaded := c.store.LoadOrStore(elem, reflect.ValueOf(ptrToI).Elem()); loaded {
-		err = fmt.Errorf(`interface "%s" had been registered.`, elem.String())
+		err = fmt.Errorf(location.Catch()+
+			`Interface "%s" had been registered.`, elem.String())
 		return
 	} else {
-		log.Debug().Printf(`register interface "%s"`, elem.String())
+		log.Debug().Printf(`Register interface "%s"`, elem.String())
 	}
 
 	return
@@ -64,17 +69,20 @@ func (c *Container) Fill(v any) (err error) {
 			return
 		}
 
-		err = fmt.Errorf("failed to fill %#v:\n%w", v, err)
+		err = fmt.Errorf(location.Catch()+
+			"Failed to fill %#v:\n%w", v, err)
 	}()
 
 	if v == nil {
-		err = fmt.Errorf("fill should not take a nil.")
+		err = fmt.Errorf(location.Catch() +
+			"Fill should not take a nil.")
 		return
 	}
 
 	rvalue := reflect.ValueOf(v)
 	if rvalue.Kind() != reflect.Pointer {
-		err = fmt.Errorf(`fill should always take a pointer as argument.`)
+		err = fmt.Errorf(location.Catch() +
+			`Fill should always take a pointer as argument.`)
 		return
 	}
 
@@ -86,7 +94,8 @@ func (c *Container) Fill(v any) (err error) {
 	}
 
 	if elem.Kind() != reflect.Struct {
-		err = fmt.Errorf(`type %s not found in this container.`, elem.Type().String())
+		err = fmt.Errorf(location.Catch()+
+			`Type %s not found in this container.`, elem.Type().String())
 		return
 	}
 
@@ -100,7 +109,8 @@ func (c *Container) Fill(v any) (err error) {
 				unsafe.Pointer(elem.Field(i).Addr().Pointer()),
 			).Interface(),
 		); err != nil {
-			err = fmt.Errorf("failed on field %d:\n%w", i, err)
+			err = fmt.Errorf(location.Catch()+
+				"Failed on field %d:\n%w", i, err)
 			return
 		}
 	}

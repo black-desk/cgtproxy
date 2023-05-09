@@ -9,6 +9,7 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
@@ -34,8 +35,8 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to add cgroup (%s) to nftable: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to add cgroup (%s) to nftable:\n%w",
 			path, err,
 		)
 	}()
@@ -121,8 +122,8 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to add bypass cgroup set (level %d) to nftable: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to add bypass cgroup set (level %d) to nftable:\n%w",
 			level, err,
 		)
 	}()
@@ -196,8 +197,8 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to add tproxy cgroup set (level %d) to nftable: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to add tproxy cgroup set (level %d) to nftable:\n%w",
 			level, err,
 		)
 	}()
@@ -269,8 +270,8 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to remove cgroup (%s) from nftable: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to remove cgroup (%s) from nftable:\n%w",
 			path, err,
 		)
 	}()
@@ -371,8 +372,8 @@ func (t *Table) FlushInitialContent() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"error occurs while flushing nftable: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Error occurs while flushing nftable:\n%w",
 			err,
 		)
 	}()
@@ -427,8 +428,8 @@ func (t *Table) Clear() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"error occurs while removing nftable: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Error occurs while removing nftable:\n%w",
 			err,
 		)
 	}()

@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/google/nftables"
 )
 
@@ -51,8 +52,8 @@ func New(opts ...Opt) (ret *Table, err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"error occurs while initializing nft stuff: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Error occurs while initializing nft stuff:\n%w",
 			err,
 		)
 	}()

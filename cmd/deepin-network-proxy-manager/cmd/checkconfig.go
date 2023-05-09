@@ -6,6 +6,7 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -36,7 +37,7 @@ func checkConfigCmdRun() (err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(
+		err = fmt.Errorf(location.Catch()+
 			"failed to validate configuration:\n%w",
 			err,
 		)
@@ -44,7 +45,7 @@ func checkConfigCmdRun() (err error) {
 
 	var content []byte
 	if content, err = os.ReadFile(flags.CfgPath); err != nil {
-		err = fmt.Errorf(
+		err = fmt.Errorf(location.Catch()+
 			"failed to read configuration [ %s ]:\n%w",
 			flags.CfgPath, err,
 		)

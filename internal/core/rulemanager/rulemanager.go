@@ -9,6 +9,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager/table"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
@@ -32,8 +33,8 @@ func New(container *inject.Container) (m *RuleManager, err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to create the nftable rule manager: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to create the nftable rule manager:\n%w",
 			err,
 		)
 	}()
@@ -62,8 +63,8 @@ func (m *RuleManager) Run() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"error occurs while running the nftable rules manager: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Error occurs while running the nftable rules manager:\n%w",
 			err,
 		)
 	}()
@@ -100,8 +101,8 @@ func (m *RuleManager) initializeNftableRuels() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to initialize nftable ruels: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to initialize nftable ruels:\n%w",
 			err,
 		)
 	}()
@@ -126,8 +127,8 @@ func (m *RuleManager) addRoute() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to add route: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to add route:\n%w",
 			err,
 		)
 	}()
@@ -173,8 +174,8 @@ func (m *RuleManager) addRule() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(
-			"failed to add route rule: %w",
+		err = fmt.Errorf(location.Catch()+
+			"Failed to add route rule:\n%w",
 			err,
 		)
 	}()
