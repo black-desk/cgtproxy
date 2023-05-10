@@ -43,8 +43,10 @@ var _ = Describe("ginkgo helper", func() {
 		})
 	},
 		ContextTableEntry("found",
-			"./table_test.go", nil),
+			"./table_test.go", nil,
+		).WithFmt("./table_test.go"),
 		ContextTableEntry("not found",
-			"/some/random/path/"+uuid.NewString(), os.ErrNotExist),
+			"/some/random/path/"+uuid.NewString(), os.ErrNotExist,
+		).WithFmt("/some/random/path/..."),
 	)
 })
