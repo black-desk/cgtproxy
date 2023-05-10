@@ -28,7 +28,7 @@ func TestInjectInt(t *testing.T) {
 	}
 
 	s := struct {
-		A int
+		A int `inject:"true"`
 	}{}
 
 	if err := container.Fill(&s); err != nil {
