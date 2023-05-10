@@ -78,9 +78,15 @@ func (m *Monitor) Run() (err error) {
 				EventType: CgroupEventTypeDelete,
 			}
 
+		} else if fsEvent.Has(fsnotify.Chmod) {
+			// We not care about this kind of event
+		} else if fsEvent.Has(fsnotify.Write) {
+			// We not care about this kind of event
+		} else if fsEvent.Has(fsnotify.Rename) {
+			// We not care about this kind of event
 		} else {
 			err = fmt.Errorf(location.Catch()+
-				"Unexpected fs event: %v",
+				"%w: %v", ErrUnexpectFsEventType,
 				fsEvent.Op.String(),
 			)
 			return
