@@ -1,9 +1,13 @@
 package ginkgohelper_test
 
 import (
+	"errors"
+	"fmt"
+	"os"
 	"testing"
 
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/test/ginkgo-helper"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -21,5 +25,26 @@ var _ = Describe("ginkgo helper", func() {
 	},
 		ContextTableEntry([]int{1, 2}),
 		ContextTableEntry([]int{2, 3}).WithFmt("2 3"),
+	)
+
+	ContextTable("Given a file path %v", func(resultMsg string, path string, expectErr error) {
+		var (
+			file *os.File
+			err  error
+		)
+		BeforeEach(func() {
+			By("open that file", func() {
+				file, err = os.Open(path)
+				defer file.Close()
+			})
+		})
+		It(fmt.Sprintf("should be %s", resultMsg), func() {
+			Expect(errors.Is(err, expectErr)).To(BeTrue())
+		})
+	},
+		ContextTableEntry("found",
+			"./table_test.go", nil),
+		ContextTableEntry("not found",
+			"/some/random/path/"+uuid.NewString(), os.ErrNotExist),
 	)
 })

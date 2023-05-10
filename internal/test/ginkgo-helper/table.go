@@ -16,6 +16,13 @@ func ContextTable(message string, fn any, entries ...*ContextTableEntryT) {
 	for i := range entries {
 		ginkgo.Context(fmt.Sprintf(message, entries[i].fmtArgs...), func() {
 			vfn := reflect.ValueOf(fn)
+			for j := range entries[i].args {
+				if entries[i].args[j].IsValid() {
+					continue
+				}
+
+				entries[i].args[j] = reflect.New(vfn.Type().In(j)).Elem()
+			}
 			vfn.Call(entries[i].args)
 		})
 	}
