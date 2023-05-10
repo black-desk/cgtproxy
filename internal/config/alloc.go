@@ -32,8 +32,12 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 			)
 			return
 		}
+
 		tp.Port = begin
-		log.Debug().Printf("Allocate port for tproxy %#v", tp)
+		log.Debug().Printf("Allocate port %d for tproxy %s",
+			tp.Port, tp.Name,
+		)
+
 		begin++
 	}
 
@@ -68,6 +72,8 @@ func (c *ConfigV1) collectProxies(rule Rule) {
 		Addr:   &c.Repeater.Listens[0],
 		Port:   0, // NOTE(black_desk): alloc later
 	}
+
+	log.Debug().Printf("Create tproxy for proxy:\n%v", rule.Proxy)
 
 	c.TProxies[rule.Proxy.TProxy] = struct{}{}
 	c.Proxies[rule.Proxy] = struct{}{}
