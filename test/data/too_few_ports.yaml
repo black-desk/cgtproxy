@@ -2,19 +2,20 @@ version: 1
 cgroup-root: AUTO
 rules:
   - match: /user.slice/user-1000.slice/user@1000.service/app.slice/*
-    tproxy:
-      name: clash
-      port: 7893
-      addr: 127.0.0.1
-  - match: /user.slice/user-1001.slice/user@1001.service/app.slice/*
-    proxy: &proxy1
+    proxy:
       udp: true
       port: 1080
       protocol: socks
       addr: 127.0.0.1
+  - match: /user.slice/user-1001.slice/user@1001.service/app.slice/*
+    drop: true
   - match: /user.slice/user-1002.slice/user@1002.service/app.slice/*
-    proxy: *proxy1
+    proxy:
+      udp: true
+      port: 1080
+      protocol: socks
+      addr: 127.0.0.1
 repeater:
   listens:
     - 127.0.0.1
-  tproxy-ports: "[13030,13040)"
+  tproxy-ports: "[13030,13031)"
