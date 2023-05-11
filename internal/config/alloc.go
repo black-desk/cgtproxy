@@ -28,7 +28,7 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 
 		if begin >= end {
 			err = fmt.Errorf(location.Catch()+
-				"We do not have enough port for %#v", tp,
+				"%w %#v", ErrTooFewPorts, tp,
 			)
 			return
 		}
