@@ -12,12 +12,12 @@ func (r *Rule) String() string {
 		return fmt.Sprintf("rule [ match: %s | DROP ]", r.Match)
 	} else if r.Direct {
 		return fmt.Sprintf("rule [ match: %s | DIRECT ]", r.Match)
-	} else if r.Proxy != nil {
+	} else if r.Proxy != "" {
 		return fmt.Sprintf("rule [ match: %s | PROXY %s ]",
-			r.Match, r.Proxy.String())
-	} else if r.TProxy != nil {
+			r.Match, r.Proxy)
+	} else if r.TProxy != "" {
 		return fmt.Sprintf("rule [ match: %s | TPROXY %s ]",
-			r.Match, r.TProxy.String())
+			r.Match, r.TProxy)
 	}
 
 	panic("this should never happened")

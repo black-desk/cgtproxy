@@ -23,17 +23,9 @@ func (c *ConfigV1) check() (err error) {
 		)
 	}()
 
-	c.Proxies = map[*Proxy]struct{}{}
-	c.TProxies = map[*TProxy]struct{}{}
-
-	if c == nil {
-		err = fmt.Errorf(location.Catch() +
-			"Config is required.")
-		return
-	}
-
 	var validator = validator.New()
 	if err = validator.Struct(c); err != nil {
+		err = fmt.Errorf("Failed on validation:\n%w", err)
 		return
 	}
 
@@ -48,6 +40,14 @@ func (c *ConfigV1) check() (err error) {
 
 	if c.Rules == nil {
 		log.Warning().Printf("No rules in config.")
+	}
+
+	if c.Proxies == nil {
+		c.Proxies = map[string]*Proxy{}
+	}
+
+	if c.TProxies == nil {
+		c.TProxies = map[string]*TProxy{}
 	}
 
 	rangeExp := regexp.MustCompile(`\[(\d+),(\d+)\)`)

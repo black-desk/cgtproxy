@@ -6,16 +6,17 @@ type Config struct {
 }
 
 type ConfigV1 struct {
-	Version    uint8     `yaml:"version" validate:"required,eq=1"`
-	Repeater   *Repeater `yaml:"repeater"`
-	Rules      []Rule    `yaml:"rules" validate:"dive"`
-	Bypass     *Bypass   `yaml:"bypass"`
-	CgroupRoot string    `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
-	RouteTable int       `yaml:"route-table"`
-	Mark       uint32    `yaml:"mark"`
+	Version  uint8     `yaml:"version" validate:"required,eq=1"`
+	Repeater *Repeater `yaml:"repeater"`
 
-	Proxies  map[*Proxy]struct{}  `yaml:"-"`
-	TProxies map[*TProxy]struct{} `yaml:"-"`
+	Proxies  map[string]*Proxy  `yaml:"proxies" validate:"dive"`
+	TProxies map[string]*TProxy `yaml:"tproxies" validate:"dive"`
+
+	Rules      []Rule  `yaml:"rules" validate:"dive"`
+	Bypass     *Bypass `yaml:"bypass"`
+	CgroupRoot string  `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
+	RouteTable int     `yaml:"route-table"`
+	Mark       uint32  `yaml:"mark"`
 }
 
 type Bypass struct {
@@ -26,14 +27,14 @@ type Bypass struct {
 type Rule struct {
 	Match string `yaml:"match" validate:"required"`
 
-	TProxy *TProxy `yaml:"tproxy" validate:"required_without_all=Proxy Drop Direct,excluded_with=Proxy Drop Direct"`
-	Proxy  *Proxy  `yaml:"proxy" validate:"required_without_all=TProxy Drop Direct,excluded_with=TProxy Drop Direct"`
-	Drop   bool    `yaml:"drop" validate:"required_without_all=TProxy Proxy Direct,excluded_with=TProxy Proxy Direct"`
-	Direct bool    `yaml:"direct" validate:"required_without_all=TProxy Proxy Drop,excluded_with=TProxy Proxy Drop"`
+	TProxy string `yaml:"tproxy" validate:"required_without_all=Proxy Drop Direct,excluded_with=Proxy Drop Direct"`
+	Proxy  string `yaml:"proxy" validate:"required_without_all=TProxy Drop Direct,excluded_with=TProxy Drop Direct"`
+	Drop   bool   `yaml:"drop" validate:"required_without_all=TProxy Proxy Direct,excluded_with=TProxy Proxy Direct"`
+	Direct bool   `yaml:"direct" validate:"required_without_all=TProxy Proxy Drop,excluded_with=TProxy Proxy Drop"`
 }
 
 type TProxy struct {
-	Name   string  `yaml:"name" validate:"required"` // use as chain name
+	Name   string  `yaml:"-"`
 	NoUDP  bool    `yaml:"no-udp"`
 	NoIPv6 bool    `yaml:"no-ipv6"`
 	Addr   *string `yaml:"addr" validate:"hostname|ip"`
@@ -46,7 +47,6 @@ type Repeater struct {
 }
 
 type Proxy struct {
-	Name     string `yaml:"name"`
 	Protocol string `yaml:"protocol" validate:"required,eq=http|eq=https|eq=socks|eq=socks4|eq=socks5"`
 	Addr     string `yaml:"addr" validate:"required,hostname|ip"`
 	Port     uint16 `yaml:"port" validate:"required"`
