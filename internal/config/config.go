@@ -36,7 +36,7 @@ type TProxy struct {
 	Name   string  `yaml:"name" validate:"required"` // use as chain name
 	NoUDP  bool    `yaml:"no-udp"`
 	NoIPv6 bool    `yaml:"no-ipv6"`
-	Addr   *string `yaml:"addr" validate:"hostname"`
+	Addr   *string `yaml:"addr" validate:"hostname|ip"`
 	Port   uint16  `yaml:"port" validate:"required"`
 }
 
