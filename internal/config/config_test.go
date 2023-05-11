@@ -13,7 +13,7 @@ import (
 )
 
 var _ = Describe("Configuration", func() {
-	ContextTable("load from %s configuration (%s)", func(path string) {
+	ContextTable("load from valid configuration (%s)", func(path string) {
 		var (
 			err     error
 			file    *os.File
