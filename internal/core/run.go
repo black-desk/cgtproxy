@@ -27,9 +27,7 @@ func (c *Core) Run() (err error) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
-	if err = c.start(); err != nil {
-		return err
-	}
+	c.start()
 
 	go func() {
 		select {
@@ -42,10 +40,16 @@ func (c *Core) Run() (err error) {
 	return c.pool.Wait()
 }
 
-func (c *Core) start() (err error) {
+func (c *Core) start() {
 	c.pool.Go(c.runMonitor)
-	c.pool.Go(c.runRepeater)
 	c.pool.Go(c.runRuleManager)
+
+	if c.cfg.Repeater == nil {
+		return
+	}
+
+	c.pool.Go(c.runRepeater)
+
 	return
 }
 
