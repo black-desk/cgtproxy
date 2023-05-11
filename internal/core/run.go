@@ -32,7 +32,10 @@ func (c *Core) Run() (err error) {
 	}
 
 	go func() {
-		<-sigChan
+		select {
+		case <-c.ctx.Done():
+		case <-sigChan:
+		}
 		c.cancel()
 	}()
 
