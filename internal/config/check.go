@@ -18,7 +18,7 @@ func (c *ConfigV1) check() (err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Invalid configuration:\n%w",
 			err,
 		)
@@ -58,7 +58,7 @@ func (c *ConfigV1) check() (err error) {
 	matchs := rangeExp.FindStringSubmatch(c.Repeater.TProxyPorts)
 
 	if len(matchs) != 3 {
-		err = fmt.Errorf(location.Catch()+"%w",
+		err = fmt.Errorf(location.Capture()+"%w",
 			&ErrWrongPortsPattern{
 				actual: c.Repeater.TProxyPorts,
 			},
@@ -75,7 +75,7 @@ func (c *ConfigV1) check() (err error) {
 
 	tmp, err = strconv.ParseUint(matchs[1], 10, 16)
 	if err != nil {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to parse port range begin from %s:\n%w",
 			matchs[0], err,
 		)
@@ -85,7 +85,7 @@ func (c *ConfigV1) check() (err error) {
 
 	tmp, err = strconv.ParseUint(matchs[2], 10, 16)
 	if err != nil {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to parse port range end from %s:\n%w",
 			matchs[1], err,
 		)
@@ -106,7 +106,7 @@ func getCgroupRoot() (cgroupRoot string, err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to get cgroupv2 mount point:\n%w",
 			err,
 		)

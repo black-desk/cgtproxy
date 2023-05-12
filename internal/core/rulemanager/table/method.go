@@ -35,7 +35,7 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to add cgroup (%s) to nftable:\n%w",
 			path, err,
 		)
@@ -127,7 +127,7 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to add bypass cgroup set (level %d) to nftable:\n%w",
 			level, err,
 		)
@@ -203,7 +203,7 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to add tproxy cgroup set (level %d) to nftable:\n%w",
 			level, err,
 		)
@@ -277,7 +277,7 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to remove cgroup (%s) from nftable:\n%w",
 			path, err,
 		)
@@ -379,7 +379,7 @@ func (t *Table) FlushInitialContent() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Error occurs while flushing nftable:\n%w",
 			err,
 		)
@@ -435,7 +435,7 @@ func (t *Table) Clear() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Error occurs while removing nftable:\n%w",
 			err,
 		)

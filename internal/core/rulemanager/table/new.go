@@ -52,7 +52,7 @@ func New(opts ...Opt) (ret *Table, err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Error occurs while initializing nft stuff:\n%w",
 			err,
 		)

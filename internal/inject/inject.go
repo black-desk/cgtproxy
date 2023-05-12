@@ -27,7 +27,7 @@ func New() *Container {
 func (c *Container) Register(v any) (err error) {
 	rtype := reflect.TypeOf(v)
 	if _, loaded := c.store.LoadOrStore(rtype, reflect.ValueOf(v)); loaded {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			`Type "%s" had been registered.`, rtype.String())
 		return
 	} else {
@@ -40,20 +40,20 @@ func (c *Container) Register(v any) (err error) {
 func (c *Container) RegisterI(ptrToI any) (err error) {
 	rtype := reflect.TypeOf(ptrToI)
 	if rtype.Kind() != reflect.Pointer {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			`Wrong type: %s`, rtype.String())
 		return
 	}
 
 	elem := rtype.Elem()
 	if elem.Kind() != reflect.Interface {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			`Wrong type: %s`, rtype.String())
 		return
 	}
 
 	if _, loaded := c.store.LoadOrStore(elem, reflect.ValueOf(ptrToI).Elem()); loaded {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			`Interface "%s" had been registered.`, elem.String())
 		return
 	} else {
@@ -69,19 +69,19 @@ func (c *Container) Fill(v any) (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to fill %#v:\n%w", v, err)
 	}()
 
 	if v == nil {
-		err = fmt.Errorf(location.Catch() +
+		err = fmt.Errorf(location.Capture() +
 			"Fill should not take a nil.")
 		return
 	}
 
 	rvalue := reflect.ValueOf(v)
 	if rvalue.Kind() != reflect.Pointer {
-		err = fmt.Errorf(location.Catch() +
+		err = fmt.Errorf(location.Capture() +
 			`Fill should always take a pointer as argument.`)
 		return
 	}
@@ -94,7 +94,7 @@ func (c *Container) Fill(v any) (err error) {
 	}
 
 	if elem.Kind() != reflect.Struct {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			`Type %s not found in this container.`, elem.Type().String())
 		return
 	}
@@ -109,7 +109,7 @@ func (c *Container) Fill(v any) (err error) {
 				unsafe.Pointer(elem.Field(i).Addr().Pointer()),
 			).Interface(),
 		); err != nil {
-			err = fmt.Errorf(location.Catch()+
+			err = fmt.Errorf(location.Capture()+
 				"Failed on field %d:\n%w", i, err)
 			return
 		}

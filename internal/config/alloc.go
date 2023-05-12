@@ -12,7 +12,7 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to allocate mark for proxy: %w",
 			err,
 		)
@@ -51,7 +51,7 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 		}
 
 		if begin >= end {
-			err = fmt.Errorf(location.Catch()+
+			err = fmt.Errorf(location.Capture()+
 				"%w %#v", ErrTooFewPorts, tp,
 			)
 			return

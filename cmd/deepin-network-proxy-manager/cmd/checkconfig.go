@@ -36,7 +36,7 @@ func checkConfigCmdRun() (err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"failed to validate configuration:\n%w",
 			err,
 		)
@@ -45,7 +45,7 @@ func checkConfigCmdRun() (err error) {
 	var content []byte
 	content, err = os.ReadFile(flags.CfgPath)
 	if err != nil {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"failed to read configuration [ %s ]:\n%w",
 			flags.CfgPath, err,
 		)

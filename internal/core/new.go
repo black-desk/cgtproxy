@@ -31,7 +31,7 @@ func New(opts ...Opt) (core *Core, err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to create new deepin-network-proxy-manager core:\n%w",
 			err,
 		)

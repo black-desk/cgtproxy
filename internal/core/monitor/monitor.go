@@ -35,7 +35,7 @@ func New(container *inject.Container) (m *Monitor, err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to create the cgroup monitor:\n%w",
 			err,
 		)
@@ -58,7 +58,7 @@ func (m *Monitor) Run() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Error occurs while running the cgroup monitor:\n%w",
 			err,
 		)
@@ -86,7 +86,7 @@ func (m *Monitor) Run() (err error) {
 		} else if fsEvent.Has(fsnotify.Rename) {
 			// We not care about this kind of event
 		} else {
-			err = fmt.Errorf(location.Catch()+
+			err = fmt.Errorf(location.Capture()+
 				"%w: %v", ErrUnexpectFsEventType,
 				fsEvent.Op.String(),
 			)

@@ -40,7 +40,7 @@ func checkKernelCmdRun() (err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"failed to check kernel config:\n%w",
 			err,
 		)
@@ -79,7 +79,7 @@ func checkKernelCmdRun() (err error) {
 
 			components := strings.SplitN(line, "=", 2)
 			if len(components) != 2 {
-				err = fmt.Errorf(location.Catch()+
+				err = fmt.Errorf(location.Capture()+
 					"unexpected format of /proc/config.gz (line: %s)", line)
 				return
 			}
@@ -149,7 +149,7 @@ func checkKernelCmdRun() (err error) {
 
 			components := strings.Split(line, " ")
 			if len(components) != 6 {
-				err = fmt.Errorf(location.Catch()+
+				err = fmt.Errorf(location.Capture()+
 					"unexpected format of /proc/modules. (line: %s)", line)
 				return
 			}

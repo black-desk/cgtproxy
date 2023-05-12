@@ -12,7 +12,7 @@ func Load(content []byte) (ret *Config, err error) {
 		if err == nil {
 			return
 		}
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to load configuration:\n%w",
 			err,
 		)
@@ -22,7 +22,7 @@ func Load(content []byte) (ret *Config, err error) {
 
 	err = yaml.Unmarshal(content, cfg)
 	if err != nil {
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to unmarshal configuration:\n%w", err)
 		return
 	}

@@ -33,7 +33,7 @@ func New(container *inject.Container) (m *RuleManager, err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to create the nftable rule manager:\n%w",
 			err,
 		)
@@ -65,7 +65,7 @@ func (m *RuleManager) Run() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Error occurs while running the nftable rules manager:\n%w",
 			err,
 		)
@@ -106,7 +106,7 @@ func (m *RuleManager) initializeNftableRuels() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to initialize nftable ruels:\n%w",
 			err,
 		)
@@ -132,7 +132,7 @@ func (m *RuleManager) addRoute() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to add route:\n%w",
 			err,
 		)
@@ -181,7 +181,7 @@ func (m *RuleManager) addRule() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Failed to add route rule:\n%w",
 			err,
 		)

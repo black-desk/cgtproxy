@@ -18,7 +18,7 @@ func (c *Core) Run() (err error) {
 			return
 		}
 
-		err = fmt.Errorf(location.Catch()+
+		err = fmt.Errorf(location.Capture()+
 			"Error occurs while running the core:\n%w",
 			err,
 		)
