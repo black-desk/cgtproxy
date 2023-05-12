@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	"github.com/fsnotify/fsnotify"
 )
 

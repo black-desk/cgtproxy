@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 )
 
 func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {

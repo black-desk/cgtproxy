@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	fstab "github.com/deniswernert/go-fstab"
 	"github.com/go-playground/validator/v10"
 )

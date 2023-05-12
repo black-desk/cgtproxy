@@ -6,7 +6,7 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	"github.com/spf13/cobra"
 )
 

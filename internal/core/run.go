@@ -9,7 +9,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/repeater"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 )
 
 func (c *Core) Run() (err error) {

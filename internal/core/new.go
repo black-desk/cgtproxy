@@ -12,7 +12,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager/table"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 )
 
 type Core struct {
