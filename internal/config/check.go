@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/location"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	fstab "github.com/deniswernert/go-fstab"
@@ -50,14 +51,15 @@ func (c *ConfigV1) check() (err error) {
 		c.TProxies = map[string]*TProxy{}
 	}
 
-	rangeExp := regexp.MustCompile(`\[(\d+),(\d+)\)`)
+	rangeExp := regexp.MustCompile(consts.PortsPattern)
 
 	matchs := rangeExp.FindStringSubmatch(c.Repeater.TProxyPorts)
 
 	if len(matchs) != 3 {
-		err = fmt.Errorf(location.Catch()+
-			"`tproxy-ports` must be range like [10080,10090), but we get %s",
-			c.Repeater.TProxyPorts,
+		err = fmt.Errorf(location.Catch()+"%w",
+			&ErrWrongPortsPattern{
+				actual: c.Repeater.TProxyPorts,
+			},
 		)
 		return
 	}

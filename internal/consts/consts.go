@@ -10,4 +10,6 @@ https://github.com/black-desk/deepin-network-proxy-manager
 	RepeaterMarkBase int32  = 3000
 	RepeaterMaxMarks uint32 = 20
 	RuleInsertHandle        = 1000
+
+	PortsPattern = `^\[(\d+),(\d+)\)$`
 )
