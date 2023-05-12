@@ -46,7 +46,8 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 	level := uint32(strings.Count(path, "/"))
 
 	var fileInfo os.FileInfo
-	if fileInfo, err = os.Stat(path); err != nil {
+	fileInfo, err = os.Stat(path)
+	if err != nil {
 		return
 	}
 
@@ -58,7 +59,8 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 
 	switch target.Op {
 	case TargetDirect:
-		if err = t.addBypassCgroupSetIfNeed(level); err != nil {
+		err = t.addBypassCgroupSetIfNeed(level)
+		if err != nil {
 			return
 		}
 
@@ -72,7 +74,8 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		t.bypassCgroupSets[level].elements[path] = setElement
 
 	case TargetTProxy:
-		if err = t.addTProxyCgroupMapIfNeed(level); err != nil {
+		err = t.addTProxyCgroupMapIfNeed(level)
+		if err != nil {
 			return
 		}
 
@@ -91,7 +94,8 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		t.cgroupMaps[level].elements[path] = setElement
 
 	case TargetDrop:
-		if err = t.addTProxyCgroupMapIfNeed(level); err != nil {
+		err = t.addTProxyCgroupMapIfNeed(level)
+		if err != nil {
 			return
 		}
 
@@ -109,7 +113,8 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		t.cgroupMaps[level].elements[path] = setElement
 	}
 
-	if err = t.conn.Flush(); err != nil {
+	err = t.conn.Flush()
+	if err != nil {
 		return
 	}
 
@@ -138,7 +143,8 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 		KeyType: nftables.TypeCGroupV2,
 	}
 
-	if err = t.conn.AddSet(set, []nftables.SetElement{}); err != nil {
+	err = t.conn.AddSet(set, []nftables.SetElement{})
+	if err != nil {
 		return
 	}
 
@@ -215,7 +221,8 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 		IsMap:    true,
 	}
 
-	if err = t.conn.AddSet(set, []nftables.SetElement{}); err != nil {
+	err = t.conn.AddSet(set, []nftables.SetElement{})
+	if err != nil {
 		return
 	}
 

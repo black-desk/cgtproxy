@@ -45,7 +45,8 @@ func rootCmdRun() (err error) {
 
 	var cfg *config.Config
 
-	if cfg, err = config.Load(content); err != nil {
+	cfg, err = config.Load(content)
+	if err != nil {
 		log.Err().Printf(
 			"Failed to load configuration:\n%s",
 			err.Error(),

@@ -57,7 +57,8 @@ func (c *Core) runMonitor() (err error) {
 	defer c.cancel()
 
 	var m *monitor.Monitor
-	if m, err = monitor.New(c.container); err != nil {
+	m, err = monitor.New(c.container)
+	if err != nil {
 		return
 	}
 
@@ -69,7 +70,8 @@ func (c *Core) runRuleManager() (err error) {
 	defer c.cancel()
 
 	var r *rulemanager.RuleManager
-	if r, err = rulemanager.New(c.container); err != nil {
+	r, err = rulemanager.New(c.container)
+	if err != nil {
 		return
 	}
 
@@ -81,7 +83,8 @@ func (c *Core) runRepeater() (err error) {
 	defer c.cancel()
 
 	var r *repeater.Repeater
-	if r, err = repeater.New(c.container); err != nil {
+	r, err = repeater.New(c.container)
+	if err != nil {
 		return
 	}
 

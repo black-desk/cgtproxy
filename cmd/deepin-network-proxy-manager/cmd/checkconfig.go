@@ -43,7 +43,8 @@ func checkConfigCmdRun() (err error) {
 	}()
 
 	var content []byte
-	if content, err = os.ReadFile(flags.CfgPath); err != nil {
+	content, err = os.ReadFile(flags.CfgPath)
+	if err != nil {
 		err = fmt.Errorf(location.Catch()+
 			"failed to read configuration [ %s ]:\n%w",
 			flags.CfgPath, err,
@@ -51,7 +52,8 @@ func checkConfigCmdRun() (err error) {
 		return
 	}
 
-	if _, err = config.Load(content); err != nil {
+	_, err = config.Load(content)
+	if err != nil {
 		return
 	}
 

@@ -42,7 +42,8 @@ func New(container *inject.Container) (m *Monitor, err error) {
 	}()
 
 	m = &Monitor{}
-	if err = container.Fill(m); err != nil {
+	err = container.Fill(m)
+	if err != nil {
 		return
 	}
 

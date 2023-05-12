@@ -9,7 +9,10 @@ import (
 func TestInjectInt(t *testing.T) {
 	container := inject.New()
 
-	if err := container.Register(1); err != nil {
+	var err error
+
+	err = container.Register(1)
+	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
@@ -19,7 +22,8 @@ func TestInjectInt(t *testing.T) {
 
 	x := 3
 
-	if err := container.Fill(&x); err != nil {
+	err = container.Fill(&x)
+	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
@@ -31,7 +35,8 @@ func TestInjectInt(t *testing.T) {
 		A int `inject:"true"`
 	}{}
 
-	if err := container.Fill(&s); err != nil {
+	err = container.Fill(&s)
+	if err != nil {
 		t.Fatalf("%v", err)
 	}
 

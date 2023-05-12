@@ -25,14 +25,16 @@ func (c *ConfigV1) check() (err error) {
 	}()
 
 	var validator = validator.New()
-	if err = validator.Struct(c); err != nil {
+	err = validator.Struct(c)
+	if err != nil {
 		err = fmt.Errorf("Failed on validation:\n%w", err)
 		return
 	}
 
 	if c.CgroupRoot == "AUTO" {
 		var cgroupRoot string
-		if cgroupRoot, err = getCgroupRoot(); err != nil {
+		cgroupRoot, err = getCgroupRoot()
+		if err != nil {
 			return
 		}
 
@@ -71,7 +73,8 @@ func (c *ConfigV1) check() (err error) {
 		tmp uint64
 	)
 
-	if tmp, err = strconv.ParseUint(matchs[1], 10, 16); err != nil {
+	tmp, err = strconv.ParseUint(matchs[1], 10, 16)
+	if err != nil {
 		err = fmt.Errorf(location.Catch()+
 			"Failed to parse port range begin from %s:\n%w",
 			matchs[0], err,
@@ -80,7 +83,8 @@ func (c *ConfigV1) check() (err error) {
 	}
 	begin = uint16(tmp)
 
-	if tmp, err = strconv.ParseUint(matchs[2], 10, 16); err != nil {
+	tmp, err = strconv.ParseUint(matchs[2], 10, 16)
+	if err != nil {
 		err = fmt.Errorf(location.Catch()+
 			"Failed to parse port range end from %s:\n%w",
 			matchs[1], err,
@@ -89,7 +93,8 @@ func (c *ConfigV1) check() (err error) {
 	}
 	end = uint16(tmp)
 
-	if err = c.allocPorts(begin, end); err != nil {
+	err = c.allocPorts(begin, end)
+	if err != nil {
 		return
 	}
 
@@ -108,7 +113,8 @@ func getCgroupRoot() (cgroupRoot string, err error) {
 	}()
 
 	var mounts fstab.Mounts
-	if mounts, err = fstab.ParseProc(); err != nil {
+	mounts, err = fstab.ParseProc()
+	if err != nil {
 		return
 	}
 

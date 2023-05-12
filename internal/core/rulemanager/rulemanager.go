@@ -40,14 +40,16 @@ func New(container *inject.Container) (m *RuleManager, err error) {
 	}()
 
 	m = &RuleManager{}
-	if err = container.Fill(m); err != nil {
+	err = container.Fill(m)
+	if err != nil {
 		return
 	}
 
 	for i := range m.Cfg.Rules {
 		regex := m.Cfg.Rules[i].Match
 		var matcher *regexp.Regexp
-		if matcher, err = regexp.Compile(regex); err != nil {
+		matcher, err = regexp.Compile(regex)
+		if err != nil {
 			return
 		}
 
@@ -70,17 +72,20 @@ func (m *RuleManager) Run() (err error) {
 	}()
 
 	defer m.removeNftableRules()
-	if err = m.initializeNftableRuels(); err != nil {
+	err = m.initializeNftableRuels()
+	if err != nil {
 		return
 	}
 
 	defer m.removeRoute()
-	if err = m.addRoute(); err != nil {
+	err = m.addRoute()
+	if err != nil {
 		return
 	}
 
 	defer m.removeRule()
-	if err = m.addRule(); err != nil {
+	err = m.addRule()
+	if err != nil {
 		return
 	}
 
@@ -134,7 +139,8 @@ func (m *RuleManager) addRoute() (err error) {
 	}()
 
 	var iface *net.Interface
-	if iface, err = net.InterfaceByName("lo"); err != nil {
+	iface, err = net.InterfaceByName("lo")
+	if err != nil {
 		return
 	}
 
@@ -147,7 +153,8 @@ func (m *RuleManager) addRoute() (err error) {
 		Type:      unix.RTN_LOCAL,
 	}
 
-	if err = netlink.RouteAdd(route); err != nil {
+	err = netlink.RouteAdd(route)
+	if err != nil {
 		return
 	}
 
@@ -185,7 +192,8 @@ func (m *RuleManager) addRule() (err error) {
 	rule.Mark = int(m.Cfg.Mark) // WARN(black_desk): ???
 	rule.Table = m.Cfg.RouteTable
 
-	if err = netlink.RuleAdd(rule); err != nil {
+	err = netlink.RuleAdd(rule)
+	if err != nil {
 		return
 	}
 
@@ -230,13 +238,15 @@ func (m *RuleManager) handleNewCgroup(path string) {
 		break
 	}
 
-	if err := m.Nft.AddCgroup(path, &target); err != nil {
+	err := m.Nft.AddCgroup(path, &target)
+	if err != nil {
 		log.Err().Print(err.Error())
 	}
 }
 
 func (m *RuleManager) handleDeleteCgroup(path string) {
-	if err := m.Nft.RemoveCgroup(path); err != nil {
+	err := m.Nft.RemoveCgroup(path)
+	if err != nil {
 		log.Err().Printf(err.Error())
 	}
 }

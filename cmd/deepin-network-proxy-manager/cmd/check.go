@@ -29,11 +29,13 @@ var checkCmd = &cobra.Command{
 }
 
 func checkCmdRun() (err error) {
-	if err = checkKernelCmdRun(); err != nil {
+	err = checkKernelCmdRun()
+	if err != nil {
 		return
 	}
 
-	if err = checkConfigCmdRun(); err != nil {
+	err = checkConfigCmdRun()
+	if err != nil {
 		return
 	}
 

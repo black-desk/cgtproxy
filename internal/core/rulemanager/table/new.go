@@ -68,7 +68,8 @@ func New(opts ...Opt) (ret *Table, err error) {
 		}
 	}
 
-	if err = t.initChecks(); err != nil {
+	err = t.initChecks()
+	if err != nil {
 		return
 	}
 

@@ -46,11 +46,13 @@ func New(opts ...Opt) (core *Core, err error) {
 		}
 	}
 
-	if err = core.initContext(); err != nil {
+	err = core.initContext()
+	if err != nil {
 		return
 	}
 
-	if err = core.initRegisterContainer(); err != nil {
+	err = core.initRegisterContainer()
+	if err != nil {
 		return
 	}
 
@@ -68,7 +70,8 @@ func (c *Core) initRegisterContainer() (err error) {
 
 	{
 		var watcher *fsnotify.Watcher
-		if watcher, err = fsnotify.NewWatcher(); err != nil {
+		watcher, err = fsnotify.NewWatcher()
+		if err != nil {
 			return
 		}
 
@@ -79,7 +82,8 @@ func (c *Core) initRegisterContainer() (err error) {
 
 		watcher.Add(c.cfg.CgroupRoot + "/...")
 
-		if err = c.container.Register(watcher); err != nil {
+		err = c.container.Register(watcher)
+		if err != nil {
 			return
 		}
 	}
@@ -90,20 +94,23 @@ func (c *Core) initRegisterContainer() (err error) {
 		var cgroupEventChanWrite chan<- *monitor.CgroupEvent
 		cgroupEventChanWrite = cgroupEventChan
 
-		if err = c.container.Register(cgroupEventChanWrite); err != nil {
+		err = c.container.Register(cgroupEventChanWrite)
+		if err != nil {
 			return
 		}
 
 		var cgroupEventChanRead <-chan *monitor.CgroupEvent
 		cgroupEventChanRead = cgroupEventChan
 
-		if err = c.container.Register(cgroupEventChanRead); err != nil {
+		err = c.container.Register(cgroupEventChanRead)
+		if err != nil {
 			return
 		}
 	}
 
 	{
-		if err = c.container.RegisterI(&c.ctx); err != nil {
+		err = c.container.RegisterI(&c.ctx)
+		if err != nil {
 			return
 		}
 	}
@@ -111,7 +118,8 @@ func (c *Core) initRegisterContainer() (err error) {
 	{
 		var conn *nftables.Conn
 
-		if conn, err = nftables.New(); err != nil {
+		conn, err = nftables.New()
+		if err != nil {
 			return
 		}
 
@@ -123,19 +131,22 @@ func (c *Core) initRegisterContainer() (err error) {
 		); err != nil {
 			return
 		}
-		if err = c.container.Register(nft); err != nil {
+		err = c.container.Register(nft)
+		if err != nil {
 			return
 		}
 	}
 
 	{
-		if err = c.container.Register(&c.cfg); err != nil {
+		err = c.container.Register(&c.cfg)
+		if err != nil {
 			return
 		}
 	}
 
 	{
-		if err = c.container.Register(&c.pool); err != nil {
+		err = c.container.Register(&c.pool)
+		if err != nil {
 			return
 		}
 	}

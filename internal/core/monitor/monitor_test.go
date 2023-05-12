@@ -39,17 +39,21 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 		var err error
 
 		container := inject.New()
-		if err = container.Register(watcher); err != nil {
+		err = container.Register(watcher)
+		if err != nil {
 			Fail(fmt.Sprint(err.Error()))
 		}
-		if err = container.Register(cgroupEventChanIn); err != nil {
+		err = container.Register(cgroupEventChanIn)
+		if err != nil {
 			Fail(fmt.Sprint(err.Error()))
 		}
-		if err = container.RegisterI(&ctx); err != nil {
+		err = container.RegisterI(&ctx)
+		if err != nil {
 			Fail(fmt.Sprint(err.Error()))
 		}
 
-		if monitor, err = New(container); err != nil {
+		monitor, err = New(container)
+		if err != nil {
 			Fail(fmt.Sprintf("Failed to create monitor with fake fsnotify.Watcher:\n%s", err.Error()))
 		}
 	})

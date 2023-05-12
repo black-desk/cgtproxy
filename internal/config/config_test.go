@@ -24,11 +24,13 @@ var _ = Describe("Configuration", func() {
 		)
 
 		BeforeEach(func() {
-			if file, err = os.Open(path); err != nil {
+			file, err = os.Open(path)
+			if err != nil {
 				Fail(fmt.Sprintf("Failed to open configuration %s: %s", path, err.Error()))
 			}
 
-			if content, err = io.ReadAll(file); err != nil {
+			content, err = io.ReadAll(file)
+			if err != nil {
 				Fail(fmt.Sprintf("Failed to read configuration %s: %s", path, err.Error()))
 			}
 
@@ -52,11 +54,13 @@ var _ = Describe("Configuration", func() {
 		)
 
 		BeforeEach(func() {
-			if file, err = os.Open(path); err != nil {
+			file, err = os.Open(path)
+			if err != nil {
 				Fail(fmt.Sprintf("Failed to open configuration %s: %s", path, err.Error()))
 			}
 
-			if content, err = io.ReadAll(file); err != nil {
+			content, err = io.ReadAll(file)
+			if err != nil {
 				Fail(fmt.Sprintf("Failed to read configuration %s: %s", path, err.Error()))
 			}
 

@@ -20,13 +20,15 @@ func Load(content []byte) (ret *Config, err error) {
 
 	cfg := &Config{}
 
-	if err = yaml.Unmarshal(content, cfg); err != nil {
+	err = yaml.Unmarshal(content, cfg)
+	if err != nil {
 		err = fmt.Errorf(location.Catch()+
 			"Failed to unmarshal configuration:\n%w", err)
 		return
 	}
 
-	if err = cfg.check(); err != nil {
+	err = cfg.check()
+	if err != nil {
 		return
 	}
 

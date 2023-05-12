@@ -48,13 +48,15 @@ func checkKernelCmdRun() (err error) {
 
 	{ // check kernel config
 		var configFile *os.File
-		if configFile, err = os.Open("/proc/config.gz"); err != nil {
+		configFile, err = os.Open("/proc/config.gz")
+		if err != nil {
 			return
 		}
 		defer configFile.Close()
 
 		var gzipReader io.Reader
-		if gzipReader, err = gzip.NewReader(configFile); err != nil {
+		gzipReader, err = gzip.NewReader(configFile)
+		if err != nil {
 			return
 		}
 
@@ -129,7 +131,8 @@ func checkKernelCmdRun() (err error) {
 
 	{ // check kernel module loaded
 		var modulesFile *os.File
-		if modulesFile, err = os.Open("/proc/modules"); err != nil {
+		modulesFile, err = os.Open("/proc/modules")
+		if err != nil {
 			return
 		}
 		defer modulesFile.Close()

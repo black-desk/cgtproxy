@@ -29,7 +29,8 @@ func (p *Proxy) String() string {
 		err   error
 	)
 
-	if bytes, err = yaml.Marshal(p); err != nil {
+	bytes, err = yaml.Marshal(p)
+	if err != nil {
 		panic("this should never happened")
 	}
 
@@ -45,7 +46,8 @@ func (t *TProxy) String() string {
 		err   error
 	)
 
-	if bytes, err = yaml.Marshal(t); err != nil {
+	bytes, err = yaml.Marshal(t)
+	if err != nil {
 		panic("this should never happened")
 	}
 
