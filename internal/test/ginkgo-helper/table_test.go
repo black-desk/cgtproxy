@@ -1,7 +1,6 @@
 package ginkgohelper_test
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -39,7 +38,11 @@ var _ = Describe("ginkgo helper", func() {
 			})
 		})
 		It(fmt.Sprintf("should be %s", resultMsg), func() {
-			Expect(errors.Is(err, expectErr)).To(BeTrue())
+			if expectErr == nil {
+				Expect(err).To(Succeed())
+			} else {
+				Expect(err).To(MatchError(expectErr))
+			}
 		})
 	},
 		ContextTableEntry("found",
