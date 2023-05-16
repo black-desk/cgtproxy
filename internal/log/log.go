@@ -1,73 +1,29 @@
-package log
+package logger
 
 import (
+	zapjournal "github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal"
+	"go.uber.org/zap"
 	"log"
-	"log/syslog"
-	"sync"
 )
 
-var (
-	debugLog   *log.Logger
-	infoLog    *log.Logger
-	noticeLog  *log.Logger
-	warningLog *log.Logger
-	errLog     *log.Logger
-	critLog    *log.Logger
-	alertLog   *log.Logger
-	emergLog   *log.Logger
-)
-
-var once sync.Once
+var Log *zap.SugaredLogger
 
 func init() {
-	priorities := map[**log.Logger]syslog.Priority{
-		&debugLog:   syslog.LOG_DEBUG,
-		&infoLog:    syslog.LOG_INFO,
-		&noticeLog:  syslog.LOG_NOTICE,
-		&warningLog: syslog.LOG_WARNING,
-		&errLog:     syslog.LOG_ERR,
-		&critLog:    syslog.LOG_CRIT,
-		&alertLog:   syslog.LOG_ALERT,
-		&emergLog:   syslog.LOG_EMERG,
-	}
+	var (
+		logger *zap.Logger
+		err    error
+	)
 
-	for logPtr := range priorities {
-		var err error
-		*logPtr, err = syslog.NewLogger(syslog.LOG_USER|priorities[logPtr], log.Llongfile)
+	logger, err = zapjournal.New()
+	if err != nil {
+		log.Default().Printf("Failed to use zap-journal:\n%s", err.Error())
+		log.Default().Printf("Fallback to zap default production logger")
+
+		logger, err = zap.NewProduction()
 		if err != nil {
-			panic(err)
+			panic("Failed to use zap production logger:\n" + err.Error())
 		}
 	}
-}
 
-func Debug() *log.Logger {
-	return debugLog
-}
-
-func Info() *log.Logger {
-	return infoLog
-}
-
-func Notice() *log.Logger {
-	return noticeLog
-}
-
-func Warning() *log.Logger {
-	return warningLog
-}
-
-func Err() *log.Logger {
-	return errLog
-}
-
-func Crit() *log.Logger {
-	return critLog
-}
-
-func Alert() *log.Logger {
-	return alertLog
-}
-
-func Emerg() *log.Logger {
-	return emergLog
+	Log = logger.Sugar()
 }

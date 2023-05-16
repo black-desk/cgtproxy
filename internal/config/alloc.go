@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 )
 
@@ -35,8 +35,7 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 
 		c.TProxies["repeater-"+name] = p.TProxy
 
-		log.Debug().Printf("Create tproxy %s for proxy %s",
-			p.TProxy.Name, name)
+		Log.Debugw("Create tproxy for proxy ", "tproxy", p.TProxy.Name, "proxy", name)
 	}
 
 	for name := range c.TProxies {
@@ -58,9 +57,7 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 		}
 
 		tp.Port = begin
-		log.Debug().Printf("Allocate port %d for tproxy %s",
-			tp.Port, tp.String(),
-		)
+		Log.Debugw("Allocate port for tproxy", "port", tp.Port, "tproxy", tp.String())
 
 		begin++
 	}

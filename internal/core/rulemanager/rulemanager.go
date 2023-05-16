@@ -9,7 +9,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager/table"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
@@ -170,7 +170,7 @@ func (m *RuleManager) removeRoute() {
 		return
 	}
 
-	log.Warning().Printf("failed to delete route: %s", err.Error())
+	Log.Warnw("Failed to delete route", "error", err)
 
 	return
 }
@@ -209,7 +209,7 @@ func (m *RuleManager) removeRule() {
 		return
 	}
 
-	log.Warning().Printf("failed to delete rule: %s", err.Error())
+	Log.Warnw("Failed to delete rule", "error", err)
 
 	return
 }
@@ -240,13 +240,13 @@ func (m *RuleManager) handleNewCgroup(path string) {
 
 	err := m.Nft.AddCgroup(path, &target)
 	if err != nil {
-		log.Err().Print(err.Error())
+		Log.Errorw("Failed to update nft for new cgroup", "error", err)
 	}
 }
 
 func (m *RuleManager) handleDeleteCgroup(path string) {
 	err := m.Nft.RemoveCgroup(path)
 	if err != nil {
-		log.Err().Printf(err.Error())
+		Log.Errorw("Failed to update nft for removed cgroup", "error", err)
 	}
 }

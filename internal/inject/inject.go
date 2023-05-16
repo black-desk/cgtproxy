@@ -6,8 +6,8 @@ import (
 	"sync"
 	"unsafe"
 
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
 )
 
 type Container struct {
@@ -31,7 +31,7 @@ func (c *Container) Register(v any) (err error) {
 			`Type "%s" had been registered.`, rtype.String())
 		return
 	} else {
-		log.Debug().Printf(`register type "%s"`, rtype.String())
+		Log.Debugw("Register new type", "type", rtype.String())
 	}
 
 	return
@@ -57,7 +57,7 @@ func (c *Container) RegisterI(ptrToI any) (err error) {
 			`Interface "%s" had been registered.`, elem.String())
 		return
 	} else {
-		log.Debug().Printf(`Register interface "%s"`, elem.String())
+		Log.Debugw("Register new interface", "interface", elem.String())
 	}
 
 	return

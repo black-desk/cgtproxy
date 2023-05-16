@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	fstab "github.com/deniswernert/go-fstab"
 	"github.com/go-playground/validator/v10"
@@ -42,7 +42,7 @@ func (c *ConfigV1) check() (err error) {
 	}
 
 	if c.Rules == nil {
-		log.Warning().Printf("No rules in config.")
+		Log.Warnw("No rules in config.")
 	}
 
 	if c.Proxies == nil {
