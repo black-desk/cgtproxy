@@ -3,6 +3,7 @@ package encoder
 import (
 	"encoding/hex"
 	"log/syslog"
+	"strings"
 	"time"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal/internal/bufferpool"
@@ -20,10 +21,10 @@ func (enc *JournalEncoder) beforeJsonEncoder(key string) {
 
 func (enc *JournalEncoder) addKey(key string) {
 	for i := range enc.nss {
-		enc.buf.AppendString(enc.nss[i])
+		enc.buf.AppendString(strings.ToUpper(enc.nss[i]))
 		enc.buf.AppendString("_")
 	}
-	enc.buf.AppendString(key)
+	enc.buf.AppendString(strings.ToUpper(key))
 }
 
 func (enc *JournalEncoder) addEqual() {
