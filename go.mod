@@ -13,6 +13,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.7.0
 	github.com/vishvananda/netlink v1.1.0
+	go.uber.org/zap v1.24.0
 	golang.org/x/sys v0.7.0
 	gopkg.in/yaml.v3 v3.0.1
 )
