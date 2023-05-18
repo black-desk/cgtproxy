@@ -1,5 +1,5 @@
-//go:build !debug
-// +build !debug
+//go:build debug
+// +build debug
 
 package logger
 
@@ -17,7 +17,7 @@ func init() {
 		err    error
 	)
 
-	logger, err = zapjournal.New()
+	logger, err = zapjournal.NewDebug()
 	if err != nil {
 		log.Default().Printf("Failed to use zap-journal:\n%s", err.Error())
 		log.Default().Printf("Fallback to zap default production logger")
