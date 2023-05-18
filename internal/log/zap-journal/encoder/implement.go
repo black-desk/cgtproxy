@@ -180,7 +180,7 @@ func (enc *JournalEncoder) AddReflected(key string, value interface{}) (err erro
 
 func (enc *JournalEncoder) AddString(key string, value string) {
 	enc.beforeJsonEncoder(key)
-	enc.jenc.AppendString(value)
+	enc.buf.AppendString(value)
 	enc.afterJsonEncoder()
 }
 
@@ -328,7 +328,7 @@ func (enc *JournalEncoder) EncodeEntry(
 
 	if entry.Stack != "" && nenc.cfg.StacktraceKey != "" {
 		nenc.beforeJsonEncoder(nenc.cfg.StacktraceKey)
-		nenc.jenc.AppendString(entry.Stack)
+		nenc.buf.AppendString(entry.Stack)
 		nenc.afterJsonEncoder()
 	}
 
