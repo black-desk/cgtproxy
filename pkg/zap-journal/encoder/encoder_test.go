@@ -50,8 +50,8 @@ var _ = Describe("Systemd journal encoder for zap", func() {
 				"\000\000\000\000\000\000\000\000"+
 				"\n"+
 				"SOME_STRING\n"+
-				"\003\000\000\000\000\000\000\000"+
-				"\"%s\"\n",
+				"\001\000\000\000\000\000\000\000"+
+				"%s\n",
 				syslog.LOG_INFO, syslog.LOG_USER, "a",
 			))).
 				WithFmt("a string"),
