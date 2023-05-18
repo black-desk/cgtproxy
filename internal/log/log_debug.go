@@ -22,7 +22,7 @@ func init() {
 		log.Default().Printf("Failed to use zap-journal:\n%s", err.Error())
 		log.Default().Printf("Fallback to zap default production logger")
 
-		logger, err = zap.NewProduction()
+		logger, err = zap.NewDevelopment()
 		if err != nil {
 			panic("Failed to use zap production logger:\n" + err.Error())
 		}
