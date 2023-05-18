@@ -1,7 +1,7 @@
 package gomegahelper
 
 import (
-	"github.com/black-desk/deepin-network-proxy-manager/internal/test/gomega-helper/matchers"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/gomega-helper/matchers"
 	_ "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 )

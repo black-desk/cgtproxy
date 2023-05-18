@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log/syslog"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal/internal/bufferpool"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal/internal/zapjson"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/pool"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/zap-journal/internal/bufferpool"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/zap-journal/internal/zapjson"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/pool"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	"go.uber.org/zap"
 	"go.uber.org/zap/buffer"

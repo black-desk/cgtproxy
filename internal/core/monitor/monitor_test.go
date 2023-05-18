@@ -8,7 +8,7 @@ import (
 
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/test/ginkgo-helper"
+	. "github.com/black-desk/deepin-network-proxy-manager/pkg/ginkgo-helper"
 	"github.com/fsnotify/fsnotify"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

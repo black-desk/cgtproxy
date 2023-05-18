@@ -5,8 +5,8 @@ import (
 	"log/syslog"
 	"testing"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal/encoder"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/test/ginkgo-helper"
+	. "github.com/black-desk/deepin-network-proxy-manager/pkg/ginkgo-helper"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/zap-journal/encoder"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/zap"

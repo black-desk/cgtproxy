@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal/internal/bufferpool"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal/internal/zapjson"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/zap-journal/internal/bufferpool"
+	"github.com/black-desk/deepin-network-proxy-manager/pkg/zap-journal/internal/zapjson"
 	"go.uber.org/zap/buffer"
 	"go.uber.org/zap/zapcore"
 )

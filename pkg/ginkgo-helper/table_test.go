@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/test/ginkgo-helper"
+	. "github.com/black-desk/deepin-network-proxy-manager/pkg/ginkgo-helper"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal/conn"
-	_ "github.com/black-desk/deepin-network-proxy-manager/internal/log/zap-journal/encoder"
+	_ "github.com/black-desk/deepin-network-proxy-manager/pkg/zap-journal/conn"
+	_ "github.com/black-desk/deepin-network-proxy-manager/pkg/zap-journal/encoder"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
