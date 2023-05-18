@@ -24,6 +24,11 @@ var rootCmd = &cobra.Command{
 				return
 			}
 
+			Log.Errorw("Error occur while running deepin-network-proxy-manager.",
+				"config", flags.CfgPath,
+				"error", err,
+			)
+
 			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
 
 			return
