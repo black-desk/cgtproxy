@@ -43,7 +43,7 @@ type TProxy struct {
 
 type Repeater struct {
 	Listens     []string `yaml:"listens" validate:"required,dive,ip"`
-	TProxyPorts string   `yaml:"tproxy-ports"`
+	TProxyPorts string   `yaml:"tproxy-ports" validate:"required"`
 }
 
 type Proxy struct {
