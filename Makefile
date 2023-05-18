@@ -14,6 +14,7 @@ dlv-headless:
 
 deepin-network-proxy-manager:
 	go build ./cmd/deepin-network-proxy-manager
+	strip ./deepin-network-proxy-manager
 
 deepin-network-proxy-manager-debug:
 	go build -tags debug -o deepin-network-proxy-manager-debug \
