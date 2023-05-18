@@ -6,6 +6,7 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	"github.com/spf13/cobra"
 )
@@ -20,6 +21,11 @@ var checkConfigCmd = &cobra.Command{
 			if err == nil {
 				return
 			}
+
+			Log.Errorw("Failed on check configuration.",
+				"config", flags.CfgPath,
+				"error", err,
+			)
 
 			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
 
@@ -36,6 +42,7 @@ func checkConfigCmdRun() (err error) {
 		if err == nil {
 			return
 		}
+
 		err = fmt.Errorf(location.Capture()+
 			"failed to validate configuration:\n%w",
 			err,
