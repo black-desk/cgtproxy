@@ -17,8 +17,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
-// NOTE: This file is copy from zapcore
+
+// NOTE(black_desk): This file is copy from zapcore then modify by me.
 
 package zapjson
 

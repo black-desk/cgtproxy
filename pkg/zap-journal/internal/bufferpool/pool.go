@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// NOTE(black_desk): This file is copy from zapcore
+
 // Package bufferpool houses zap's shared internal buffer pool. Third-party
 // packages can recreate the same functionality with buffers.NewPool.
 package bufferpool
