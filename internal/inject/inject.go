@@ -1,5 +1,7 @@
 package inject
 
+// TODO(black_desk): remove this package and switch to google/wire
+
 import (
 	"fmt"
 	"reflect"
