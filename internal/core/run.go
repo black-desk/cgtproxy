@@ -83,7 +83,8 @@ func (c *Core) runRepeater() (err error) {
 	defer c.cancel()
 
 	var r *repeater.Repeater
-	r, err = repeater.New(c.container)
+	r, err = repeater.New() // FIXME(black_desk): add opts later
+
 	if err != nil {
 		return
 	}
