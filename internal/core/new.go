@@ -144,13 +144,6 @@ func (c *Core) initRegisterContainer() (err error) {
 		}
 	}
 
-	{
-		err = c.container.Register(&c.pool)
-		if err != nil {
-			return
-		}
-	}
-
 	return
 }
 
