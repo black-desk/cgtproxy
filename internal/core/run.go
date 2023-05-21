@@ -9,6 +9,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/repeater"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 )
 
@@ -41,6 +42,7 @@ func (c *Core) Run() (err error) {
 }
 
 func (c *Core) start() {
+	c.pool.Go(c.runWatcher)
 	c.pool.Go(c.runMonitor)
 	c.pool.Go(c.runRuleManager)
 
@@ -90,5 +92,19 @@ func (c *Core) runRepeater() (err error) {
 	}
 
 	err = r.Run()
+	return
+}
+
+func (c *Core) runWatcher() (err error) {
+	defer c.cancel()
+
+	var w *watcher.Watcher
+	w, err = watcher.New()
+
+	if err != nil {
+		return
+	}
+
+	err = w.Run()
 	return
 }
