@@ -70,7 +70,7 @@ func (c *Core) runRuleManager() (err error) {
 	defer c.cancel()
 
 	var r *rulemanager.RuleManager
-	r, err = rulemanager.New(c.container)
+	r, err = rulemanager.New() // FIXME(black_desk): add opts later
 	if err != nil {
 		return
 	}
