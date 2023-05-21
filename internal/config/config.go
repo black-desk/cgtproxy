@@ -1,6 +1,5 @@
 package config
 
-// NOTE(black_desk): Always call Check before use Config.
 type Config struct {
 	ConfigV1 `yaml:",inline"`
 }
