@@ -9,7 +9,7 @@ import (
 	"github.com/sourcegraph/conc/pool"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager/table"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/core/table"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
