@@ -9,9 +9,9 @@ import (
 	"github.com/sourcegraph/conc/pool"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager/table"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 )
 
@@ -89,9 +89,9 @@ func (c *Core) initRegisterContainer() (err error) {
 	}
 
 	{
-		cgroupEventChan := make(chan *monitor.CgroupEvent)
+		cgroupEventChan := make(chan *types.CgroupEvent)
 
-		var cgroupEventChanWrite chan<- *monitor.CgroupEvent
+		var cgroupEventChanWrite chan<- *types.CgroupEvent
 		cgroupEventChanWrite = cgroupEventChan
 
 		err = c.container.Register(cgroupEventChanWrite)
@@ -99,7 +99,7 @@ func (c *Core) initRegisterContainer() (err error) {
 			return
 		}
 
-		var cgroupEventChanRead <-chan *monitor.CgroupEvent
+		var cgroupEventChanRead <-chan *types.CgroupEvent
 		cgroupEventChanRead = cgroupEventChan
 
 		err = c.container.Register(cgroupEventChanRead)

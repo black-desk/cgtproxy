@@ -6,17 +6,17 @@ import (
 	"regexp"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager/table"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 )
 
 type RuleManager struct {
-	EventChan <-chan *monitor.CgroupEvent `inject:"true"`
+	EventChan <-chan *types.CgroupEvent `inject:"true"`
 
 	Nft *table.Table   `inject:"true"`
 	Cfg *config.Config `inject:"true"`
@@ -91,9 +91,9 @@ func (m *RuleManager) Run() (err error) {
 
 	for event := range m.EventChan {
 		switch event.EventType {
-		case monitor.CgroupEventTypeNew:
+		case types.CgroupEventTypeNew:
 			m.handleNewCgroup(event.Path)
-		case monitor.CgroupEventTypeDelete:
+		case types.CgroupEventTypeDelete:
 			m.handleDeleteCgroup(event.Path)
 		}
 	}

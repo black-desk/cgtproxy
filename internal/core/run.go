@@ -57,7 +57,7 @@ func (c *Core) runMonitor() (err error) {
 	defer c.cancel()
 
 	var m *monitor.Monitor
-	m, err = monitor.New(c.container)
+	m, err = monitor.New() // FIXME(black_desk): add opts later
 	if err != nil {
 		return
 	}

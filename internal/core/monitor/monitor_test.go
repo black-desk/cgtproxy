@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	. "github.com/black-desk/deepin-network-proxy-manager/pkg/ginkgo-helper"
 	"github.com/fsnotify/fsnotify"
 	. "github.com/onsi/ginkgo/v2"
@@ -18,7 +18,7 @@ import (
 var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 	var (
 		watcher         *fsnotify.Watcher
-		cgroupEventChan chan *CgroupEvent
+		cgroupEventChan chan *types.CgroupEvent
 		ctx             context.Context
 		monitor         *Monitor
 	)
@@ -29,33 +29,27 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 			Errors: make(chan error),
 		}
 
-		cgroupEventChan = make(chan *CgroupEvent)
+		cgroupEventChan = make(chan *types.CgroupEvent)
 
-		var cgroupEventChanIn chan<- *CgroupEvent
+		var cgroupEventChanIn chan<- *types.CgroupEvent
 		cgroupEventChanIn = cgroupEventChan
 
 		ctx = context.Background()
 
 		var err error
 
-		container := inject.New()
-		err = container.Register(watcher)
-		Expect(err).To(Succeed())
-
-		err = container.Register(cgroupEventChanIn)
-		Expect(err).To(Succeed())
-
-		err = container.RegisterI(&ctx)
-		Expect(err).To(Succeed())
-
-		monitor, err = New(container)
+		monitor, err = New(
+			WithWatcher(watcher),
+			WithCtx(ctx),
+			WithOutput(cgroupEventChanIn),
+		)
 		Expect(err).To(Succeed())
 	})
 
 	ContextTable("receive %s", func(
 		resultMsg string,
 		events []fsnotify.Event, errs []error,
-		expectResult []*CgroupEvent, expectErr error,
+		expectResult []*types.CgroupEvent, expectErr error,
 	) {
 		var p *pool.ErrorPool
 
@@ -88,7 +82,7 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 		})
 
 		It(fmt.Sprintf("should %s", resultMsg), func() {
-			var cgroupEvents []*CgroupEvent
+			var cgroupEvents []*types.CgroupEvent
 			for cgroupEvent := range cgroupEventChan {
 				cgroupEvents = append(cgroupEvents, cgroupEvent)
 			}
@@ -114,9 +108,9 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 				Op:   fsnotify.Create,
 			}},
 			[]error{},
-			[]*CgroupEvent{{
+			[]*types.CgroupEvent{{
 				Path:      "/test/path/1",
-				EventType: CgroupEventTypeNew,
+				EventType: types.CgroupEventTypeNew,
 			}},
 			nil,
 		).WithFmt("a fsnotify.Event with fsnotify.Create"),
@@ -127,9 +121,9 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 				Op:   fsnotify.Remove,
 			}},
 			[]error{},
-			[]*CgroupEvent{{
+			[]*types.CgroupEvent{{
 				Path:      "/test/path/2",
-				EventType: CgroupEventTypeDelete,
+				EventType: types.CgroupEventTypeDelete,
 			}},
 			nil,
 		).WithFmt("a fsnotify.Event with fsnotify.Delete"),
@@ -137,7 +131,7 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 			"send nothing, and exit with no error",
 			[]fsnotify.Event{},
 			[]error{},
-			[]*CgroupEvent{},
+			[]*types.CgroupEvent{},
 			nil,
 		).WithFmt("nothing"),
 		ContextTableEntry(
@@ -147,7 +141,7 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 				Op:   fsnotify.Op(0),
 			}},
 			[]error{},
-			[]*CgroupEvent{},
+			[]*types.CgroupEvent{},
 			ErrUnexpectFsEventType,
 		).WithFmt("invalid fsnotify.Event"),
 	)
