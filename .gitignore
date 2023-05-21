@@ -1,2 +1,4 @@
 /deepin-network-proxy-manager
-deepin-network-proxy-manager-debug
+/deepin-network-proxy-manager-debug
+/test/coverage.html
+/test/coverprofile
