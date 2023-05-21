@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 	"github.com/google/nftables"
 )
@@ -10,8 +11,8 @@ import (
 type Table struct {
 	conn *nftables.Conn
 
-	rerouteMark uint32
-	cgroupRoot  string
+	rerouteMark config.RerouteMark 
+	cgroupRoot  config.CgroupRoot
 
 	table *nftables.Table
 
@@ -86,14 +87,14 @@ func WithConn(conn *nftables.Conn) Opt {
 	}
 }
 
-func WithRerouteMark(mark uint32) Opt {
+func WithRerouteMark(mark config.RerouteMark) Opt {
 	return func(table *Table) (*Table, error) {
 		table.rerouteMark = mark
 		return table, nil
 	}
 }
 
-func WithCgroupRoot(root string) Opt {
+func WithCgroupRoot(root config.CgroupRoot) Opt {
 	return func(table *Table) (*Table, error) {
 		table.cgroupRoot = root
 		return table, nil

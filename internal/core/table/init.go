@@ -154,7 +154,7 @@ func (t *Table) initStructure() {
 			Exprs: []expr.Any{
 				&expr.Immediate{ // immediate reg 1 ...
 					Register: 1,
-					Data:     binaryutil.NativeEndian.PutUint32(t.rerouteMark),
+					Data:     binaryutil.NativeEndian.PutUint32(uint32(t.rerouteMark)),
 				},
 			},
 		},

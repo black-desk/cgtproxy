@@ -59,7 +59,7 @@ func (c *Core) runMonitor() (err error) {
 	defer c.cancel()
 
 	var m *monitor.Monitor
-	m, err = monitor.New() // FIXME(black_desk): add opts later
+	m, err = injectedMonitor(c)
 	if err != nil {
 		return
 	}
@@ -72,7 +72,7 @@ func (c *Core) runRuleManager() (err error) {
 	defer c.cancel()
 
 	var r *rulemanager.RuleManager
-	r, err = rulemanager.New() // FIXME(black_desk): add opts later
+	r, err = injectedRuleManager(c)
 	if err != nil {
 		return
 	}
@@ -85,7 +85,7 @@ func (c *Core) runRepeater() (err error) {
 	defer c.cancel()
 
 	var r *repeater.Repeater
-	r, err = repeater.New() // FIXME(black_desk): add opts later
+	r, err = injectedRepeater(c)
 
 	if err != nil {
 		return
@@ -99,7 +99,7 @@ func (c *Core) runWatcher() (err error) {
 	defer c.cancel()
 
 	var w *watcher.Watcher
-	w, err = watcher.New()
+	w, err = injectedWatcher(c)
 
 	if err != nil {
 		return

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
+	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	. "github.com/black-desk/deepin-network-proxy-manager/pkg/ginkgo-helper"
 	"github.com/fsnotify/fsnotify"
@@ -17,16 +18,18 @@ import (
 
 var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 	var (
-		watcher         *fsnotify.Watcher
+		w               *watcher.Watcher
 		cgroupEventChan chan *types.CgroupEvent
 		ctx             context.Context
 		monitor         *Monitor
 	)
 
 	BeforeEach(func() {
-		watcher = &fsnotify.Watcher{
-			Events: make(chan fsnotify.Event),
-			Errors: make(chan error),
+		w = &watcher.Watcher{
+			Watcher: &fsnotify.Watcher{
+				Events: make(chan fsnotify.Event),
+				Errors: make(chan error),
+			},
 		}
 
 		cgroupEventChan = make(chan *types.CgroupEvent)
@@ -39,7 +42,7 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 		var err error
 
 		monitor, err = New(
-			WithWatcher(watcher),
+			WithWatcher(w),
 			WithCtx(ctx),
 			WithOutput(cgroupEventChanIn),
 		)
@@ -58,18 +61,18 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 
 			p.Go(func() error {
 				for i := range events {
-					watcher.Events <- events[i]
+					w.Events <- events[i]
 				}
-				close(watcher.Events)
+				close(w.Events)
 				return nil
 			})
 
 			p.Go(func() error {
 				// NOTE(black_desk): Errors from fsnotify is ignored for now.
 				for i := range errs {
-					watcher.Errors <- errs[i]
+					w.Errors <- errs[i]
 				}
-				close(watcher.Errors)
+				close(w.Errors)
 				return nil
 			})
 

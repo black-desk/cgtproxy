@@ -3,6 +3,6 @@ package watcher
 import "errors"
 
 var (
-	ErrContextMissing = errors.New("Context is missing")
-	ErrConfigMissing  = errors.New("Config is missing")
+	ErrContextMissing    = errors.New("Context is missing")
+	ErrCgroupRootMissing = errors.New("Cgroup root is missing")
 )

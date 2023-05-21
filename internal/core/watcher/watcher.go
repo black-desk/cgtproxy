@@ -9,8 +9,8 @@ import (
 
 type Watcher struct {
 	*fsnotify.Watcher
-	ctx context.Context
-	cfg *config.Config
+	ctx  context.Context
+	root config.CgroupRoot
 }
 
 func New(opts ...Opt) (ret *Watcher, err error) {
@@ -37,8 +37,8 @@ func New(opts ...Opt) (ret *Watcher, err error) {
 			return
 		}
 
-		if w.cfg == nil {
-			err = ErrConfigMissing
+		if w.root == "" {
+			err = ErrCgroupRootMissing
 			return
 		}
 	}
@@ -49,14 +49,14 @@ func New(opts ...Opt) (ret *Watcher, err error) {
 
 type Opt func(w *Watcher) (ret *Watcher, err error)
 
-func WithConfig(cfg *config.Config) Opt {
+func WithCgroupRoot(root config.CgroupRoot) Opt {
 	return func(w *Watcher) (ret *Watcher, err error) {
-		err = w.Add(cfg.CgroupRoot + "/...")
+		err = w.Add(string(root) + "/...")
 		if err != nil {
 			return
 		}
 
-		w.cfg = cfg
+		w.root = root
 		ret = w
 		return
 	}

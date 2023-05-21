@@ -18,7 +18,7 @@ func Load(content []byte) (ret *Config, err error) {
 		)
 	}()
 
-	cfg := &Config{}
+        cfg := &Config{}
 
 	err = yaml.Unmarshal(content, cfg)
 	if err != nil {
@@ -33,6 +33,6 @@ func Load(content []byte) (ret *Config, err error) {
 	}
 
 	ret = cfg
-
 	return
+
 }

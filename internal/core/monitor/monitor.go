@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
-	"github.com/fsnotify/fsnotify"
 )
 
 type Monitor struct {
-	watcher *fsnotify.Watcher         `inject:"true"`
+	watcher *watcher.Watcher          `inject:"true"`
 	ctx     context.Context           `inject:"true"`
 	output  chan<- *types.CgroupEvent `inject:"true"`
 }
@@ -58,7 +58,7 @@ func New(opts ...Opt) (ret *Monitor, err error) {
 
 type Opt func(mon *Monitor) (ret *Monitor, err error)
 
-func WithWatcher(w *fsnotify.Watcher) Opt {
+func WithWatcher(w *watcher.Watcher) Opt {
 	return func(mon *Monitor) (ret *Monitor, err error) {
 		if w == nil {
 			err = ErrWatcherMissing

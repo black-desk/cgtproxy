@@ -32,7 +32,7 @@ func (c *ConfigV1) check() (err error) {
 	}
 
 	if c.CgroupRoot == "AUTO" {
-		var cgroupRoot string
+		var cgroupRoot CgroupRoot
 		cgroupRoot, err = getCgroupRoot()
 		if err != nil {
 			return
@@ -101,7 +101,7 @@ func (c *ConfigV1) check() (err error) {
 	return
 }
 
-func getCgroupRoot() (cgroupRoot string, err error) {
+func getCgroupRoot() (cgroupRoot CgroupRoot, err error) {
 	defer func() {
 		if err == nil {
 			return
@@ -120,12 +120,12 @@ func getCgroupRoot() (cgroupRoot string, err error) {
 
 	var (
 		mountFound bool
-		fsFile     string
+		fsFile     CgroupRoot
 	)
 	for i := range mounts {
 		mount := mounts[i]
 		fsVfsType := mount.VfsType
-		fsFile = mount.File
+		fsFile = CgroupRoot(mount.File)
 
 		if fsVfsType == "cgroup2" {
 			mountFound = true

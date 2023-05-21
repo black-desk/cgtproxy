@@ -11,12 +11,15 @@ type ConfigV1 struct {
 	Proxies  map[string]*Proxy  `yaml:"proxies" validate:"dive"`
 	TProxies map[string]*TProxy `yaml:"tproxies" validate:"dive"`
 
-	Rules      []Rule  `yaml:"rules" validate:"dive"`
-	Bypass     *Bypass `yaml:"bypass"`
-	CgroupRoot string  `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
-	RouteTable int     `yaml:"route-table"`
-	Mark       uint32  `yaml:"mark"`
+	Rules      []Rule      `yaml:"rules" validate:"dive"`
+	Bypass     *Bypass     `yaml:"bypass"`
+	CgroupRoot CgroupRoot  `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
+	RouteTable int         `yaml:"route-table"`
+	Mark       RerouteMark `yaml:"mark"`
 }
+
+type CgroupRoot string
+type RerouteMark uint32
 
 type Bypass struct {
 	IPV4 []string `yaml:"ipv4" validate:"dive,ipv4"`

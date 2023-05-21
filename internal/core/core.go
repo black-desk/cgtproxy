@@ -4,29 +4,23 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fsnotify/fsnotify"
-	"github.com/google/nftables"
 	"github.com/sourcegraph/conc/pool"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/table"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/inject"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
 )
 
 type Core struct {
 	cfg *config.Config
 
-	ctx       context.Context
-	cancel    context.CancelFunc
-	pool      pool.ErrorPool
-	container *inject.Container
+	pool   pool.ErrorPool
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 type Opt = (func(*Core) (*Core, error))
 
-func New(opts ...Opt) (core *Core, err error) {
+func New(opts ...Opt) (ret *Core, err error) {
 	defer func() {
 		if err == nil {
 			return
@@ -37,7 +31,7 @@ func New(opts ...Opt) (core *Core, err error) {
 		)
 	}()
 
-	core = &Core{}
+	core := &Core{}
 	for i := range opts {
 		core, err = opts[i](core)
 		if err != nil {
@@ -46,16 +40,17 @@ func New(opts ...Opt) (core *Core, err error) {
 		}
 	}
 
+	if core.cfg == nil {
+		err = ErrConfigMissing
+		return
+	}
+
 	err = core.initContext()
 	if err != nil {
 		return
 	}
 
-	err = core.initRegisterContainer()
-	if err != nil {
-		return
-	}
-
+	ret = core
 	return
 }
 
@@ -64,91 +59,13 @@ func (c *Core) initContext() (err error) {
 	return
 }
 
-func (c *Core) initRegisterContainer() (err error) {
-
-	c.container = inject.New()
-
-	{
-		var watcher *fsnotify.Watcher
-		watcher, err = fsnotify.NewWatcher()
-		if err != nil {
-			return
-		}
-
-		c.pool.Go(func() error {
-			<-c.ctx.Done()
-			return watcher.Close()
-		})
-
-		watcher.Add(c.cfg.CgroupRoot + "/...")
-
-		err = c.container.Register(watcher)
-		if err != nil {
-			return
-		}
-	}
-
-	{
-		cgroupEventChan := make(chan *types.CgroupEvent)
-
-		var cgroupEventChanWrite chan<- *types.CgroupEvent
-		cgroupEventChanWrite = cgroupEventChan
-
-		err = c.container.Register(cgroupEventChanWrite)
-		if err != nil {
-			return
-		}
-
-		var cgroupEventChanRead <-chan *types.CgroupEvent
-		cgroupEventChanRead = cgroupEventChan
-
-		err = c.container.Register(cgroupEventChanRead)
-		if err != nil {
-			return
-		}
-	}
-
-	{
-		err = c.container.RegisterI(&c.ctx)
-		if err != nil {
-			return
-		}
-	}
-
-	{
-		var conn *nftables.Conn
-
-		conn, err = nftables.New()
-		if err != nil {
-			return
-		}
-
-		var nft *table.Table
-		if nft, err = table.New(
-			table.WithConn(conn),
-			table.WithRerouteMark(c.cfg.Mark),
-			table.WithCgroupRoot(c.cfg.CgroupRoot),
-		); err != nil {
-			return
-		}
-		err = c.container.Register(nft)
-		if err != nil {
-			return
-		}
-	}
-
-	{
-		err = c.container.Register(&c.cfg)
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
 func WithConfig(cfg *config.Config) Opt {
 	return func(core *Core) (ret *Core, err error) {
+		if cfg == nil {
+			err = ErrConfigMissing
+			return
+		}
+
 		core.cfg = cfg
 		ret = core
 
