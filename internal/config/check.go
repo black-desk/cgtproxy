@@ -60,7 +60,7 @@ func (c *ConfigV1) check() (err error) {
 	if len(matchs) != 3 {
 		err = fmt.Errorf(location.Capture()+"%w",
 			&ErrWrongPortsPattern{
-				actual: c.Repeater.TProxyPorts,
+				Actual: c.Repeater.TProxyPorts,
 			},
 		)
 		return

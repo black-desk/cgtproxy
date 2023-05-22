@@ -12,12 +12,12 @@ var (
 )
 
 type ErrWrongPortsPattern struct {
-	actual string
+	Actual string
 }
 
 func (e *ErrWrongPortsPattern) Error() string {
 	return fmt.Sprintf(
 		"`tproxy-ports` must be range string match %s, but we got %s",
-		consts.PortsPattern, e.actual,
+		consts.PortsPattern, e.Actual,
 	)
 }
