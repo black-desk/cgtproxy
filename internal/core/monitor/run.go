@@ -45,8 +45,7 @@ func (m *Monitor) Run() (err error) {
 			// We not care about this kind of event
 		} else {
 			err = fmt.Errorf(location.Capture()+
-				"%w: %v", ErrUnexpectFsEventType,
-				fsEvent.Op.String(),
+				"%w", &ErrUnexpectFsEventOp{Op: fsEvent.Op},
 			)
 			return
 		}

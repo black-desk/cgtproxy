@@ -10,6 +10,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	. "github.com/black-desk/deepin-network-proxy-manager/pkg/ginkgo-helper"
+	. "github.com/black-desk/deepin-network-proxy-manager/pkg/gomega-helper"
 	"github.com/fsnotify/fsnotify"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -97,11 +98,7 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 			}
 
 			err := p.Wait()
-			if expectErr == nil {
-				Expect(err).To(Succeed())
-			} else {
-				Expect(err).To(MatchError(expectErr))
-			}
+			Expect(err).To(MatchErr(expectErr))
 		})
 	},
 		ContextTableEntry(
@@ -145,7 +142,7 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 			}},
 			[]error{},
 			[]*types.CgroupEvent{},
-			ErrUnexpectFsEventType,
+			new(ErrUnexpectFsEventOp),
 		).WithFmt("invalid fsnotify.Event"),
 	)
 })
