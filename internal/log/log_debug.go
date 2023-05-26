@@ -4,7 +4,7 @@
 package logger
 
 import (
-	zapjournal "github.com/black-desk/deepin-network-proxy-manager/pkg/zap-journal"
+	zapjournal "github.com/black-desk/zap-journal"
 	"go.uber.org/zap"
 	"log"
 )
