@@ -1,17 +1,15 @@
 package table
 
 import (
-	"fmt"
-
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 )
 
 type Table struct {
 	conn *nftables.Conn
 
-	rerouteMark config.RerouteMark 
+	rerouteMark config.RerouteMark
 	cgroupRoot  config.CgroupRoot
 
 	table *nftables.Table
@@ -48,16 +46,7 @@ type cgroupSet struct {
 type Opt = (func(*Table) (*Table, error))
 
 func New(opts ...Opt) (ret *Table, err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Error occurs while initializing nft stuff:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Error occurs while initializing nft stuff.")
 
 	t := &Table{}
 

@@ -4,19 +4,11 @@ import (
 	"fmt"
 
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 )
 
 func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-		err = fmt.Errorf(location.Capture()+
-			"Failed to allocate mark for proxy: %w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to allocate mark for proxy")
 
 	for name := range c.Proxies {
 		p := c.Proxies[name]
@@ -50,9 +42,7 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 		}
 
 		if begin >= end {
-			err = fmt.Errorf(location.Capture()+
-				"%w %#v", ErrTooFewPorts, tp,
-			)
+			err = fmt.Errorf("%w %#v", ErrTooFewPorts, tp)
 			return
 		}
 

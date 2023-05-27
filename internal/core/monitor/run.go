@@ -1,26 +1,14 @@
 package monitor
 
 import (
-	"fmt"
-
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/fsnotify/fsnotify"
 )
 
 func (m *Monitor) Run() (err error) {
-	defer func() {
-		close(m.output)
-
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Error occurs while running the cgroup monitor:\n%w",
-			err,
-		)
-	}()
+	defer close(m.output)
+	defer Wrap(&err, "Error occurs while running the cgroup monitor.")
 
 	// TODO(black_desk): handle exsiting cgroup
 
@@ -44,9 +32,8 @@ func (m *Monitor) Run() (err error) {
 		} else if fsEvent.Has(fsnotify.Rename) {
 			// We not care about this kind of event
 		} else {
-			err = fmt.Errorf(location.Capture()+
-				"%w", &ErrUnexpectFsEventOp{Op: fsEvent.Op},
-			)
+			err = &ErrUnexpectFsEventOp{Op: fsEvent.Op}
+			Wrap(&err)
 			return
 		}
 

@@ -2,11 +2,10 @@ package monitor
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 )
 
 type Monitor struct {
@@ -16,16 +15,7 @@ type Monitor struct {
 }
 
 func New(opts ...Opt) (ret *Monitor, err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to create the cgroup monitor:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to create the cgroup monitor.")
 
 	m := &Monitor{}
 	for i := range opts {

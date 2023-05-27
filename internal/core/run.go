@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,20 +9,11 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/repeater"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 )
 
 func (c *Core) Run() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Error occurs while running the core:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Error occurs while running the core.")
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)

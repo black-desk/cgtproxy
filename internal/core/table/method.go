@@ -9,7 +9,7 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
@@ -30,16 +30,7 @@ type Target struct {
 }
 
 func (t *Table) AddCgroup(path string, target *Target) (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to add cgroup (%s) to nftable:\n%w",
-			path, err,
-		)
-	}()
+	defer Wrap(&err, "Failed to add cgroup (%s) to nftable.")
 
 	path = filepath.Clean(path)[len(t.cgroupRoot):]
 
@@ -122,16 +113,10 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 }
 
 func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to add bypass cgroup set (level %d) to nftable:\n%w",
-			level, err,
-		)
-	}()
+	defer Wrap(
+		&err,
+		"Failed to add bypass cgroup set (level %d) to nftable.",
+	)
 
 	if _, ok := t.bypassCgroupSets[level]; ok {
 		return
@@ -198,16 +183,11 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 }
 
 func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to add tproxy cgroup set (level %d) to nftable:\n%w",
-			level, err,
-		)
-	}()
+	defer Wrap(
+		&err,
+		"Failed to add tproxy cgroup set (level %d) to nftable.",
+		level,
+	)
 
 	if _, ok := t.cgroupMaps[level]; ok {
 		return
@@ -272,16 +252,11 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 }
 
 func (t *Table) RemoveCgroup(path string) (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to remove cgroup (%s) from nftable:\n%w",
-			path, err,
-		)
-	}()
+	defer Wrap(
+		&err,
+		"Failed to remove cgroup (%s) from nftable.",
+		path,
+	)
 
 	path = filepath.Clean(path)[len(t.cgroupRoot):]
 
@@ -374,16 +349,7 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (name string) {
 }
 
 func (t *Table) FlushInitialContent() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Error occurs while flushing nftable:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Error occurs while flushing nftable.")
 
 	t.conn.AddTable(t.table)
 	t.conn.AddSet(t.ipv4BypassSet, t.ipv4BypassSetElement)
@@ -430,16 +396,8 @@ func (t *Table) FlushInitialContent() (err error) {
 }
 
 func (t *Table) Clear() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
+	defer Wrap(&err, "Error occurs while removing nftable.")
 
-		err = fmt.Errorf(location.Capture()+
-			"Error occurs while removing nftable:\n%w",
-			err,
-		)
-	}()
 	t.conn.DelTable(t.table)
 	err = t.conn.Flush()
 	return

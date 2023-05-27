@@ -1,13 +1,12 @@
 package rulemanager
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/table"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 )
 
@@ -24,16 +23,7 @@ type RuleManager struct {
 }
 
 func New(opts ...Opt) (ret *RuleManager, err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to create the nftable rule manager:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to create the nftable rule manager.")
 
 	m := &RuleManager{}
 	for i := range opts {

@@ -8,21 +8,13 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 	fstab "github.com/deniswernert/go-fstab"
 	"github.com/go-playground/validator/v10"
 )
 
 func (c *ConfigV1) check() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-		err = fmt.Errorf(location.Capture()+
-			"Invalid configuration:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Invalid configuration.")
 
 	var validator = validator.New()
 	err = validator.Struct(c)
@@ -58,11 +50,11 @@ func (c *ConfigV1) check() (err error) {
 	matchs := rangeExp.FindStringSubmatch(c.Repeater.TProxyPorts)
 
 	if len(matchs) != 3 {
-		err = fmt.Errorf(location.Capture()+"%w",
-			&ErrWrongPortsPattern{
-				Actual: c.Repeater.TProxyPorts,
-			},
-		)
+		err = &ErrWrongPortsPattern{
+			Actual: c.Repeater.TProxyPorts,
+		}
+		Wrap(&err)
+
 		return
 	}
 
@@ -75,9 +67,9 @@ func (c *ConfigV1) check() (err error) {
 
 	tmp, err = strconv.ParseUint(matchs[1], 10, 16)
 	if err != nil {
-		err = fmt.Errorf(location.Capture()+
-			"Failed to parse port range begin from %s:\n%w",
-			matchs[0], err,
+		Wrap(
+			&err,
+			"Failed to parse port range begin from %s.", matchs[0],
 		)
 		return
 	}
@@ -85,9 +77,9 @@ func (c *ConfigV1) check() (err error) {
 
 	tmp, err = strconv.ParseUint(matchs[2], 10, 16)
 	if err != nil {
-		err = fmt.Errorf(location.Capture()+
-			"Failed to parse port range end from %s:\n%w",
-			matchs[1], err,
+		Wrap(
+			&err,
+			"Failed to parse port range end from %s.", matchs[1],
 		)
 		return
 	}
@@ -102,15 +94,7 @@ func (c *ConfigV1) check() (err error) {
 }
 
 func getCgroupRoot() (cgroupRoot CgroupRoot, err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-		err = fmt.Errorf(location.Capture()+
-			"Failed to get cgroupv2 mount point:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to get cgroupv2 mount point.")
 
 	var mounts fstab.Mounts
 	mounts, err = fstab.ParseProc()

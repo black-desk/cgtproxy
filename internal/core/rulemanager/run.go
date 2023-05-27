@@ -1,28 +1,18 @@
 package rulemanager
 
 import (
-	"fmt"
 	"net"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/table"
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 )
 
 func (m *RuleManager) Run() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Error occurs while running the nftable rules manager:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Error occurs while running the nftable rules manager.")
 
 	defer m.removeNftableRules()
 	err = m.initializeNftableRuels()
@@ -54,16 +44,7 @@ func (m *RuleManager) Run() (err error) {
 }
 
 func (m *RuleManager) initializeNftableRuels() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to initialize nftable ruels:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to initialize nftable ruels.")
 
 	for _, tp := range m.cfg.TProxies {
 		// NOTE(black_desk): Same as `addChainForProxy`.
@@ -80,16 +61,7 @@ func (m *RuleManager) removeNftableRules() (err error) {
 }
 
 func (m *RuleManager) addRoute() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to add route:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to add route.")
 
 	var iface *net.Interface
 	iface, err = net.InterfaceByName("lo")
@@ -129,16 +101,7 @@ func (m *RuleManager) removeRoute() {
 }
 
 func (m *RuleManager) addRule() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"Failed to add route rule:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to add route rule.")
 
 	rule := netlink.NewRule()
 	rule.Family = netlink.FAMILY_ALL

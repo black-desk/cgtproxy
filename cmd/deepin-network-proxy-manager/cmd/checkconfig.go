@@ -7,7 +7,7 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/spf13/cobra"
 )
 
@@ -38,23 +38,15 @@ var checkConfigCmd = &cobra.Command{
 }
 
 func checkConfigCmdRun() (err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-
-		err = fmt.Errorf(location.Capture()+
-			"failed to validate configuration:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to validate configuration.")
 
 	var content []byte
 	content, err = os.ReadFile(flags.CfgPath)
 	if err != nil {
-		err = fmt.Errorf(location.Capture()+
-			"failed to read configuration [ %s ]:\n%w",
-			flags.CfgPath, err,
+		Wrap(
+			&err,
+			"Failed to read configuration from %s.",
+			flags.CfgPath,
 		)
 		return
 	}

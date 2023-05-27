@@ -2,12 +2,11 @@ package core
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/sourcegraph/conc/pool"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/pkg/location"
+	. "github.com/black-desk/lib/go/errwrap"
 )
 
 type Core struct {
@@ -21,15 +20,7 @@ type Core struct {
 type Opt = (func(*Core) (*Core, error))
 
 func New(opts ...Opt) (ret *Core, err error) {
-	defer func() {
-		if err == nil {
-			return
-		}
-		err = fmt.Errorf(location.Capture()+
-			"Failed to create new deepin-network-proxy-manager core:\n%w",
-			err,
-		)
-	}()
+	defer Wrap(&err, "Failed to create new deepin-network-proxy-manager core.")
 
 	core := &Core{}
 	for i := range opts {
