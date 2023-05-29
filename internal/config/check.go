@@ -31,6 +31,11 @@ func (c *ConfigV1) check() (err error) {
 		}
 
 		c.CgroupRoot = cgroupRoot
+
+		Log.Infow(
+			"Cgroup mount point auto detection done.",
+			"cgroup root", cgroupRoot,
+		)
 	}
 
 	if c.Rules == nil {
