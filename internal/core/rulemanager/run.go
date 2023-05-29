@@ -48,7 +48,7 @@ func (m *RuleManager) initializeNftableRuels() (err error) {
 
 	for _, tp := range m.cfg.TProxies {
 		// NOTE(black_desk): Same as `addChainForProxy`.
-		_ = m.nft.AddChainAndRulesForTProxy(tp)
+		_ = m.nft.InitializeChainAndRulesForTProxy(tp)
 	}
 
 	err = m.nft.FlushInitialContent()

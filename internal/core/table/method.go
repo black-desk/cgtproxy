@@ -290,7 +290,7 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 	return
 }
 
-func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (name string) {
+func (t *Table) InitializeChainAndRulesForTProxy(tp *config.TProxy) (name string) {
 	// type filter hook prerouting priority mangle; policy accept;
 	chain := &nftables.Chain{
 		Table:    t.table,
