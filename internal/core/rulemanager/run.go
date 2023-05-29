@@ -143,10 +143,12 @@ func (m *RuleManager) handleNewCgroup(path string) {
 			target.Op = table.TargetDrop
 		} else if m.cfg.Rules[i].Proxy != "" {
 			target.Op = table.TargetTProxy
-			target.Chain = m.cfg.Proxies[m.cfg.Rules[i].Proxy].TProxy.Name
+			target.Chain =
+				m.cfg.Proxies[m.cfg.Rules[i].Proxy].TProxy.Name
 		} else if m.cfg.Rules[i].TProxy != "" {
 			target.Op = table.TargetTProxy
-			target.Chain = m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
+			target.Chain =
+				m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
 		} else {
 			panic("this should never happened.")
 		}
