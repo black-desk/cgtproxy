@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/black-desk/lib/go v0.0.0-20230527174101-0e6787ffeff2
-	github.com/black-desk/zap-journal v0.0.0-20230526030022-1d5611044e29
+	github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b
 	github.com/deniswernert/go-fstab v0.0.0-20141204152952-eb4090f26517
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-playground/validator/v10 v10.14.0
