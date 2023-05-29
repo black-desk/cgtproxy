@@ -83,7 +83,6 @@ var _ = Describe("Configuration", func() {
 		ContextTableEntry("../../test/data/wrong_ports.yaml", new(ErrWrongPortsPattern)).
 			WithFmt("../../test/data/wrong_ports.yaml"),
 	)
-
 })
 
 func TestConfig(t *testing.T) {
