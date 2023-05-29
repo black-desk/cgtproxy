@@ -68,12 +68,6 @@ func provideChan() (ret chan *types.CgroupEvent) {
 	return
 }
 
-var (
-	_nftConnOnce sync.Once
-	_nftConn     *nftables.Conn
-	_nftErr      error
-)
-
 func provideInputChan() (ret <-chan *types.CgroupEvent) {
 	return provideChan()
 }
@@ -81,6 +75,12 @@ func provideInputChan() (ret <-chan *types.CgroupEvent) {
 func provideOutputChan() (ret chan<- *types.CgroupEvent) {
 	return provideChan()
 }
+
+var (
+	_nftConnOnce sync.Once
+	_nftConn     *nftables.Conn
+	_nftErr      error
+)
 
 func provideNftConn() (ret *nftables.Conn, err error) {
 	_nftConnOnce.Do(func() {
@@ -94,7 +94,6 @@ func provideNftConn() (ret *nftables.Conn, err error) {
 
 	ret = _nftConn
 	return
-
 }
 
 var (
