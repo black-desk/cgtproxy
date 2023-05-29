@@ -1,10 +1,10 @@
 package table
 
 import (
-	"errors"
 	"math/rand"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
+	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
@@ -12,8 +12,15 @@ import (
 )
 
 func (t *Table) initChecks() (err error) {
+	defer Wrap(&err)
+
 	if t.conn == nil {
-		err = errors.New("`Table` need a nftables conn.")
+		err = ErrMissingNftableConn
+		return
+	}
+
+	if t.rerouteMark == 0 {
+		err = ErrMissingRerouteMark
 		return
 	}
 
