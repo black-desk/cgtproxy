@@ -7,8 +7,7 @@ import (
 )
 
 type Table struct {
-	conn *nftables.Conn
-
+	conn        *nftables.Conn
 	rerouteMark config.RerouteMark
 	cgroupRoot  config.CgroupRoot
 
