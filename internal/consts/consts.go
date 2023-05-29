@@ -10,4 +10,6 @@ https://github.com/black-desk/deepin-network-proxy-manager
 	RuleInsertHandle = 1000
 
 	PortsPattern = `^\[(\d+),(\d+)\)$`
+
+	NftTableName = "deepin_network_proxy"
 )

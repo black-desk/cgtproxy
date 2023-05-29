@@ -29,7 +29,7 @@ func (t *Table) initChecks() (err error) {
 
 func (t *Table) initStructure() {
 	t.table = &nftables.Table{
-		Name:   "deepin-network-proxy",
+		Name:   consts.NftTableName,
 		Family: nftables.TableFamilyINet,
 	}
 
