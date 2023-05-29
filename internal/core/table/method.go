@@ -30,7 +30,7 @@ type Target struct {
 }
 
 func (t *Table) AddCgroup(path string, target *Target) (err error) {
-	defer Wrap(&err, "Failed to add cgroup (%s) to nftable.")
+	defer Wrap(&err, "Failed to add cgroup (%s) to nftable.", path)
 
 	path = filepath.Clean(path)[len(t.cgroupRoot):]
 
@@ -116,6 +116,7 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 	defer Wrap(
 		&err,
 		"Failed to add bypass cgroup set (level %d) to nftable.",
+		level,
 	)
 
 	if _, ok := t.bypassCgroupSets[level]; ok {
