@@ -84,7 +84,7 @@ var (
 
 func provideNftConn() (ret *nftables.Conn, err error) {
 	_nftConnOnce.Do(func() {
-		_nftConn, _nftErr = nftables.New()
+		_nftConn, _nftErr = nftables.New(nftables.AsLasting())
 	})
 
 	if _nftErr != nil {

@@ -8,7 +8,6 @@ import (
 	"syscall"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
@@ -32,15 +31,15 @@ type Target struct {
 func (t *Table) AddCgroup(path string, target *Target) (err error) {
 	defer Wrap(&err, "Failed to add cgroup (%s) to nftable.", path)
 
-	path = filepath.Clean(path)[len(t.cgroupRoot):]
-
-	level := uint32(strings.Count(path, "/"))
-
 	var fileInfo os.FileInfo
 	fileInfo, err = os.Stat(path)
 	if err != nil {
 		return
 	}
+
+	path = filepath.Clean(path)[len(t.cgroupRoot):]
+
+	level := uint32(strings.Count(path, "/"))
 
 	setElement := nftables.SetElement{
 		Key: binaryutil.NativeEndian.PutUint64(
@@ -55,10 +54,15 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 			return
 		}
 
-		if err = t.conn.SetAddElements(
+		err = t.conn.SetAddElements(
 			t.bypassCgroupSets[level].set,
 			[]nftables.SetElement{setElement},
-		); err != nil {
+		)
+		if err != nil {
+			return
+		}
+		err = t.conn.Flush()
+		if err != nil {
 			return
 		}
 
@@ -75,10 +79,16 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 			Chain: target.Chain,
 		}
 
-		if err = t.conn.SetAddElements(
+		err = t.conn.SetAddElements(
 			t.cgroupMaps[level].set,
 			[]nftables.SetElement{setElement},
-		); err != nil {
+		)
+		if err != nil {
+			return
+		}
+
+		err = t.conn.Flush()
+		if err != nil {
 			return
 		}
 
@@ -94,10 +104,15 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 			Kind: expr.VerdictDrop,
 		}
 
-		if err = t.conn.SetAddElements(
+		err = t.conn.SetAddElements(
 			t.cgroupMaps[level].set,
 			[]nftables.SetElement{setElement},
-		); err != nil {
+		)
+		if err != nil {
+			return
+		}
+		err = t.conn.Flush()
+		if err != nil {
 			return
 		}
 
@@ -129,37 +144,40 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 		KeyType: nftables.TypeCGroupV2,
 	}
 
-	err = t.conn.AddSet(set, []nftables.SetElement{})
+	{
+		err = t.conn.AddSet(set, []nftables.SetElement{})
+		if err != nil {
+			return
+		}
+		t.conn.Flush()
+		if err != nil {
+			return
+		}
+	}
+
+	var rules []*nftables.Rule
+	rules, err = t.conn.GetRules(t.table, t.outputChain)
 	if err != nil {
 		return
 	}
 
-	var position uint64
+	position := len(rules) - 2
 
-	for i := level - 1; i >= 0; i-- {
-		if i == 0 {
-			position = consts.RuleInsertHandle
+	for i := uint32(0); i < level; i++ {
+		if _, ok := t.bypassCgroupSets[i]; !ok {
 			break
 		}
-
-		if _, ok := t.bypassCgroupSets[i]; !ok {
-			continue
-		}
-
-		position = uint64(i)
-		break
+		position--
 	}
 
 	// WARN(black_desk): Seems InsertRule will not insert rule but
 	// will replace rule with Handle is set.
-	// Remember to update comment in `addBypassCgroupSetIfNeed` as well.
 
-	// socket cgroupv2 level x @bypass-cgroup-x return # handle x
+	// socket cgroupv2 level x @bypass-cgroup-x return
 	t.conn.InsertRule(&nftables.Rule{
 		Table:    t.table,
 		Chain:    t.outputChain,
-		Handle:   uint64(level),
-		Position: position,
+		Position: rules[position].Handle,
 		Exprs: []expr.Any{
 			&expr.Socket{ // socket load cgroupv2 => reg 1
 				Key:      expr.SocketKeyCgroupv2,
@@ -175,9 +193,14 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 			},
 		},
 	})
+	t.conn.Flush()
+	if err != nil {
+		return
+	}
 
 	t.bypassCgroupSets[level] = cgroupSet{
-		set: set,
+		set:      set,
+		elements: map[string]nftables.SetElement{},
 	}
 
 	return
@@ -202,35 +225,37 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 		IsMap:    true,
 	}
 
-	err = t.conn.AddSet(set, []nftables.SetElement{})
+	{
+		err = t.conn.AddSet(set, []nftables.SetElement{})
+		if err != nil {
+			return
+		}
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
+	}
+
+	var rules []*nftables.Rule
+	rules, err = t.conn.GetRules(t.table, t.preroutingChain)
 	if err != nil {
 		return
 	}
 
-	var position uint64
+	position := len(rules) - 1
 
-	for i := level - 1; i >= 0; i-- {
-		if i == 0 {
-			position = consts.RuleInsertHandle
+	for i := uint32(0); i < level; i++ {
+		if _, ok := t.cgroupMaps[i]; !ok {
 			break
 		}
-
-		if _, ok := t.cgroupMaps[i]; !ok {
-			continue
-		}
-
-		position = uint64(i)
-		break
+		position--
 	}
 
-	// WARN(black_desk): Same as `addBypassCgroupSetIfNeed`
-
-	// socket cgroupv2 level x vmap @cgroup-map-x # handle x
+	// socket cgroupv2 level x vmap @cgroup-map-x
 	t.conn.InsertRule(&nftables.Rule{
 		Table:    t.table,
 		Chain:    t.preroutingChain,
-		Handle:   uint64(level),
-		Position: position,
+		Position: rules[position].Handle,
 		Exprs: []expr.Any{
 			&expr.Socket{ // socket load cgroupv2 => reg 1
 				Key:      expr.SocketKeyCgroupv2,
@@ -244,9 +269,14 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 			},
 		},
 	})
+	err = t.conn.Flush()
+	if err != nil {
+		return
+	}
 
 	t.cgroupMaps[level] = cgroupSet{
-		set: set,
+		set:      set,
+		elements: map[string]nftables.SetElement{},
 	}
 
 	return
@@ -264,23 +294,33 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 	level := uint32(strings.Count(path, "/"))
 
 	if _, ok := t.bypassCgroupSets[level].elements[path]; ok {
-		if err = t.conn.SetDeleteElements(
+		t.conn.SetDeleteElements(
 			t.bypassCgroupSets[level].set,
 			[]nftables.SetElement{
 				t.bypassCgroupSets[level].elements[path],
 			},
-		); err != nil {
+		)
+		if err != nil {
+			return
+		}
+		err = t.conn.Flush()
+		if err != nil {
 			return
 		}
 
 		delete(t.bypassCgroupSets[level].elements, path)
 	} else if _, ok := t.cgroupMaps[level].elements[path]; ok {
-		if err = t.conn.SetDeleteElements(
+		err = t.conn.SetDeleteElements(
 			t.cgroupMaps[level].set,
 			[]nftables.SetElement{
 				t.cgroupMaps[level].elements[path],
 			},
-		); err != nil {
+		)
+		if err != nil {
+			return
+		}
+		err = t.conn.Flush()
+		if err != nil {
 			return
 		}
 
@@ -290,26 +330,35 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 	return
 }
 
-func (t *Table) InitializeChainAndRulesForTProxy(tp *config.TProxy) (name string) {
-	// type filter hook prerouting priority mangle; policy accept;
+func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
+	defer Wrap(
+		&err,
+		"Failed to add chain and rules to nft table for tproxy: %#v",
+		tp,
+	)
 	chain := &nftables.Chain{
-		Table:    t.table,
-		Name:     tp.Name,
-		Type:     nftables.ChainTypeFilter,
-		Hooknum:  nftables.ChainHookPrerouting,
-		Priority: nftables.ChainPriorityMangle,
-		Policy:   &t.policy,
+		Table: t.table,
+		Name:  tp.Name,
 	}
 	t.tproxyChains = append(t.tproxyChains, chain)
+	t.conn.AddChain(chain)
+	err = t.conn.Flush()
+	if err != nil {
+		return
+	}
 
 	tproxy := &expr.TProxy{ // tproxy port reg 1
-		Family:      byte(nftables.TableFamilyINet),
-		TableFamily: byte(nftables.TableFamilyINet),
-		RegPort:     1,
+		Family:  byte(nftables.TableFamilyUnspecified),
+		RegPort: 1,
+	}
+
+	err = t.conn.AddSet(t.protoSet, t.protoSetElement)
+	if err != nil {
+		return
 	}
 
 	rule := &nftables.Rule{
-		// meta l4proto tcp tproxy to ...
+		// meta l4proto { tcp, udp } tproxy to ...
 		Table: t.table,
 		Chain: chain,
 		Exprs: []expr.Any{
@@ -320,10 +369,11 @@ func (t *Table) InitializeChainAndRulesForTProxy(tp *config.TProxy) (name string
 			&expr.Lookup{ // lookup reg 1 set __set%d
 				SourceRegister: 1,
 				SetID:          t.protoSet.ID,
+				SetName:        t.protoSet.Name,
 			},
 			&expr.Immediate{ // immediate reg 1 ...
 				Register: 1,
-				Data:     binaryutil.NativeEndian.PutUint16(tp.Port),
+				Data:     binaryutil.BigEndian.PutUint16(tp.Port),
 			},
 			tproxy,
 		},
@@ -343,56 +393,13 @@ func (t *Table) InitializeChainAndRulesForTProxy(tp *config.TProxy) (name string
 		tproxy.Family = byte(nftables.TableFamilyIPv4)
 	}
 
-	t.tproxyRules[chain.Name] = append(t.tproxyRules[chain.Name], rule)
-
-	name = chain.Name
-	return
-}
-
-func (t *Table) FlushInitialContent() (err error) {
-	defer Wrap(&err, "Error occurs while flushing nftable.")
-
-	t.conn.AddTable(t.table)
-	t.conn.AddSet(t.ipv4BypassSet, t.ipv4BypassSetElement)
-	t.conn.AddSet(t.ipv6BypassSet, t.ipv6BypassSetElement)
-
-	for i := range t.tproxyChains {
-		if t.tproxyChains[i] == nil {
-			return
-		}
-		t.conn.AddChain(t.tproxyChains[i])
-
-		chain := t.tproxyChains[i].Name
-
-		if t.tproxyRules[chain] == nil {
-			return
-		}
-
-		for i := range t.tproxyRules[chain] {
-			if t.tproxyRules[chain][i] == nil {
-				return
-			}
-			t.conn.AddRule(t.tproxyRules[chain][i])
-		}
-	}
-
-	t.conn.AddChain(t.outputChain)
-	for i := range t.outputRules {
-		if t.outputRules[i] == nil {
-			return
-		}
-		t.conn.AddRule(t.outputRules[i])
-	}
-
-	t.conn.AddChain(t.preroutingChain)
-	for i := range t.preroutingRules {
-		if t.preroutingRules[i] == nil {
-			return
-		}
-		t.conn.AddRule(t.preroutingRules[i])
-	}
+	t.conn.AddRule(rule)
 
 	err = t.conn.Flush()
+	if err != nil {
+		return
+	}
+
 	return
 }
 

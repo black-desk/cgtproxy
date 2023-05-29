@@ -10,31 +10,27 @@ type Table struct {
 	conn        *nftables.Conn
 	rerouteMark config.RerouteMark
 	cgroupRoot  config.CgroupRoot
+	bypassIPv4  []string
+	bypassIPv6  []string
 
 	table *nftables.Table
 
-	ipv4BypassSet        *nftables.Set
-	ipv4BypassSetElement []nftables.SetElement
-
-	ipv6BypassSet        *nftables.Set
-	ipv6BypassSetElement []nftables.SetElement
+	ipv4BypassSet *nftables.Set
+	ipv6BypassSet *nftables.Set
 
 	bypassCgroupSets map[uint32]cgroupSet // level -> cgroupSet
 
 	protoSet        *nftables.Set
-	protoSetElement []nftables.SetElement
+	protoSetElement []nftables.SetElement // keep anonymous set elements
 
 	policy nftables.ChainPolicy
 
 	tproxyChains []*nftables.Chain
-	tproxyRules  map[string][]*nftables.Rule
 
 	cgroupMaps map[uint32]cgroupSet // level -> cgroupSet
 
 	outputChain     *nftables.Chain
-	outputRules     []*nftables.Rule
 	preroutingChain *nftables.Chain
-	preroutingRules []*nftables.Rule
 }
 
 type cgroupSet struct {
@@ -45,7 +41,7 @@ type cgroupSet struct {
 type Opt = (func(*Table) (*Table, error))
 
 func New(opts ...Opt) (ret *Table, err error) {
-	defer Wrap(&err, "Error occurs while initializing nft stuff.")
+	defer Wrap(&err, "Failed to create nft table.")
 
 	t := &Table{}
 
@@ -62,10 +58,21 @@ func New(opts ...Opt) (ret *Table, err error) {
 		return
 	}
 
-	t.initStructure()
+	err = t.initStructure()
+	if err != nil {
+		return
+	}
 
 	ret = t
 	return
+}
+
+func WithBypass(bypass *config.Bypass) Opt {
+	return func(table *Table) (*Table, error) {
+		table.bypassIPv4 = bypass.IPV4
+		table.bypassIPv6 = bypass.IPV6
+		return table, nil
+	}
 }
 
 func WithConn(conn *nftables.Conn) Opt {

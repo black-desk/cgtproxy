@@ -1,11 +1,9 @@
 table inet deepin-network-proxy {
         set bypass {
                 type ipv4_addr;
-                flags interval;
         }
         set bypass6 {
                 type ipv6_addr;
-                flags interval;
         }
         map cgroup-map-1 {
                 type cgroupsv2 : verdict;
@@ -56,19 +54,15 @@ table inet deepin-network-proxy {
                 accept
         }
         chain repeater-proxy-1 {
-                type filter hook prerouting priority mangle; policy accept;
                 meta l4proto tcp tproxy to :1088
         }
         chain repeater-proxy-2 {
-                type filter hook prerouting priority mangle; policy accept;
                 meta l4proto { tcp, udp } tproxy ip to :1088
         }
         chain repeater-proxy-3 {
-                type filter hook prerouting priority mangle; policy accept;
                 meta l4proto { tcp, udp } tproxy to :1088
         }
         chain clash {
-                type filter hook prerouting priority mangle; policy accept;
                 meta l4proto { tcp, udp } tproxy to :7893
         }
         chain output {

@@ -1,7 +1,7 @@
 package table
 
 import (
-	"math/rand"
+	"net"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -27,24 +27,51 @@ func (t *Table) initChecks() (err error) {
 	return
 }
 
-func (t *Table) initStructure() {
+func (t *Table) initStructure() (err error) {
+	defer Wrap(&err, "Failed to flush initial content of nft table.")
+
 	t.table = &nftables.Table{
 		Name:   consts.NftTableName,
 		Family: nftables.TableFamilyINet,
 	}
+	t.conn.AddTable(t.table)
 
 	t.ipv4BypassSet = &nftables.Set{
-		Table:    t.table,
-		Constant: true,
-		Name:     "bypass",
-		KeyType:  nftables.TypeIPAddr,
+		Table:   t.table,
+		Name:    "bypass",
+		KeyType: nftables.TypeIPAddr,
+	}
+
+	{
+		elements := []nftables.SetElement{}
+		for i := range t.bypassIPv4 {
+			elements = append(elements, nftables.SetElement{
+				Key: []byte(net.ParseIP(t.bypassIPv4[i]).To4()),
+			})
+		}
+		err = t.conn.AddSet(t.ipv4BypassSet, elements)
+		if err != nil {
+			return
+		}
 	}
 
 	t.ipv6BypassSet = &nftables.Set{
-		Table:    t.table,
-		Constant: true,
-		Name:     "bypass6",
-		KeyType:  nftables.TypeIP6Addr,
+		Table:   t.table,
+		Name:    "bypass6",
+		KeyType: nftables.TypeIP6Addr,
+	}
+
+	{
+		elements := []nftables.SetElement{}
+		for i := range t.bypassIPv6 {
+			elements = append(elements, nftables.SetElement{
+				Key: []byte(net.ParseIP(t.bypassIPv6[i]).To16()),
+			})
+		}
+		err = t.conn.AddSet(t.ipv6BypassSet, elements)
+		if err != nil {
+			return
+		}
 	}
 
 	t.bypassCgroupSets = map[uint32]cgroupSet{}
@@ -52,7 +79,7 @@ func (t *Table) initStructure() {
 	t.protoSet = &nftables.Set{
 		Table:     t.table,
 		Anonymous: true,
-		ID:        rand.Uint32(),
+		Constant:  true,
 		KeyType:   nftables.TypeInetProto,
 	}
 	t.protoSetElement = []nftables.SetElement{
@@ -64,21 +91,26 @@ func (t *Table) initStructure() {
 
 	t.tproxyChains = []*nftables.Chain{}
 
-	t.tproxyRules = map[string][]*nftables.Rule{}
-
 	t.policy = nftables.ChainPolicyAccept
 
-	// type filter hook prerouting priority mangle; policy accept;
-	t.outputChain = &nftables.Chain{
-		Table:    t.table,
-		Name:     "output",
-		Type:     nftables.ChainTypeRoute,
-		Hooknum:  nftables.ChainHookOutput,
-		Priority: nftables.ChainPriorityMangle,
-		Policy:   &t.policy,
+	{ // type filter hook prerouting priority mangle; policy accept;
+		t.outputChain = &nftables.Chain{
+			Table:    t.table,
+			Name:     "output",
+			Type:     nftables.ChainTypeRoute,
+			Hooknum:  nftables.ChainHookOutput,
+			Priority: nftables.ChainPriorityMangle,
+			Policy:   &t.policy,
+		}
+		t.conn.AddChain(t.outputChain)
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
 	}
-	t.outputRules = []*nftables.Rule{
-		{ // ip daddr @bypass return
+
+	{ // ip daddr @bypass return
+		t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.outputChain,
 			Exprs: []expr.Any{
@@ -100,14 +132,22 @@ func (t *Table) initStructure() {
 				},
 				&expr.Lookup{ // lookup reg 1 set bypass
 					SourceRegister: 1,
+					SetID:          t.ipv4BypassSet.ID,
 					SetName:        t.ipv4BypassSet.Name,
 				},
 				&expr.Verdict{ // immediate reg 0 return
 					Kind: expr.VerdictReturn,
 				},
 			},
-		},
-		{ // ip6 daddr @bypass6 return
+		})
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
+	}
+
+	{ // ip6 daddr @bypass6 return
+		t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.outputChain,
 			Exprs: []expr.Any{
@@ -129,17 +169,29 @@ func (t *Table) initStructure() {
 				},
 				&expr.Lookup{ // lookup reg 1 set bypass
 					SourceRegister: 1,
-					SetName:        t.ipv4BypassSet.Name,
+					SetID:          t.ipv6BypassSet.ID,
+					SetName:        t.ipv6BypassSet.Name,
 				},
 				&expr.Verdict{ // immediate reg 0 return
 					Kind: expr.VerdictReturn,
 				},
 			},
-		},
-		{ // meta l4proto != { tcp, udp } return # handle 1000
-			Table:  t.table,
-			Chain:  t.outputChain,
-			Handle: consts.RuleInsertHandle,
+		})
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
+	}
+
+	{ // meta l4proto != { tcp, udp } return
+		err = t.conn.AddSet(t.protoSet, t.protoSetElement)
+		if err != nil {
+			return
+		}
+
+		t.conn.AddRule(&nftables.Rule{
+			Table: t.table,
+			Chain: t.outputChain,
 			Exprs: []expr.Any{
 				&expr.Meta{ // meta load l4proto => reg 1
 					Key:      expr.MetaKeyL4PROTO,
@@ -148,14 +200,22 @@ func (t *Table) initStructure() {
 				&expr.Lookup{ // lookup reg 1 set __set%d
 					SourceRegister: 1,
 					SetID:          t.protoSet.ID,
+					SetName:        t.protoSet.Name,
 					Invert:         true,
 				},
 				&expr.Verdict{ // immediate reg 0 return
 					Kind: expr.VerdictReturn,
 				},
 			},
-		},
-		{ // meta mark set ...
+		})
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
+	}
+
+	{ // meta mark set ...
+		t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.outputChain,
 			Exprs: []expr.Any{
@@ -163,23 +223,39 @@ func (t *Table) initStructure() {
 					Register: 1,
 					Data:     binaryutil.NativeEndian.PutUint32(uint32(t.rerouteMark)),
 				},
+				&expr.Meta{
+					Key:            expr.MetaKeyMARK,
+					SourceRegister: true,
+					Register:       1,
+				},
 			},
-		},
+		})
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
 	}
 
-	// type route hook output priority mangle; policy accept;
-	t.preroutingChain = &nftables.Chain{
-		Table:    t.table,
-		Name:     "prerouting",
-		Type:     nftables.ChainTypeFilter,
-		Hooknum:  nftables.ChainHookPrerouting,
-		Priority: nftables.ChainPriorityMangle,
-		Policy:   &t.policy,
+	{ // type route hook output priority mangle; policy accept;
+		t.preroutingChain = &nftables.Chain{
+			Table:    t.table,
+			Name:     "prerouting",
+			Type:     nftables.ChainTypeFilter,
+			Hooknum:  nftables.ChainHookPrerouting,
+			Priority: nftables.ChainPriorityMangle,
+			Policy:   &t.policy,
+		}
+		t.conn.AddChain(t.preroutingChain)
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
 	}
-	t.preroutingRules = []*nftables.Rule{
-		{ // ip daddr @bypass return
+
+	{ // ip daddr @bypass return
+		t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
-			Chain: t.outputChain,
+			Chain: t.preroutingChain,
 			Exprs: []expr.Any{
 				&expr.Meta{ // meta load nfproto => reg 1
 					Key:      expr.MetaKeyNFPROTO,
@@ -199,16 +275,24 @@ func (t *Table) initStructure() {
 				},
 				&expr.Lookup{ // lookup reg 1 set bypass
 					SourceRegister: 1,
+					SetID:          t.ipv4BypassSet.ID,
 					SetName:        t.ipv4BypassSet.Name,
 				},
 				&expr.Verdict{ // immediate reg 0 return
 					Kind: expr.VerdictReturn,
 				},
 			},
-		},
-		{ // ip6 daddr @bypass6 return
+		})
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
+	}
+
+	{ // ip6 daddr @bypass6 return
+		t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
-			Chain: t.outputChain,
+			Chain: t.preroutingChain,
 			Exprs: []expr.Any{
 				&expr.Meta{ // meta load nfproto => reg 1
 					Key:      expr.MetaKeyNFPROTO,
@@ -228,22 +312,35 @@ func (t *Table) initStructure() {
 				},
 				&expr.Lookup{ // lookup reg 1 set bypass
 					SourceRegister: 1,
-					SetName:        t.ipv4BypassSet.Name,
+					SetID:          t.ipv6BypassSet.ID,
+					SetName:        t.ipv6BypassSet.Name,
 				},
 				&expr.Verdict{ // immediate reg 0 return
 					Kind: expr.VerdictReturn,
 				},
 			},
-		},
-		{ // accept # handle 1000
-			Table:  t.table,
-			Chain:  t.outputChain,
-			Handle: consts.RuleInsertHandle,
+		})
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
+	}
+
+	{ // accept
+		t.conn.AddRule(&nftables.Rule{
+			Table: t.table,
+			Chain: t.preroutingChain,
 			Exprs: []expr.Any{
 				&expr.Verdict{ // accept
 					Kind: expr.VerdictAccept,
 				},
 			},
-		},
+		})
+		err = t.conn.Flush()
+		if err != nil {
+			return
+		}
 	}
+
+	return
 }
