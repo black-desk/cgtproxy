@@ -48,7 +48,7 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 
 		tp.Port = begin
 		Log.Debugw("Allocate port for tproxy",
-			"port", tp.Port, "tproxy", tp.String(),
+			"port", tp.Port, "tproxy", tp,
 		)
 
 		begin++

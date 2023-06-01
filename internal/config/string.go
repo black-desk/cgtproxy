@@ -2,9 +2,6 @@ package config
 
 import (
 	"fmt"
-	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 func (r *Rule) String() string {
@@ -21,35 +18,4 @@ func (r *Rule) String() string {
 	}
 
 	panic("this should never happened")
-}
-
-func (p *Proxy) String() string {
-	var (
-		bytes []byte
-		err   error
-	)
-
-	bytes, err = yaml.Marshal(p)
-	if err != nil {
-		panic("this should never happened")
-	}
-
-	return fmt.Sprintf("%stproxy:\n  %s",
-		string(bytes),
-		strings.ReplaceAll(p.TProxy.String(), "\n", "\n  "),
-	)
-}
-
-func (t *TProxy) String() string {
-	var (
-		bytes []byte
-		err   error
-	)
-
-	bytes, err = yaml.Marshal(t)
-	if err != nil {
-		panic("this should never happened")
-	}
-
-	return fmt.Sprint(string(bytes))
 }
