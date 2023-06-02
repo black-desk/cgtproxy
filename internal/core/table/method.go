@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
@@ -18,7 +19,8 @@ import (
 type TargetOp uint32
 
 const (
-	TargetDrop TargetOp = iota
+	TargetNoop TargetOp = iota
+	TargetDrop
 	TargetTProxy
 	TargetDirect
 )
@@ -30,6 +32,11 @@ type Target struct {
 
 func (t *Table) AddCgroup(path string, target *Target) (err error) {
 	defer Wrap(&err, "Failed to add cgroup (%s) to nftable.", path)
+
+	Log.Infow("Adding new cgroup to nft.",
+		"cgroup", path,
+		"target", target,
+	)
 
 	var fileInfo os.FileInfo
 	fileInfo, err = os.Stat(path)
@@ -123,6 +130,12 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 	if err != nil {
 		return
 	}
+
+	Log.Infow("New cgroup added to nft.",
+		"cgroup", path,
+	)
+
+	DumpNFTableRules()
 
 	return
 }
@@ -294,6 +307,10 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 	level := uint32(strings.Count(path, "/"))
 
 	if _, ok := t.bypassCgroupSets[level].elements[path]; ok {
+		Log.Infow("Removing bypass rule from nft for this cgroup.",
+			"cgroup", path,
+		)
+
 		t.conn.SetDeleteElements(
 			t.bypassCgroupSets[level].set,
 			[]nftables.SetElement{
@@ -310,6 +327,10 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 
 		delete(t.bypassCgroupSets[level].elements, path)
 	} else if _, ok := t.cgroupMaps[level].elements[path]; ok {
+		Log.Infow("Removing proxy rule from nft for this cgroup.",
+			"cgroup", path,
+		)
+
 		err = t.conn.SetDeleteElements(
 			t.cgroupMaps[level].set,
 			[]nftables.SetElement{
@@ -325,6 +346,10 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 		}
 
 		delete(t.cgroupMaps[level].elements, path)
+	} else {
+		Log.Infow("Nothing to do with this cgroup",
+			"cgroup", path,
+		)
 	}
 
 	return
@@ -336,6 +361,11 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 		"Failed to add chain and rules to nft table for tproxy: %#v",
 		tp,
 	)
+
+	Log.Debugw("Adding chain and rules for tproxy.",
+		"tproxy", tp,
+	)
+
 	chain := &nftables.Chain{
 		Table: t.table,
 		Name:  tp.Name,
@@ -399,6 +429,10 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 	if err != nil {
 		return
 	}
+
+	Log.Debug("chain and rules added for this tproxy.")
+
+	DumpNFTableRules()
 
 	return
 }

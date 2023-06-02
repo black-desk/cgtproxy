@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/fsnotify/fsnotify"
@@ -36,6 +37,8 @@ func (m *Monitor) Run() (err error) {
 			Wrap(&err)
 			return
 		}
+
+		Log.Infow("New cgroup envent.", "event", cgEvent)
 
 		select {
 		case <-m.ctx.Done():

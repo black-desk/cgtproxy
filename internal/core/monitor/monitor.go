@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
 )
@@ -43,6 +44,9 @@ func New(opts ...Opt) (ret *Monitor, err error) {
 	}
 
 	ret = m
+
+	Log.Debugw("Create a new cgroup monitor.")
+
 	return
 }
 

@@ -4,6 +4,7 @@ import (
 	"net"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
@@ -29,6 +30,8 @@ func (t *Table) initChecks() (err error) {
 
 func (t *Table) initStructure() (err error) {
 	defer Wrap(&err, "Failed to flush initial content of nft table.")
+
+	Log.Debug("Initialing nft table structure.")
 
 	t.table = &nftables.Table{
 		Name:   consts.NftTableName,
@@ -341,6 +344,10 @@ func (t *Table) initStructure() (err error) {
 			return
 		}
 	}
+
+	Log.Debug("nft table structure initialized.")
+
+	DumpNFTableRules()
 
 	return
 }

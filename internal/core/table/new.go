@@ -2,6 +2,7 @@ package table
 
 import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 )
@@ -64,6 +65,8 @@ func New(opts ...Opt) (ret *Table, err error) {
 	}
 
 	ret = t
+
+	Log.Debugw("Create a nft table.")
 	return
 }
 

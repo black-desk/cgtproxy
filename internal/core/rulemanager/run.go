@@ -139,6 +139,11 @@ func (m *RuleManager) handleNewCgroup(path string) {
 			continue
 		}
 
+		Log.Infow("Rule found for this cgroup",
+			"cgroup", path,
+			"rule", m.cfg.Rules[i].String(),
+		)
+
 		if m.cfg.Rules[i].Direct {
 			target.Op = table.TargetDirect
 		} else if m.cfg.Rules[i].Drop {
@@ -158,9 +163,18 @@ func (m *RuleManager) handleNewCgroup(path string) {
 		break
 	}
 
+	if target.Op == table.TargetNoop {
+		Log.Infow("No rule match this cgroup",
+			"cgroup", path,
+		)
+		return
+	}
+
 	err := m.nft.AddCgroup(path, &target)
 	if err != nil {
-		Log.Errorw("Failed to update nft for new cgroup", "error", err)
+		Log.Errorw("Failed to update nft for new cgroup",
+			"error", err,
+		)
 	}
 }
 

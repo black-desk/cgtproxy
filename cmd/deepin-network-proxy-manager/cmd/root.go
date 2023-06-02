@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -29,7 +30,10 @@ var rootCmd = &cobra.Command{
 				"error", err,
 			)
 
-			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
+			err = fmt.Errorf(
+				"\n\n%w\n"+consts.CheckDocumentString,
+				err,
+			)
 
 			return
 		}()
@@ -51,21 +55,39 @@ func rootCmdRun() (err error) {
 
 	cfg, err = config.Load(content)
 	if err != nil {
-		Log.Errorw("Failed to load configuration",
-			"error", err)
-		return err
+		return
 	}
 
-	core, err := core.New(
+	c, err := core.New(
 		core.WithConfig(cfg),
 	)
 	if err != nil {
-		Log.Errorw("Failed to init core",
-			"error", err)
-		return err
+		return
 	}
 
-	return core.Run()
+	err = c.Run()
+	if err == nil {
+		return
+	}
+
+	Log.Debugw(
+		"Core exited with error.",
+		"error", err,
+	)
+
+	{
+		var cancelBySignal *core.ErrCancelBySignal
+		if errors.As(err, &cancelBySignal) {
+			Log.Infow("Signal received, exiting...",
+				"signal", cancelBySignal.Signal,
+			)
+			err = nil
+			return
+		}
+	}
+
+	return
+
 }
 
 func Execute() {
