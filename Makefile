@@ -7,7 +7,10 @@
 	dlv-headless \
 	generate \
 	install \
-	test
+	test-debug \
+	test-release \
+	test \
+	test/coverage.html
 
 all: deepin-network-proxy-manager
 
@@ -29,11 +32,32 @@ dlv-headless: generate
 generate:
 	go generate ./...
 
-test: generate
-	go test ./...
+test-debug: generate
+	unshare -U -C -m -n --map-user=0 -- bash -c "\
+		mount --make-rprivate / && \
+		mount -t cgroup2 none /sys/fs/cgroup && \
+		go test ./... -tags debug -v --ginkgo.vv \
+	"
+
+test-release: generate
+	unshare -U -C -m -n --map-user=0 -- bash -c "\
+		mount --make-rprivate / && \
+		mount -t cgroup2 none /sys/fs/cgroup && \
+		go test ./... -v --ginkgo.vv \
+	"
+
+test: test-release
 
 test/coverage.html: generate
-	go test ./... -coverprofile test/coverprofile
+	unshare -U -C -m -n --map-user=0 -- bash -c "\
+		mount --make-rprivate / && \
+		mount -t cgroup2 cgroup2 /sys/fs/cgroup && \
+		( \
+			env TEST_ALL=1 go test ./... -v --ginkgo.vv \
+				-coverprofile test/coverprofile; \
+			true \
+		) \
+	"
 	go tool cover -html=test/coverprofile -o test/coverage.html
 
 install: generate
