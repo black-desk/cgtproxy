@@ -176,7 +176,23 @@ var _ = Describe("Netfliter table", Ordered, func() {
 							ContainSubstring("socket cgroupv2 level 2 vmap @cgroup-map-2"),
 						)
 						Expect(result).To(
-							ContainSubstring("test/d/d"),
+							ContainSubstring(`test/d/d`),
+						)
+
+						Expect(result).To(
+							ContainSubstring(`"test/a" : jump`),
+						)
+
+						Expect(result).To(
+							ContainSubstring(`"test/b" : jump`),
+						)
+
+						Expect(result).To(
+							ContainSubstring(`"test/c" : drop`),
+						)
+
+						Expect(result).To(
+							ContainSubstring(`"test/d/d"`),
 						)
 					}
 				})
