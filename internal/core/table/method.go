@@ -44,7 +44,7 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		return
 	}
 
-	path = filepath.Clean(path)[len(t.cgroupRoot):]
+	path = t.removeCgroupRoot(path)
 
 	level := uint32(strings.Count(path, "/"))
 
@@ -302,7 +302,7 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 		path,
 	)
 
-	path = filepath.Clean(path)[len(t.cgroupRoot):]
+	path = t.removeCgroupRoot(path)
 
 	level := uint32(strings.Count(path, "/"))
 
@@ -443,4 +443,17 @@ func (t *Table) Clear() (err error) {
 	t.conn.DelTable(t.table)
 	err = t.conn.Flush()
 	return
+}
+
+func (t *Table) removeCgroupRoot(path string) string {
+	path = filepath.Clean(path)
+	if strings.HasPrefix(path, string(t.cgroupRoot)) {
+		path = path[len(t.cgroupRoot):]
+	}
+
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
+	return path
 }
