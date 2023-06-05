@@ -163,7 +163,10 @@ var (
 	_monitorErr  error
 )
 
-func provideMonitor(ch chan<- *types.CgroupEvent, w *watcher.Watcher,
+func provideMonitor(
+	ch chan<- *types.CgroupEvent,
+	w *watcher.Watcher,
+	root config.CgroupRoot,
 ) (
 	ret *monitor.Monitor, err error,
 ) {
@@ -171,6 +174,7 @@ func provideMonitor(ch chan<- *types.CgroupEvent, w *watcher.Watcher,
 		_monitor, _monitorErr = monitor.New(
 			monitor.WithOutput(ch),
 			monitor.WithWatcher(w),
+			monitor.WithCgroupRoot(root),
 		)
 	})
 	if _monitorErr != nil {

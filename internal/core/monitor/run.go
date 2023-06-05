@@ -2,17 +2,56 @@ package monitor
 
 import (
 	"context"
+	"io/fs"
+	"path/filepath"
+	"strings"
 
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
+func (m *Monitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, err error) error {
+	return func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !d.IsDir() {
+			return nil
+		}
+
+		cgEvent := &types.CgroupEvent{
+			Path:      path,
+			EventType: types.CgroupEventTypeNew,
+		}
+
+		cgEvent.Path = strings.TrimRight(cgEvent.Path, "/")
+
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		case m.output <- cgEvent:
+			Log.Debugw("Cgroup event sent.")
+		}
+
+		return nil
+	}
+}
+
 func (m *Monitor) Run(ctx context.Context) (err error) {
 	defer close(m.output)
 	defer Wrap(&err, "Error occurs while running the cgroup monitor.")
 
-	// TODO(black_desk): handle exsiting cgroup
+	Log.Debugw("Initializing cgroup monitor...")
+
+	err = filepath.WalkDir(string(m.root), m.walkFn(ctx))
+	if err != nil {
+		return
+	}
+
+	Log.Debugw("Initializing cgroup monitor done.")
 
 	var cgEvent *types.CgroupEvent
 	for {
@@ -39,6 +78,8 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 				err = &ErrUnexpectFsEvent{fsEvent.RawEvent}
 				return
 			}
+
+			cgEvent.Path = strings.TrimRight(cgEvent.Path, "/")
 
 			Log.Debugw("New cgroup envent.", "event", cgEvent)
 

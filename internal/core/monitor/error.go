@@ -10,6 +10,7 @@ import (
 var (
 	ErrWatcherMissing = errors.New("Watcher is missing.")
 	ErrOutputMissing  = errors.New("Output is missing.")
+	ErrCgroupRootMissing = errors.New("Cgroup root is missing")
 )
 
 type ErrUnexpectFsEvent struct {

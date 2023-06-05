@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
@@ -8,8 +9,9 @@ import (
 )
 
 type Monitor struct {
-	watcher *watcher.Watcher          `inject:"true"`
-	output  chan<- *types.CgroupEvent `inject:"true"`
+	watcher *watcher.Watcher
+	output  chan<- *types.CgroupEvent
+	root    config.CgroupRoot
 }
 
 func New(opts ...Opt) (ret *Monitor, err error) {
@@ -31,6 +33,11 @@ func New(opts ...Opt) (ret *Monitor, err error) {
 
 		if m.output == nil {
 			err = ErrOutputMissing
+			return
+		}
+
+		if m.root == "" {
+			err = ErrCgroupRootMissing
 			return
 		}
 	}
@@ -63,6 +70,18 @@ func WithOutput(ch chan<- *types.CgroupEvent) Opt {
 			return
 		}
 		mon.output = ch
+		ret = mon
+		return
+	}
+}
+
+func WithCgroupRoot(root config.CgroupRoot) Opt {
+	return func(mon *Monitor) (ret *Monitor, err error) {
+		if root == "" {
+			err = ErrCgroupRootMissing
+			return
+		}
+		mon.root = root
 		ret = mon
 		return
 	}

@@ -26,7 +26,7 @@ func injectedMonitor(core *Core) (*monitor.Monitor, error) {
 	if err != nil {
 		return nil, err
 	}
-	monitorMonitor, err := provideMonitor(v, watcher)
+	monitorMonitor, err := provideMonitor(v, watcher, cgroupRoot)
 	if err != nil {
 		return nil, err
 	}

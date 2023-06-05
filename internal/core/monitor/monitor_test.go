@@ -3,8 +3,10 @@ package monitor_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
@@ -22,6 +24,8 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 		w               *watcher.Watcher
 		cgroupEventChan chan *types.CgroupEvent
 		monitor         *Monitor
+		tmpDir          string
+		err             error
 	)
 
 	BeforeEach(func() {
@@ -37,12 +41,19 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 		var cgroupEventChanIn chan<- *types.CgroupEvent
 		cgroupEventChanIn = cgroupEventChan
 
-		var err error
+		tmpDir, err = os.MkdirTemp("/tmp", "*")
+		Expect(err).To(Succeed())
 
 		monitor, err = New(
 			WithWatcher(w),
 			WithOutput(cgroupEventChanIn),
+			WithCgroupRoot(config.CgroupRoot(tmpDir)),
 		)
+		Expect(err).To(Succeed())
+	})
+
+	AfterEach(func() {
+		err = os.RemoveAll(tmpDir)
 		Expect(err).To(Succeed())
 	})
 
@@ -90,13 +101,15 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 				cgroupEvents = append(cgroupEvents, cgroupEvent)
 			}
 
-			Expect(len(expectResult)).To(Equal(len(cgroupEvents)))
+			Expect(len(expectResult) + 1).To(Equal(len(cgroupEvents)))
 
-			for i := range cgroupEvents {
-				Expect(*cgroupEvents[i]).To(Equal(*expectResult[i]))
+			Expect(cgroupEvents[0].Path).To(Equal(tmpDir))
+
+			for i := range cgroupEvents[1:] {
+				Expect(*cgroupEvents[i+1]).To(Equal(*expectResult[i]))
 			}
 
-			err := p.Wait()
+			err = p.Wait()
 			Expect(err).To(MatchErr(expectErr))
 		})
 	},
