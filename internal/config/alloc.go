@@ -33,10 +33,6 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 	for name := range c.TProxies {
 		tp := c.TProxies[name]
 
-		if tp.Name == "" {
-			tp.Name = name
-		}
-
 		if tp.Port != 0 {
 			continue
 		}

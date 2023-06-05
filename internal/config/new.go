@@ -23,5 +23,4 @@ func Load(content []byte) (ret *Config, err error) {
 
 	ret = cfg
 	return
-
 }

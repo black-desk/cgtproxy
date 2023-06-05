@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strconv"
 
@@ -23,78 +24,102 @@ func (c *ConfigV1) check() (err error) {
 		return
 	}
 
-	if c.CgroupRoot == "AUTO" {
-		var cgroupRoot CgroupRoot
-		cgroupRoot, err = getCgroupRoot()
-		if err != nil {
+	{
+		if c.CgroupRoot == "AUTO" {
+			var cgroupRoot CgroupRoot
+			cgroupRoot, err = getCgroupRoot()
+			if err != nil {
+				return
+			}
+
+			c.CgroupRoot = cgroupRoot
+
+			Log.Infow(
+				"Cgroup mount point auto detection done.",
+				"cgroup root", cgroupRoot,
+			)
+		}
+	}
+
+	{
+		if c.Mark == 0 {
+			c.Mark = RerouteMark(rand.Int())
+		}
+	}
+
+	{
+		if c.Rules == nil {
+			Log.Warnw("No rules in config.")
+		}
+	}
+
+	{
+		if c.Proxies == nil {
+			c.Proxies = map[string]*Proxy{}
+		}
+
+		if c.TProxies == nil {
+			c.TProxies = map[string]*TProxy{}
+		}
+
+		for name := range c.TProxies {
+			tp := c.TProxies[name]
+			if tp.Name == "" {
+				tp.Name = name
+			}
+		}
+	}
+
+	{
+		if c.Repeater == nil {
 			return
 		}
 
-		c.CgroupRoot = cgroupRoot
+		rangeExp := regexp.MustCompile(consts.PortsPattern)
 
-		Log.Infow(
-			"Cgroup mount point auto detection done.",
-			"cgroup root", cgroupRoot,
-		)
-	}
+		matchs := rangeExp.FindStringSubmatch(c.Repeater.TProxyPorts)
 
-	if c.Rules == nil {
-		Log.Warnw("No rules in config.")
-	}
+		if len(matchs) != 3 {
+			err = &ErrWrongPortsPattern{
+				Actual: c.Repeater.TProxyPorts,
+			}
+			Wrap(&err)
 
-	if c.Proxies == nil {
-		c.Proxies = map[string]*Proxy{}
-	}
-
-	if c.TProxies == nil {
-		c.TProxies = map[string]*TProxy{}
-	}
-
-	rangeExp := regexp.MustCompile(consts.PortsPattern)
-
-	matchs := rangeExp.FindStringSubmatch(c.Repeater.TProxyPorts)
-
-	if len(matchs) != 3 {
-		err = &ErrWrongPortsPattern{
-			Actual: c.Repeater.TProxyPorts,
+			return
 		}
-		Wrap(&err)
 
-		return
-	}
+		var (
+			begin uint16
+			end   uint16
 
-	var (
-		begin uint16
-		end   uint16
-
-		tmp uint64
-	)
-
-	tmp, err = strconv.ParseUint(matchs[1], 10, 16)
-	if err != nil {
-		Wrap(
-			&err,
-			"Failed to parse port range begin from %s.", matchs[0],
+			tmp uint64
 		)
-		return
-	}
-	begin = uint16(tmp)
 
-	tmp, err = strconv.ParseUint(matchs[2], 10, 16)
-	if err != nil {
-		Wrap(
-			&err,
-			"Failed to parse port range end from %s.", matchs[1],
-		)
-		return
-	}
-	end = uint16(tmp)
+		tmp, err = strconv.ParseUint(matchs[1], 10, 16)
+		if err != nil {
+			Wrap(&err,
+				"Failed to parse port range begin from %s.",
+				matchs[0],
+			)
+			return
+		}
+		begin = uint16(tmp)
 
-	err = c.allocPorts(begin, end)
-	if err != nil {
-		return
-	}
+		tmp, err = strconv.ParseUint(matchs[2], 10, 16)
+		if err != nil {
+			Wrap(&err,
+				"Failed to parse port range end from %s.",
+				matchs[1],
+			)
+			return
+		}
+		end = uint16(tmp)
 
+		err = c.allocPorts(begin, end)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
