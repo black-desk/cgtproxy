@@ -90,6 +90,10 @@ func (m *RuleManager) addRoute() (err error) {
 }
 
 func (m *RuleManager) removeRoute() {
+	if m.route == nil {
+		return
+	}
+
 	err := netlink.RouteDel(m.route)
 
 	if err == nil {
@@ -120,6 +124,10 @@ func (m *RuleManager) addRule() (err error) {
 }
 
 func (m *RuleManager) removeRule() {
+	if m.rule == nil {
+		return
+	}
+
 	err := netlink.RuleDel(m.rule)
 
 	if err == nil {
