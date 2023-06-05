@@ -16,18 +16,17 @@ import (
 // Injectors from wire.go:
 
 func injectedMonitor(core *Core) (*monitor.Monitor, error) {
-	context := provideContext(core)
 	v := provideOutputChan()
 	config, err := provideConfig(core)
 	if err != nil {
 		return nil, err
 	}
 	cgroupRoot := provideCgroupRoot(config)
-	watcher, err := provideWatcher(context, cgroupRoot)
+	watcher, err := provideWatcher(cgroupRoot)
 	if err != nil {
 		return nil, err
 	}
-	monitorMonitor, err := provideMonitor(context, v, watcher)
+	monitorMonitor, err := provideMonitor(v, watcher)
 	if err != nil {
 		return nil, err
 	}
@@ -66,13 +65,12 @@ func injectedRepeater(core *Core) (*repeater.Repeater, error) {
 }
 
 func injectedWatcher(core *Core) (*watcher.Watcher, error) {
-	context := provideContext(core)
 	config, err := provideConfig(core)
 	if err != nil {
 		return nil, err
 	}
 	cgroupRoot := provideCgroupRoot(config)
-	watcherWatcher, err := provideWatcher(context, cgroupRoot)
+	watcherWatcher, err := provideWatcher(cgroupRoot)
 	if err != nil {
 		return nil, err
 	}

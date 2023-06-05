@@ -1,8 +1,6 @@
 package monitor
 
 import (
-	"context"
-
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
@@ -11,7 +9,6 @@ import (
 
 type Monitor struct {
 	watcher *watcher.Watcher          `inject:"true"`
-	ctx     context.Context           `inject:"true"`
 	output  chan<- *types.CgroupEvent `inject:"true"`
 }
 
@@ -29,11 +26,6 @@ func New(opts ...Opt) (ret *Monitor, err error) {
 	{
 		if m.watcher == nil {
 			err = ErrWatcherMissing
-			return
-		}
-
-		if m.ctx == nil {
-			err = ErrContextMissing
 			return
 		}
 
@@ -59,18 +51,6 @@ func WithWatcher(w *watcher.Watcher) Opt {
 			return
 		}
 		mon.watcher = w
-		ret = mon
-		return
-	}
-}
-
-func WithCtx(ctx context.Context) Opt {
-	return func(mon *Monitor) (ret *Monitor, err error) {
-		if ctx == nil {
-			err = ErrContextMissing
-			return
-		}
-		mon.ctx = ctx
 		ret = mon
 		return
 	}

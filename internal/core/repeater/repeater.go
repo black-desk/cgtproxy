@@ -1,5 +1,7 @@
 package repeater
 
+import "context"
+
 type Repeater struct {
 }
 
@@ -9,6 +11,6 @@ func New(opts ...Opt) (ret *Repeater, err error) {
 	panic("Unimplemented")
 }
 
-func (r *Repeater) Run() (err error) {
+func (r *Repeater) Run(ctx context.Context) (err error) {
 	panic("Unimplemented")
 }

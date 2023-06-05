@@ -1,7 +1,6 @@
 package core
 
 import (
-	"context"
 	"sync"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
@@ -32,14 +31,12 @@ var (
 	_wathcerErr  error
 )
 
-func provideWatcher(
-	ctx context.Context, cgroupRoot config.CgroupRoot,
+func provideWatcher(cgroupRoot config.CgroupRoot,
 ) (
 	ret *watcher.Watcher, err error,
 ) {
 	_watcherOnce.Do(func() {
 		_watcher, _wathcerErr = watcher.New(
-			watcher.WithContext(ctx),
 			watcher.WithCgroupRoot(cgroupRoot),
 		)
 	})
@@ -166,14 +163,12 @@ var (
 	_monitorErr  error
 )
 
-func provideMonitor(
-	ctx context.Context, ch chan<- *types.CgroupEvent, w *watcher.Watcher,
+func provideMonitor(ch chan<- *types.CgroupEvent, w *watcher.Watcher,
 ) (
 	ret *monitor.Monitor, err error,
 ) {
 	_monitorOnce.Do(func() {
 		_monitor, _monitorErr = monitor.New(
-			monitor.WithCtx(ctx),
 			monitor.WithOutput(ch),
 			monitor.WithWatcher(w),
 		)
@@ -185,10 +180,6 @@ func provideMonitor(
 
 	ret = _monitor
 	return
-}
-
-func provideContext(c *Core) context.Context {
-	return c.ctx
 }
 
 func provideCgroupRoot(cfg *config.Config) config.CgroupRoot {
@@ -209,7 +200,6 @@ var set = wire.NewSet(
 	provideRuleManager,
 	provideRepeater,
 	provideMonitor,
-	provideContext,
 	provideCgroupRoot,
 	provideRerouteMark,
 )

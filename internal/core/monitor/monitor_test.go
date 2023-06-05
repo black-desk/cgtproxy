@@ -2,7 +2,6 @@ package monitor_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -11,24 +10,24 @@ import (
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/black-desk/lib/go/gomega-helper"
-	"github.com/fsnotify/fsnotify"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/sourcegraph/conc/pool"
+	"github.com/tywkeene/go-fsevents"
+	"golang.org/x/sys/unix"
 )
 
-var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
+var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, func() {
 	var (
 		w               *watcher.Watcher
 		cgroupEventChan chan *types.CgroupEvent
-		ctx             context.Context
 		monitor         *Monitor
 	)
 
 	BeforeEach(func() {
 		w = &watcher.Watcher{
-			Watcher: &fsnotify.Watcher{
-				Events: make(chan fsnotify.Event),
+			Watcher: &fsevents.Watcher{
+				Events: make(chan *fsevents.FsEvent),
 				Errors: make(chan error),
 			},
 		}
@@ -38,13 +37,10 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 		var cgroupEventChanIn chan<- *types.CgroupEvent
 		cgroupEventChanIn = cgroupEventChan
 
-		ctx = context.Background()
-
 		var err error
 
 		monitor, err = New(
 			WithWatcher(w),
-			WithCtx(ctx),
 			WithOutput(cgroupEventChanIn),
 		)
 		Expect(err).To(Succeed())
@@ -52,37 +48,40 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 
 	ContextTable("receive %s", func(
 		resultMsg string,
-		events []fsnotify.Event, errs []error,
+		events []*fsevents.FsEvent, errs []error,
 		expectResult []*types.CgroupEvent, expectErr error,
 	) {
-		var p *pool.ErrorPool
+		var p *pool.ContextPool
 
 		BeforeEach(func() {
-			p = new(pool.ErrorPool)
+			p = pool.New().WithContext(context.Background()).WithFirstError().WithCancelOnError()
 
-			p.Go(func() error {
+			p.Go(func(ctx context.Context) error {
+				defer close(w.Events)
 				for i := range events {
-					w.Events <- events[i]
+					select {
+					case w.Events <- events[i]:
+					case <-ctx.Done():
+						return ctx.Err()
+					}
 				}
-				close(w.Events)
 				return nil
 			})
 
-			p.Go(func() error {
-				// NOTE(black_desk): Errors from fsnotify is ignored for now.
+			p.Go(func(ctx context.Context) error {
+				defer close(w.Errors)
+				// NOTE(black_desk): Errors from fsevents is ignored for now.
 				for i := range errs {
-					w.Errors <- errs[i]
+					select {
+					case w.Errors <- errs[i]:
+					case <-ctx.Done():
+						return ctx.Err()
+					}
 				}
-				close(w.Errors)
 				return nil
 			})
 
 			p.Go(monitor.Run)
-		})
-
-		AfterEach(func() {
-			result := errors.Is(ctx.Err(), nil)
-			Expect(result).To(BeTrue())
 		})
 
 		It(fmt.Sprintf("should %s", resultMsg), func() {
@@ -103,9 +102,9 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 	},
 		ContextTableEntry(
 			"send a `New` event, and exit with no error",
-			[]fsnotify.Event{{
-				Name: "/test/path/1",
-				Op:   fsnotify.Create,
+			[]*fsevents.FsEvent{{
+				Path:     "/test/path/1",
+				RawEvent: &unix.InotifyEvent{Mask: fsevents.IsDir | fsevents.Create | fsevents.MovedTo},
 			}},
 			[]error{},
 			[]*types.CgroupEvent{{
@@ -113,12 +112,12 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 				EventType: types.CgroupEventTypeNew,
 			}},
 			nil,
-		).WithFmt("a fsnotify.Event with fsnotify.Create"),
+		).WithFmt("a DirCreated fsevents.Event"),
 		ContextTableEntry(
 			"send a `Delete` event, and exit with no error",
-			[]fsnotify.Event{{
-				Name: "/test/path/2",
-				Op:   fsnotify.Remove,
+			[]*fsevents.FsEvent{{
+				Path:     "/test/path/2",
+				RawEvent: &unix.InotifyEvent{Mask: fsevents.IsDir | fsevents.Delete | fsevents.MovedFrom},
 			}},
 			[]error{},
 			[]*types.CgroupEvent{{
@@ -126,23 +125,23 @@ var _ = Describe("Cgroup monitor create with fake fsnotify.Watcher", func() {
 				EventType: types.CgroupEventTypeDelete,
 			}},
 			nil,
-		).WithFmt("a fsnotify.Event with fsnotify.Delete"),
+		).WithFmt("a DirDeleted fsevents.Event"),
 		ContextTableEntry(
 			"send nothing, and exit with no error",
-			[]fsnotify.Event{},
+			[]*fsevents.FsEvent{},
 			[]error{},
 			[]*types.CgroupEvent{},
 			nil,
 		).WithFmt("nothing"),
 		ContextTableEntry(
 			"send nothing, and exit with error",
-			[]fsnotify.Event{{
-				Name: "/test/path/3",
-				Op:   fsnotify.Op(0),
+			[]*fsevents.FsEvent{{
+				Path:     "/test/path/3",
+				RawEvent: &unix.InotifyEvent{},
 			}},
 			[]error{},
 			[]*types.CgroupEvent{},
-			new(ErrUnexpectFsEventOp),
+			new(ErrUnexpectFsEvent),
 		).WithFmt("invalid fsnotify.Event"),
 	)
 })

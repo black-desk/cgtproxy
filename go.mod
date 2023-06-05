@@ -23,6 +23,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/google/subcommands v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/tywkeene/go-fsevents v0.2.1-0.20210417193827-d7e9fb3063aa // indirect
 	golang.org/x/mod v0.10.0 // indirect
 )
 

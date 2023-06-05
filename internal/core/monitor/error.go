@@ -4,19 +4,18 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/fsnotify/fsnotify"
+	"golang.org/x/sys/unix"
 )
 
 var (
 	ErrWatcherMissing = errors.New("Watcher is missing.")
-	ErrContextMissing = errors.New("Context is missing.")
 	ErrOutputMissing  = errors.New("Output is missing.")
 )
 
-type ErrUnexpectFsEventOp struct {
-	Op fsnotify.Op
+type ErrUnexpectFsEvent struct {
+	*unix.InotifyEvent
 }
 
-func (e *ErrUnexpectFsEventOp) Error() string {
-	return fmt.Sprintf("Unexpected fs event op: %d \"%s\".", e.Op, e.Op.String())
+func (e *ErrUnexpectFsEvent) Error() string {
+	return fmt.Sprintf("Unexpected fs event op: %v.", e.InotifyEvent)
 }
