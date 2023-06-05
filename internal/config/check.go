@@ -139,12 +139,13 @@ func getCgroupRoot() (cgroupRoot CgroupRoot, err error) {
 	for i := range mounts {
 		mount := mounts[i]
 		fsVfsType := mount.VfsType
-		fsFile = CgroupRoot(mount.File)
 
-		if fsVfsType == "cgroup2" {
-			mountFound = true
-			break
+		if fsVfsType != "cgroup2" {
+			continue
 		}
+
+		fsFile = CgroupRoot(mount.File)
+		mountFound = true
 	}
 
 	if !mountFound {
