@@ -169,26 +169,32 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 		return
 	}
 
+	DumpNFTableRules()
+
+	Log.Debugw("Adding bypass cgroup set.",
+		"level", level,
+	)
+
 	set := &nftables.Set{
 		Table:   t.table,
 		Name:    fmt.Sprintf("bypass-cgroup-%d", level),
 		KeyType: nftables.TypeCGroupV2,
 	}
 
-	{
-		err = t.conn.AddSet(set, []nftables.SetElement{})
-		if err != nil {
-			return
-		}
-		t.conn.Flush()
-		if err != nil {
-			return
-		}
+	err = t.conn.AddSet(set, []nftables.SetElement{})
+	if err != nil {
+		return
+	}
+	t.conn.Flush()
+	if err != nil {
+		return
 	}
 
-	rules := t.getRules(t.table, t.outputChain)
+	DumpNFTableRules()
 
-	position := len(rules) - 2
+	Log.Debugw("Updating prerouting chain.")
+
+	position := len(t.outputRules)
 
 	for i := uint32(0); i < level; i++ {
 		if _, ok := t.bypassCgroupSets[i]; !ok {
@@ -197,14 +203,13 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 		position--
 	}
 
-	// WARN(black_desk): Seems InsertRule will not insert rule but
-	// will replace rule with Handle is set.
+	rules := make([]*nftables.Rule, len(t.outputRules[:position]))
+	copy(rules, t.outputRules)
 
-	// socket cgroupv2 level x @bypass-cgroup-x return
-	t.conn.InsertRule(&nftables.Rule{
-		Table:    t.table,
-		Chain:    t.outputChain,
-		Position: rules[position].Handle,
+	rules = append(rules, &nftables.Rule{
+		// socket cgroupv2 level x @bypass-cgroup-x return
+		Table: t.table,
+		Chain: t.outputChain,
 		Exprs: []expr.Any{
 			&expr.Socket{ // socket load cgroupv2 => reg 1
 				Key:      expr.SocketKeyCgroupv2,
@@ -220,10 +225,20 @@ func (t *Table) addBypassCgroupSetIfNeed(level uint32) (err error) {
 			},
 		},
 	})
-	t.conn.Flush()
+	rules = append(rules, t.outputRules[position:]...)
+
+	t.conn.FlushChain(t.outputChain)
+	t.conn.AddSet(t.protoSet, t.protoSetElement)
+	for _, rule := range rules {
+		t.conn.AddRule(rule)
+	}
+
+	err = t.conn.Flush()
 	if err != nil {
 		return
 	}
+
+	t.outputRules = rules
 
 	t.bypassCgroupSets[level] = cgroupSet{
 		set:      set,
@@ -244,6 +259,12 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 		return
 	}
 
+	DumpNFTableRules()
+
+	Log.Debugw("Adding tproxy cgroup map.",
+		"level", level,
+	)
+
 	set := &nftables.Set{
 		Table:    t.table,
 		Name:     fmt.Sprintf("cgroup-map-%d", level),
@@ -252,20 +273,20 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 		IsMap:    true,
 	}
 
-	{
-		err = t.conn.AddSet(set, []nftables.SetElement{})
-		if err != nil {
-			return
-		}
-		err = t.conn.Flush()
-		if err != nil {
-			return
-		}
+	err = t.conn.AddSet(set, []nftables.SetElement{})
+	if err != nil {
+		return
+	}
+	err = t.conn.Flush()
+	if err != nil {
+		return
 	}
 
-	rules := t.getRules(t.table, t.preroutingChain)
+	DumpNFTableRules()
 
-	position := len(rules) - 1
+	Log.Debugw("Updating prerouting chain.")
+
+	position := len(t.preroutingRules) - 1
 
 	for i := uint32(0); i < level; i++ {
 		if _, ok := t.cgroupMaps[i]; !ok {
@@ -274,11 +295,14 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 		position--
 	}
 
-	// socket cgroupv2 level x vmap @cgroup-map-x
-	t.conn.InsertRule(&nftables.Rule{
-		Table:    t.table,
-		Chain:    t.preroutingChain,
-		Position: rules[position].Handle,
+	rules := make([]*nftables.Rule, len(t.preroutingRules[:position]))
+
+	copy(rules, t.preroutingRules)
+
+	rules = append(rules, &nftables.Rule{
+		// socket cgroupv2 level x vmap @cgroup-map-x
+		Table: t.table,
+		Chain: t.preroutingChain,
 		Exprs: []expr.Any{
 			&expr.Socket{ // socket load cgroupv2 => reg 1
 				Key:      expr.SocketKeyCgroupv2,
@@ -292,10 +316,19 @@ func (t *Table) addTProxyCgroupMapIfNeed(level uint32) (err error) {
 			},
 		},
 	})
+	rules = append(rules, t.preroutingRules[position:]...)
+
+	t.conn.FlushChain(t.preroutingChain)
+	t.conn.AddSet(t.protoSet, t.protoSetElement)
+	for _, rule := range rules {
+		t.conn.AddRule(rule)
+	}
 	err = t.conn.Flush()
 	if err != nil {
 		return
 	}
+
+	t.preroutingRules = rules
 
 	t.cgroupMaps[level] = cgroupSet{
 		set:      set,

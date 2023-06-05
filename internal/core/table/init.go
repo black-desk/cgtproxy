@@ -33,11 +33,10 @@ func (t *Table) initStructure() (err error) {
 
 	Log.Debug("Initialing nft table structure.")
 
-	t.table = &nftables.Table{
+	t.table = t.conn.AddTable(&nftables.Table{
 		Name:   consts.NftTableName,
 		Family: nftables.TableFamilyINet,
-	}
-	t.conn.AddTable(t.table)
+	})
 
 	t.ipv4BypassSet = &nftables.Set{
 		Table:   t.table,
@@ -97,15 +96,14 @@ func (t *Table) initStructure() (err error) {
 	t.policy = nftables.ChainPolicyAccept
 
 	{ // type filter hook prerouting priority mangle; policy accept;
-		t.outputChain = &nftables.Chain{
+		t.outputChain = t.conn.AddChain(&nftables.Chain{
 			Table:    t.table,
 			Name:     "output",
 			Type:     nftables.ChainTypeRoute,
 			Hooknum:  nftables.ChainHookOutput,
 			Priority: nftables.ChainPriorityMangle,
 			Policy:   &t.policy,
-		}
-		t.conn.AddChain(t.outputChain)
+		})
 		err = t.conn.Flush()
 		if err != nil {
 			return
@@ -113,77 +111,87 @@ func (t *Table) initStructure() (err error) {
 	}
 
 	{ // ip daddr @bypass return
-		t.conn.AddRule(&nftables.Rule{
+		exprs := []expr.Any{
+			&expr.Meta{ // meta load nfproto => reg 1
+				Key:      expr.MetaKeyNFPROTO,
+				Register: 1,
+			},
+			&expr.Cmp{ // cmp eq reg 1 0x00000002
+				Op:       expr.CmpOpEq,
+				Register: 1,
+				Data:     []byte{0x00000002},
+			},
+			&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
+				OperationType: expr.PayloadLoad,
+				DestRegister:  1,
+				Base:          expr.PayloadBaseNetworkHeader,
+				Offset:        16,
+				Len:           4,
+			},
+			&expr.Lookup{ // lookup reg 1 set bypass
+				SourceRegister: 1,
+				SetID:          t.ipv4BypassSet.ID,
+				SetName:        t.ipv4BypassSet.Name,
+			},
+			&expr.Verdict{ // immediate reg 0 return
+				Kind: expr.VerdictReturn,
+			},
+		}
+
+		rule := t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.outputChain,
-			Exprs: []expr.Any{
-				&expr.Meta{ // meta load nfproto => reg 1
-					Key:      expr.MetaKeyNFPROTO,
-					Register: 1,
-				},
-				&expr.Cmp{ // cmp eq reg 1 0x00000002
-					Op:       expr.CmpOpEq,
-					Register: 1,
-					Data:     []byte{0x00000002},
-				},
-				&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
-					OperationType: expr.PayloadLoad,
-					DestRegister:  1,
-					Base:          expr.PayloadBaseNetworkHeader,
-					Offset:        16,
-					Len:           4,
-				},
-				&expr.Lookup{ // lookup reg 1 set bypass
-					SourceRegister: 1,
-					SetID:          t.ipv4BypassSet.ID,
-					SetName:        t.ipv4BypassSet.Name,
-				},
-				&expr.Verdict{ // immediate reg 0 return
-					Kind: expr.VerdictReturn,
-				},
-			},
+			Exprs: exprs,
 		})
+
 		err = t.conn.Flush()
 		if err != nil {
 			return
 		}
+
+		t.outputRules = append(t.outputRules, rule)
 	}
 
 	{ // ip6 daddr @bypass6 return
-		t.conn.AddRule(&nftables.Rule{
+		exprs := []expr.Any{
+			&expr.Meta{ // meta load nfproto => reg 1
+				Key:      expr.MetaKeyNFPROTO,
+				Register: 1,
+			},
+			&expr.Cmp{ // cmp eq reg 1 0x0000000a
+				Op:       expr.CmpOpEq,
+				Register: 1,
+				Data:     []byte{0x0000000a},
+			},
+			&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
+				OperationType: expr.PayloadLoad,
+				DestRegister:  1,
+				Base:          expr.PayloadBaseNetworkHeader,
+				Offset:        24,
+				Len:           16,
+			},
+			&expr.Lookup{ // lookup reg 1 set bypass
+				SourceRegister: 1,
+				SetID:          t.ipv6BypassSet.ID,
+				SetName:        t.ipv6BypassSet.Name,
+			},
+			&expr.Verdict{ // immediate reg 0 return
+				Kind: expr.VerdictReturn,
+			},
+		}
+
+		rule := t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.outputChain,
-			Exprs: []expr.Any{
-				&expr.Meta{ // meta load nfproto => reg 1
-					Key:      expr.MetaKeyNFPROTO,
-					Register: 1,
-				},
-				&expr.Cmp{ // cmp eq reg 1 0x0000000a
-					Op:       expr.CmpOpEq,
-					Register: 1,
-					Data:     []byte{0x0000000a},
-				},
-				&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
-					OperationType: expr.PayloadLoad,
-					DestRegister:  1,
-					Base:          expr.PayloadBaseNetworkHeader,
-					Offset:        24,
-					Len:           16,
-				},
-				&expr.Lookup{ // lookup reg 1 set bypass
-					SourceRegister: 1,
-					SetID:          t.ipv6BypassSet.ID,
-					SetName:        t.ipv6BypassSet.Name,
-				},
-				&expr.Verdict{ // immediate reg 0 return
-					Kind: expr.VerdictReturn,
-				},
-			},
+			Exprs: exprs,
 		})
+
 		err = t.conn.Flush()
 		if err != nil {
 			return
 		}
+
+		t.outputRules = append(t.outputRules, rule)
 	}
 
 	{ // meta l4proto != { tcp, udp } return
@@ -192,63 +200,74 @@ func (t *Table) initStructure() (err error) {
 			return
 		}
 
-		t.conn.AddRule(&nftables.Rule{
+		exprs := []expr.Any{
+			&expr.Meta{ // meta load l4proto => reg 1
+				Key:      expr.MetaKeyL4PROTO,
+				Register: 1,
+			},
+			&expr.Lookup{ // lookup reg 1 set __set%d
+				SourceRegister: 1,
+				SetID:          t.protoSet.ID,
+				SetName:        t.protoSet.Name,
+				Invert:         true,
+			},
+			&expr.Verdict{ // immediate reg 0 return
+				Kind: expr.VerdictReturn,
+			},
+		}
+
+		rule := t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.outputChain,
-			Exprs: []expr.Any{
-				&expr.Meta{ // meta load l4proto => reg 1
-					Key:      expr.MetaKeyL4PROTO,
-					Register: 1,
-				},
-				&expr.Lookup{ // lookup reg 1 set __set%d
-					SourceRegister: 1,
-					SetID:          t.protoSet.ID,
-					SetName:        t.protoSet.Name,
-					Invert:         true,
-				},
-				&expr.Verdict{ // immediate reg 0 return
-					Kind: expr.VerdictReturn,
-				},
-			},
+			Exprs: exprs,
 		})
+
 		err = t.conn.Flush()
 		if err != nil {
 			return
 		}
+
+		t.outputRules = append(t.outputRules, rule)
 	}
 
 	{ // meta mark set ...
-		t.conn.AddRule(&nftables.Rule{
+		exprs := []expr.Any{
+			&expr.Immediate{ // immediate reg 1 ...
+				Register: 1,
+				Data: binaryutil.NativeEndian.PutUint32(
+					uint32(t.rerouteMark),
+				),
+			},
+			&expr.Meta{
+				Key:            expr.MetaKeyMARK,
+				SourceRegister: true,
+				Register:       1,
+			},
+		}
+
+		rule := t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.outputChain,
-			Exprs: []expr.Any{
-				&expr.Immediate{ // immediate reg 1 ...
-					Register: 1,
-					Data:     binaryutil.NativeEndian.PutUint32(uint32(t.rerouteMark)),
-				},
-				&expr.Meta{
-					Key:            expr.MetaKeyMARK,
-					SourceRegister: true,
-					Register:       1,
-				},
-			},
+			Exprs: exprs,
 		})
+
 		err = t.conn.Flush()
 		if err != nil {
 			return
 		}
+
+		t.outputRules = append(t.outputRules, rule)
 	}
 
 	{ // type route hook output priority mangle; policy accept;
-		t.preroutingChain = &nftables.Chain{
+		t.preroutingChain = t.conn.AddChain(&nftables.Chain{
 			Table:    t.table,
 			Name:     "prerouting",
 			Type:     nftables.ChainTypeFilter,
 			Hooknum:  nftables.ChainHookPrerouting,
 			Priority: nftables.ChainPriorityMangle,
 			Policy:   &t.policy,
-		}
-		t.conn.AddChain(t.preroutingChain)
+		})
 		err = t.conn.Flush()
 		if err != nil {
 			return
@@ -256,93 +275,108 @@ func (t *Table) initStructure() (err error) {
 	}
 
 	{ // ip daddr @bypass return
-		t.conn.AddRule(&nftables.Rule{
+		exprs := []expr.Any{
+			&expr.Meta{ // meta load nfproto => reg 1
+				Key:      expr.MetaKeyNFPROTO,
+				Register: 1,
+			},
+			&expr.Cmp{ // cmp eq reg 1 0x00000002
+				Op:       expr.CmpOpEq,
+				Register: 1,
+				Data:     []byte{0x00000002},
+			},
+			&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
+				OperationType: expr.PayloadLoad,
+				DestRegister:  1,
+				Base:          expr.PayloadBaseNetworkHeader,
+				Offset:        16,
+				Len:           4,
+			},
+			&expr.Lookup{ // lookup reg 1 set bypass
+				SourceRegister: 1,
+				SetID:          t.ipv4BypassSet.ID,
+				SetName:        t.ipv4BypassSet.Name,
+			},
+			&expr.Verdict{ // immediate reg 0 return
+				Kind: expr.VerdictReturn,
+			},
+		}
+
+		rule := t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.preroutingChain,
-			Exprs: []expr.Any{
-				&expr.Meta{ // meta load nfproto => reg 1
-					Key:      expr.MetaKeyNFPROTO,
-					Register: 1,
-				},
-				&expr.Cmp{ // cmp eq reg 1 0x00000002
-					Op:       expr.CmpOpEq,
-					Register: 1,
-					Data:     []byte{0x00000002},
-				},
-				&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
-					OperationType: expr.PayloadLoad,
-					DestRegister:  1,
-					Base:          expr.PayloadBaseNetworkHeader,
-					Offset:        16,
-					Len:           4,
-				},
-				&expr.Lookup{ // lookup reg 1 set bypass
-					SourceRegister: 1,
-					SetID:          t.ipv4BypassSet.ID,
-					SetName:        t.ipv4BypassSet.Name,
-				},
-				&expr.Verdict{ // immediate reg 0 return
-					Kind: expr.VerdictReturn,
-				},
-			},
+			Exprs: exprs,
 		})
+
 		err = t.conn.Flush()
 		if err != nil {
 			return
 		}
+
+		t.preroutingRules = append(t.preroutingRules, rule)
 	}
 
 	{ // ip6 daddr @bypass6 return
-		t.conn.AddRule(&nftables.Rule{
+		exprs := []expr.Any{
+			&expr.Meta{ // meta load nfproto => reg 1
+				Key:      expr.MetaKeyNFPROTO,
+				Register: 1,
+			},
+			&expr.Cmp{ // cmp eq reg 1 0x0000000a
+				Op:       expr.CmpOpEq,
+				Register: 1,
+				Data:     []byte{0x0000000a},
+			},
+			&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
+				OperationType: expr.PayloadLoad,
+				DestRegister:  1,
+				Base:          expr.PayloadBaseNetworkHeader,
+				Offset:        24,
+				Len:           16,
+			},
+			&expr.Lookup{ // lookup reg 1 set bypass
+				SourceRegister: 1,
+				SetID:          t.ipv6BypassSet.ID,
+				SetName:        t.ipv6BypassSet.Name,
+			},
+			&expr.Verdict{ // immediate reg 0 return
+				Kind: expr.VerdictReturn,
+			},
+		}
+
+		rule := t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.preroutingChain,
-			Exprs: []expr.Any{
-				&expr.Meta{ // meta load nfproto => reg 1
-					Key:      expr.MetaKeyNFPROTO,
-					Register: 1,
-				},
-				&expr.Cmp{ // cmp eq reg 1 0x0000000a
-					Op:       expr.CmpOpEq,
-					Register: 1,
-					Data:     []byte{0x0000000a},
-				},
-				&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
-					OperationType: expr.PayloadLoad,
-					DestRegister:  1,
-					Base:          expr.PayloadBaseNetworkHeader,
-					Offset:        24,
-					Len:           16,
-				},
-				&expr.Lookup{ // lookup reg 1 set bypass
-					SourceRegister: 1,
-					SetID:          t.ipv6BypassSet.ID,
-					SetName:        t.ipv6BypassSet.Name,
-				},
-				&expr.Verdict{ // immediate reg 0 return
-					Kind: expr.VerdictReturn,
-				},
-			},
+			Exprs: exprs,
 		})
+
 		err = t.conn.Flush()
 		if err != nil {
 			return
 		}
+
+		t.preroutingRules = append(t.preroutingRules, rule)
 	}
 
 	{ // accept
-		t.conn.AddRule(&nftables.Rule{
+		exprs := []expr.Any{
+			&expr.Verdict{ // accept
+				Kind: expr.VerdictAccept,
+			},
+		}
+
+		rule := t.conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: t.preroutingChain,
-			Exprs: []expr.Any{
-				&expr.Verdict{ // accept
-					Kind: expr.VerdictAccept,
-				},
-			},
+			Exprs: exprs,
 		})
+
 		err = t.conn.Flush()
 		if err != nil {
 			return
 		}
+
+		t.preroutingRules = append(t.preroutingRules, rule)
 	}
 
 	Log.Debug("nft table structure initialized.")

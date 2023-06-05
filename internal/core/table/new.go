@@ -31,7 +31,9 @@ type Table struct {
 	cgroupMaps map[uint32]cgroupSet // level -> cgroupSet
 
 	outputChain     *nftables.Chain
+	outputRules     []*nftables.Rule
 	preroutingChain *nftables.Chain
+	preroutingRules []*nftables.Rule
 }
 
 type cgroupSet struct {
