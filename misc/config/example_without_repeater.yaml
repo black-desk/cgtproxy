@@ -1,0 +1,11 @@
+version: 1
+cgroup-root: AUTO
+
+tproxies:
+  clash:
+    port: 7893
+    addr: 127.0.0.1
+
+rules:
+  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/app\.slice\/.*
+    tproxy: clash
