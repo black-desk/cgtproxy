@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	ErrTooFewPorts = errors.New("Too few ports for tproxy")
+	ErrTooFewPorts              = errors.New("Too few ports for tproxy")
+	ErrCannotFoundCgroupv2Mount = errors.New("`cgroup2` mount point not found in /proc/mounts.")
 )
 
 type ErrWrongPortsPattern struct {

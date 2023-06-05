@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"regexp"
@@ -155,7 +154,7 @@ func getCgroupRoot() (cgroupRoot CgroupRoot, err error) {
 	}
 
 	if !mountFound {
-		err = errors.New("`cgroup2` mount point not found in /proc/mounts.")
+		err = ErrCannotFoundCgroupv2Mount
 		return
 	}
 
