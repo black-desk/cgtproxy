@@ -5,6 +5,7 @@ import (
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/table"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
@@ -16,7 +17,10 @@ type RuleManager struct {
 	nft *table.Table   `inject:"true"`
 	cfg *config.Config `inject:"true"`
 
-	matchers []*regexp.Regexp
+	matchers []*struct {
+		reg    *regexp.Regexp
+		target table.Target
+	}
 
 	rule  *netlink.Rule
 	route *netlink.Route
@@ -35,16 +39,38 @@ func New(opts ...Opt) (ret *RuleManager, err error) {
 
 	for i := range m.cfg.Rules {
 		regex := m.cfg.Rules[i].Match
-		var matcher *regexp.Regexp
-		matcher, err = regexp.Compile(regex)
+		var matcher struct {
+			reg    *regexp.Regexp
+			target table.Target
+		}
+
+		matcher.reg, err = regexp.Compile(regex)
 		if err != nil {
 			return
 		}
 
-		m.matchers = append(m.matchers, matcher)
+		if m.cfg.Rules[i].Direct {
+			matcher.target.Op = table.TargetDirect
+		} else if m.cfg.Rules[i].Drop {
+			matcher.target.Op = table.TargetDrop
+		} else if m.cfg.Rules[i].Proxy != "" {
+			matcher.target.Op = table.TargetTProxy
+			matcher.target.Chain =
+				m.cfg.Proxies[m.cfg.Rules[i].Proxy].TProxy.Name
+		} else if m.cfg.Rules[i].TProxy != "" {
+			matcher.target.Op = table.TargetTProxy
+			matcher.target.Chain =
+				m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
+		} else {
+			panic("this should never happened.")
+		}
+
+		m.matchers = append(m.matchers, &matcher)
 	}
 
 	ret = m
+
+	Log.Debugw("Create a new nft rule manager.")
 	return
 }
 

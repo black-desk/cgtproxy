@@ -47,7 +47,6 @@ func (m *RuleManager) initializeNftableRuels() (err error) {
 	defer Wrap(&err, "Failed to initialize nftable ruels.")
 
 	for _, tp := range m.cfg.TProxies {
-		// NOTE(black_desk): Same as `addChainForProxy`.
 		err = m.nft.AddChainAndRulesForTProxy(tp)
 		if err != nil {
 			return
@@ -135,7 +134,7 @@ func (m *RuleManager) removeRule() {
 func (m *RuleManager) handleNewCgroup(path string) {
 	var target table.Target
 	for i := range m.matchers {
-		if !m.matchers[i].Match([]byte(path)) {
+		if !m.matchers[i].reg.Match([]byte(path)) {
 			continue
 		}
 
@@ -144,21 +143,7 @@ func (m *RuleManager) handleNewCgroup(path string) {
 			"rule", m.cfg.Rules[i].String(),
 		)
 
-		if m.cfg.Rules[i].Direct {
-			target.Op = table.TargetDirect
-		} else if m.cfg.Rules[i].Drop {
-			target.Op = table.TargetDrop
-		} else if m.cfg.Rules[i].Proxy != "" {
-			target.Op = table.TargetTProxy
-			target.Chain =
-				m.cfg.Proxies[m.cfg.Rules[i].Proxy].TProxy.Name
-		} else if m.cfg.Rules[i].TProxy != "" {
-			target.Op = table.TargetTProxy
-			target.Chain =
-				m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
-		} else {
-			panic("this should never happened.")
-		}
+		target = m.matchers[i].target
 
 		break
 	}
