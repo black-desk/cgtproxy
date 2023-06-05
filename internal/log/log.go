@@ -17,16 +17,24 @@ func init() {
 		err    error
 	)
 
-	logger, err = zapjournal.New()
-	if err != nil {
-		log.Default().Printf("Failed to use zap-journal:\n%s", err.Error())
-		log.Default().Printf("Fallback to zap default production logger")
+	defer func() {
+		Log = logger.Sugar()
+	}()
 
-		logger, err = zap.NewProduction()
-		if err != nil {
-			panic("Failed to use zap production logger:\n" + err.Error())
-		}
+	logger, err = zapjournal.New()
+	if err == nil {
+		return
 	}
 
-	Log = logger.Sugar()
+	log.Default().Printf("Failed to use zap-journal: %v", err)
+	log.Default().Printf("Fallback to zap default production logger.")
+
+	logger, err = zap.NewProduction()
+	if err == nil {
+		return
+	}
+
+	log.Default().Printf("Failed to use zap production logger: %v", err)
+	log.Default().Printf("Disable logging.")
+	logger = zap.NewNop()
 }
