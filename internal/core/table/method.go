@@ -48,17 +48,19 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 
 	level := uint32(strings.Count(path, "/"))
 
-	setElement := nftables.SetElement{
-		Key: binaryutil.NativeEndian.PutUint64(
-			fileInfo.Sys().(*syscall.Stat_t).Ino,
-		),
-	}
-
 	switch target.Op {
 	case TargetDirect:
 		err = t.addBypassCgroupSetIfNeed(level)
 		if err != nil {
 			return
+		}
+
+		// FIXME(black_desk): when add cgroup element to a regular map,
+		// we should use NativeEndian.
+		setElement := nftables.SetElement{
+			Key: binaryutil.NativeEndian.PutUint64(
+				fileInfo.Sys().(*syscall.Stat_t).Ino,
+			),
 		}
 
 		err = t.conn.SetAddElements(
@@ -81,9 +83,17 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 			return
 		}
 
-		setElement.VerdictData = &expr.Verdict{
-			Kind:  expr.VerdictJump,
-			Chain: target.Chain,
+		// FIXME(black_desk): when add cgroup element to a vmap,
+		// it seems that we should use BigEndian. But why?
+
+		setElement := nftables.SetElement{
+			Key: binaryutil.BigEndian.PutUint64(
+				fileInfo.Sys().(*syscall.Stat_t).Ino,
+			),
+			VerdictData: &expr.Verdict{
+				Kind:  expr.VerdictJump,
+				Chain: target.Chain,
+			},
 		}
 
 		err = t.conn.SetAddElements(
@@ -107,8 +117,16 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 			return
 		}
 
-		setElement.VerdictData = &expr.Verdict{
-			Kind: expr.VerdictDrop,
+		// FIXME(black_desk): when add cgroup element to a vmap,
+		// it seems that we should use BigEndian. But why?
+
+		setElement := nftables.SetElement{
+			Key: binaryutil.BigEndian.PutUint64(
+				fileInfo.Sys().(*syscall.Stat_t).Ino,
+			),
+			VerdictData: &expr.Verdict{
+				Kind: expr.VerdictDrop,
+			},
 		}
 
 		err = t.conn.SetAddElements(
