@@ -3,29 +3,19 @@ package table_test
 import (
 	"math/rand"
 	"os"
-	"os/exec"
 	"syscall"
 	"testing"
 
 	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/table"
+	. "github.com/black-desk/deepin-network-proxy-manager/internal/core/table/internal"
 	tabletest "github.com/black-desk/deepin-network-proxy-manager/internal/core/table/internal/test"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	"github.com/google/nftables"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
-
-func getNftRules() (res string) {
-	out, err := exec.Command("nft", "list", "ruleset").Output()
-	if err != nil {
-		panic(err)
-	}
-
-	res = string(out)
-	return
-}
 
 var _ = Describe("Netfliter table", Ordered, func() {
 	var (
@@ -93,7 +83,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 			It("should clear the nft table with no error", func() {
 				Expect(err).To(Succeed())
 
-				result = getNftRules()
+				result = GetNFTableRules()
 				Expect(result).To(BeEmpty())
 			})
 		})
@@ -109,13 +99,13 @@ var _ = Describe("Netfliter table", Ordered, func() {
 				By("Initialize table with tproxies.", func() {
 					for _, tp := range tps {
 						err = t.AddChainAndRulesForTProxy(tp.t)
-						Expect(err).To(Succeed(), "nft:\n%s", getNftRules())
+						Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 					}
 				})
 			})
 
 			It("should produce expected nftable rules", func() {
-				result = getNftRules()
+				result = GetNFTableRules()
 
 				Expect(result).To(ContainSubstring(consts.NftTableName))
 				for _, tp := range tps {
@@ -133,28 +123,28 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					err = t.AddCgroup("/sys/fs/cgroup/test/a",
 						&table.Target{Op: table.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name},
 					)
-					Expect(err).To(Succeed(), "nft:\n%s", getNftRules())
+					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
 					err = os.MkdirAll("/sys/fs/cgroup/test/b", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup("/sys/fs/cgroup/test/b",
 						&table.Target{Op: table.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name},
 					)
-					Expect(err).To(Succeed(), "nft:\n%s", getNftRules())
+					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
 					err = os.MkdirAll("/sys/fs/cgroup/test/c", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup("/sys/fs/cgroup/test/c",
 						&table.Target{Op: table.TargetDrop},
 					)
-					Expect(err).To(Succeed(), "nft:\n%s", getNftRules())
+					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
 					err = os.MkdirAll("/sys/fs/cgroup/test/d/d", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup("/sys/fs/cgroup/test/d/d",
 						&table.Target{Op: table.TargetDirect},
 					)
-					Expect(err).To(Succeed(), "nft:\n%s", getNftRules())
+					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 				})
 
 				AfterEach(func() {
@@ -173,7 +163,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 				})
 
 				It("should produce expected nftable rules", func() {
-					result = getNftRules()
+					result = GetNFTableRules()
 					{
 						Expect(result).To(ContainSubstring(consts.NftTableName))
 						for _, tp := range tps {
@@ -200,7 +190,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					})
 
 					It("should produce expected nftable rules", func() {
-						result = getNftRules()
+						result = GetNFTableRules()
 						Expect(result).ToNot(ContainSubstring("jump"))
 						Expect(result).ToNot(ContainSubstring("drop"))
 					})
@@ -210,11 +200,11 @@ var _ = Describe("Netfliter table", Ordered, func() {
 							err = t.AddCgroup("/sys/fs/cgroup/test/a",
 								&table.Target{Op: table.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name},
 							)
-							Expect(err).To(Succeed(), "nft:\n%s", getNftRules())
+							Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 						})
 
 						It("should produce expected nftable rules", func() {
-							result = getNftRules()
+							result = GetNFTableRules()
 							Expect(result).To(ContainSubstring("jump"))
 							Expect(result).ToNot(ContainSubstring("drop"))
 						})
