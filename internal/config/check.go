@@ -42,6 +42,12 @@ func (c *ConfigV1) check() (err error) {
 	}
 
 	{
+		if c.RouteTable == 0 {
+			c.RouteTable = rand.Int()
+		}
+	}
+
+	{
 		if c.Mark == 0 {
 			c.Mark = RerouteMark(rand.Int())
 		}
