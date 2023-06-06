@@ -18,7 +18,7 @@ func (w *Watcher) Run(ctx context.Context) (err error) {
 		return
 	}
 
-	go w.Watch()
+	go w.WatchAndHandle()
 
 	<-ctx.Done()
 	err = w.StopAll()

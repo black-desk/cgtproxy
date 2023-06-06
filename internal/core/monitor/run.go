@@ -26,18 +26,30 @@ func (m *Monitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, e
 			EventType: types.CgroupEventTypeNew,
 		}
 
-		cgEvent.Path = strings.TrimRight(cgEvent.Path, "/")
-
-		select {
-		case <-ctx.Done():
-			err = ctx.Err()
+		err = m.send(ctx, cgEvent)
+		if err != nil {
 			return err
-		case m.output <- cgEvent:
-			Log.Debugw("Cgroup event sent.")
 		}
 
 		return nil
 	}
+}
+
+func (m *Monitor) walk(ctx context.Context, path string) {
+	err := m.doWalk(ctx, path)
+	if err != nil {
+		Log.Errorw("Errors occurred.",
+			"path", path,
+			"error", err,
+		)
+	}
+
+	return
+}
+
+func (m *Monitor) doWalk(ctx context.Context, path string) (err error) {
+	err = filepath.WalkDir(path, m.walkFn(ctx))
+	return
 }
 
 func (m *Monitor) Run(ctx context.Context) (err error) {
@@ -46,7 +58,7 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 
 	Log.Debugw("Initializing cgroup monitor...")
 
-	err = filepath.WalkDir(string(m.root), m.walkFn(ctx))
+	err = m.doWalk(ctx, string(m.root))
 	if err != nil {
 		return
 	}
@@ -62,13 +74,18 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 				return
 			}
 
-			Log.Debugw("New filesystem envent arrived.")
+			Log.Debugw("New filesystem envent arrived.",
+				"event", fsEvent,
+			)
 
 			if fsEvent.IsDirCreated() {
 				cgEvent = &types.CgroupEvent{
 					Path:      fsEvent.Path,
 					EventType: types.CgroupEventTypeNew,
 				}
+
+				go m.walk(ctx, fsEvent.Path)
+
 			} else if fsEvent.IsDirRemoved() {
 				cgEvent = &types.CgroupEvent{
 					Path:      fsEvent.Path,
@@ -79,16 +96,9 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 				return
 			}
 
-			cgEvent.Path = strings.TrimRight(cgEvent.Path, "/")
-
-			Log.Debugw("New cgroup envent.", "event", cgEvent)
-
-			select {
-			case <-ctx.Done():
-				err = ctx.Err()
+			err = m.send(ctx, cgEvent)
+			if err != nil {
 				return
-			case m.output <- cgEvent:
-				Log.Debugw("Cgroup event sent.")
 			}
 
 		case <-ctx.Done():
@@ -96,4 +106,24 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 			return
 		}
 	}
+}
+
+func (m *Monitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err error) {
+	cgEvent.Path = strings.TrimRight(cgEvent.Path, "/")
+
+	Log.Debugw("New cgroup envent.",
+		"event", cgEvent,
+	)
+
+	select {
+	case <-ctx.Done():
+		err = ctx.Err()
+		return
+	case m.output <- cgEvent:
+		Log.Debugw("Cgroup event sent.",
+			"event", cgEvent,
+		)
+	}
+
+	return
 }

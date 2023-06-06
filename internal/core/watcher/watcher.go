@@ -23,6 +23,11 @@ func New(opts ...Opt) (ret *Watcher, err error) {
 		return
 	}
 
+	err = watcherImpl.RegisterEventHandler(&handle{})
+	if err != nil {
+		return
+	}
+
 	w.Watcher = watcherImpl
 
 	for i := range opts {
