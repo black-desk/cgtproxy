@@ -9,8 +9,7 @@ import (
 )
 
 func DumpNFTableRules() {
-
-	Log.Debugw("Bump nft ruleset.",
+	Log.Debugw("Dump nft ruleset.",
 		"content", GetNFTableRules(),
 	)
 
