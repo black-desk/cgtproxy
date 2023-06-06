@@ -417,7 +417,7 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 		Table: t.table,
 		Name:  tp.Name,
 	}
-	t.tproxyChains = append(t.tproxyChains, chain)
+
 	t.conn.AddChain(chain)
 	err = t.conn.Flush()
 	if err != nil {
@@ -434,29 +434,31 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 		return
 	}
 
+	exprs := []expr.Any{
+		&expr.Meta{ // meta load l4proto => reg 1
+			Key:      expr.MetaKeyL4PROTO,
+			Register: 1,
+		},
+		&expr.Lookup{ // lookup reg 1 set __set%d
+			SourceRegister: 1,
+			SetID:          t.protoSet.ID,
+			SetName:        t.protoSet.Name,
+		},
+		&expr.Immediate{ // immediate reg 1 ...
+			Register: 1,
+			Data:     binaryutil.BigEndian.PutUint16(tp.Port),
+		},
+		tproxy,
+	}
+
 	rule := &nftables.Rule{
 		// meta l4proto { tcp, udp } tproxy to ...
 		Table: t.table,
 		Chain: chain,
-		Exprs: []expr.Any{
-			&expr.Meta{ // meta load l4proto => reg 1
-				Key:      expr.MetaKeyL4PROTO,
-				Register: 1,
-			},
-			&expr.Lookup{ // lookup reg 1 set __set%d
-				SourceRegister: 1,
-				SetID:          t.protoSet.ID,
-				SetName:        t.protoSet.Name,
-			},
-			&expr.Immediate{ // immediate reg 1 ...
-				Register: 1,
-				Data:     binaryutil.BigEndian.PutUint16(tp.Port),
-			},
-			tproxy,
-		},
+		Exprs: exprs,
 	}
 
-	lookup := &rule.Exprs[1]
+	lookup := &exprs[1]
 
 	if tp.NoUDP {
 		*lookup = &expr.Cmp{ // cmp eq reg 1 0x00000006
@@ -471,7 +473,6 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 	}
 
 	t.conn.AddRule(rule)
-
 	err = t.conn.Flush()
 	if err != nil {
 		return

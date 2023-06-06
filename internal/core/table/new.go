@@ -26,8 +26,6 @@ type Table struct {
 
 	policy nftables.ChainPolicy
 
-	tproxyChains []*nftables.Chain
-
 	cgroupMaps map[uint32]cgroupSet // level -> cgroupSet
 
 	outputChain     *nftables.Chain
