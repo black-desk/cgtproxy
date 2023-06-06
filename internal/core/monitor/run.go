@@ -120,9 +120,7 @@ func (m *Monitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err err
 		err = ctx.Err()
 		return
 	case m.output <- cgEvent:
-		Log.Debugw("Cgroup event sent.",
-			"event", cgEvent,
-		)
+		Log.Debugw("Cgroup event sent.")
 	}
 
 	return
