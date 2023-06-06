@@ -369,6 +369,8 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 		}
 
 		delete(t.bypassCgroupSets[level].elements, path)
+
+		DumpNFTableRules()
 	} else if _, ok := t.cgroupMaps[level].elements[path]; ok {
 		Log.Infow("Removing proxy rule from nft for this cgroup.",
 			"cgroup", path,
@@ -389,6 +391,8 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 		}
 
 		delete(t.cgroupMaps[level].elements, path)
+
+		DumpNFTableRules()
 	} else {
 		Log.Debugw("Nothing to do with this cgroup",
 			"cgroup", path,
@@ -485,6 +489,11 @@ func (t *Table) Clear() (err error) {
 
 	t.conn.DelTable(t.table)
 	err = t.conn.Flush()
+	if err != nil {
+		return
+	}
+
+	DumpNFTableRules()
 	return
 }
 
