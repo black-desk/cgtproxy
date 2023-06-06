@@ -390,7 +390,7 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 
 		delete(t.cgroupMaps[level].elements, path)
 	} else {
-		Log.Infow("Nothing to do with this cgroup",
+		Log.Debugw("Nothing to do with this cgroup",
 			"cgroup", path,
 		)
 	}

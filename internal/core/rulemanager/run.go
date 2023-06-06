@@ -157,7 +157,7 @@ func (m *RuleManager) handleNewCgroup(path string) {
 	}
 
 	if target.Op == table.TargetNoop {
-		Log.Infow("No rule match this cgroup",
+		Log.Debugw("No rule match this cgroup",
 			"cgroup", path,
 		)
 		return
