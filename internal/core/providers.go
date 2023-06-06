@@ -101,8 +101,8 @@ var (
 
 func provideTable(
 	conn *nftables.Conn,
-	mark config.RerouteMark,
 	root config.CgroupRoot,
+	bypass *config.Bypass,
 ) (
 	ret *table.Table,
 	err error,
@@ -110,8 +110,8 @@ func provideTable(
 	_tableOnce.Do(func() {
 		_table, _tableErr = table.New(
 			table.WithConn(conn),
-			table.WithRerouteMark(mark),
 			table.WithCgroupRoot(root),
+			table.WithBypass(bypass),
 		)
 	})
 
@@ -190,8 +190,8 @@ func provideCgroupRoot(cfg *config.Config) config.CgroupRoot {
 	return cfg.CgroupRoot
 }
 
-func provideRerouteMark(cfg *config.Config) config.RerouteMark {
-	return cfg.Mark
+func provideBypass(cfg *config.Config) *config.Bypass {
+	return cfg.Bypass
 }
 
 var set = wire.NewSet(
@@ -205,5 +205,5 @@ var set = wire.NewSet(
 	provideRepeater,
 	provideMonitor,
 	provideCgroupRoot,
-	provideRerouteMark,
+	provideBypass,
 )

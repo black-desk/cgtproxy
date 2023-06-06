@@ -1,8 +1,11 @@
 package rulemanager
 
 import (
+	"errors"
 	"net"
+	"os"
 
+	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/core/table"
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
@@ -14,20 +17,14 @@ import (
 func (m *RuleManager) Run() (err error) {
 	defer Wrap(&err, "Error occurs while running the nftable rules manager.")
 
-	defer m.removeNftableRules()
-	err = m.initializeNftableRuels()
-	if err != nil {
-		return
-	}
-
 	defer m.removeRoute()
 	err = m.addRoute()
 	if err != nil {
 		return
 	}
 
-	defer m.removeRule()
-	err = m.addRule()
+	defer m.removeNftableRules()
+	err = m.initializeNftableRuels()
 	if err != nil {
 		return
 	}
@@ -51,18 +48,75 @@ func (m *RuleManager) initializeNftableRuels() (err error) {
 		if err != nil {
 			return
 		}
+
+		err = m.addRule(tp.Mark)
+		if err != nil {
+			return
+		}
 	}
 
 	return
 }
 
-func (m *RuleManager) removeNftableRules() (err error) {
-	err = m.nft.Clear()
+func (m *RuleManager) removeNftableRules() {
+	err := m.nft.Clear()
+	if err != nil {
+		Log.Errorw("Failed to delete nft table.",
+			"error", err,
+		)
+	}
+
+	for _, rule := range m.rule {
+		err = netlink.RuleDel(rule)
+		if err == nil {
+			continue
+		}
+
+		Log.Errorw("Failed to delete route rule.",
+			"rule", rule,
+			"error", err,
+		)
+	}
+	return
+}
+
+func (m *RuleManager) addRule(mark config.RerouteMark) (err error) {
+	defer Wrap(&err, "Failed to add route rule.")
+
+	Log.Infow("Adding route rule.",
+		"mark", mark,
+		"table", m.cfg.RouteTable,
+	)
+
+	// ip rule add fwmark <mark> lookup <table>
+
+	rule := netlink.NewRule()
+	rule.Family = netlink.FAMILY_ALL
+	rule.Mark = int(mark) // WARN(black_desk): ???
+	rule.Table = m.cfg.RouteTable
+
+	err = netlink.RuleAdd(rule)
+	if errors.Is(err, os.ErrExist) {
+		Log.Infow("Rule already exists.")
+		err = nil
+	}
+	if err != nil {
+		return
+	}
+
+	m.rule = append(m.rule, rule)
+
 	return
 }
 
 func (m *RuleManager) addRoute() (err error) {
 	defer Wrap(&err, "Failed to add route.")
+
+	Log.Infow("Adding route.",
+		"table", m.cfg.RouteTable,
+	)
+
+	// ip route add local default dev lo table <table>
 
 	var iface *net.Interface
 	iface, err = net.InterfaceByName("lo")
@@ -70,71 +124,46 @@ func (m *RuleManager) addRoute() (err error) {
 		return
 	}
 
-	route := &netlink.Route{
-		LinkIndex: iface.Index,
-		Scope:     unix.RT_SCOPE_HOST,
-		Dst:       &net.IPNet{IP: net.IPv4zero, Mask: net.CIDRMask(0, 32)},
-		Protocol:  unix.RTPROT_BOOT,
-		Table:     m.cfg.RouteTable,
-		Type:      unix.RTN_LOCAL,
-	}
+	cidrStrs := []string{"0.0.0.0/0", "0::0/0"}
 
-	err = netlink.RouteAdd(route)
-	if err != nil {
-		return
-	}
+	for _, cidrStr := range cidrStrs {
+		var cidr *net.IPNet
 
-	m.route = route
+		_, cidr, err = net.ParseCIDR(cidrStr)
+		if err != nil {
+			return
+		}
+
+		route := &netlink.Route{
+			LinkIndex: iface.Index,
+			Scope:     unix.RT_SCOPE_HOST,
+			Dst:       cidr,
+			Table:     m.cfg.RouteTable,
+			Type:      unix.RTN_LOCAL,
+		}
+
+		err = netlink.RouteAdd(route)
+		if err != nil {
+			return
+		}
+
+		m.route = append(m.route, route)
+	}
 
 	return
 }
 
 func (m *RuleManager) removeRoute() {
-	if m.route == nil {
-		return
+	for i := range m.route {
+		err := netlink.RouteDel(m.route[i])
+
+		if err == nil {
+			continue
+		}
+
+		Log.Warnw("Failed to remove route",
+			"error", err)
 	}
-
-	err := netlink.RouteDel(m.route)
-
-	if err == nil {
-		return
-	}
-
-	Log.Warnw("Failed to delete route", "error", err)
-
-	return
-}
-
-func (m *RuleManager) addRule() (err error) {
-	defer Wrap(&err, "Failed to add route rule.")
-
-	rule := netlink.NewRule()
-	rule.Family = netlink.FAMILY_ALL
-	rule.Mark = int(m.cfg.Mark) // WARN(black_desk): ???
-	rule.Table = m.cfg.RouteTable
-
-	err = netlink.RuleAdd(rule)
-	if err != nil {
-		return
-	}
-
-	m.rule = rule
-
-	return
-}
-
-func (m *RuleManager) removeRule() {
-	if m.rule == nil {
-		return
-	}
-
-	err := netlink.RuleDel(m.rule)
-
-	if err == nil {
-		return
-	}
-
-	Log.Warnw("Failed to delete rule", "error", err)
 
 	return
 }

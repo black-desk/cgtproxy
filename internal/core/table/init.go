@@ -7,7 +7,6 @@ import (
 	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
-	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
 )
@@ -17,11 +16,6 @@ func (t *Table) initChecks() (err error) {
 
 	if t.conn == nil {
 		err = ErrMissingNftableConn
-		return
-	}
-
-	if t.rerouteMark == 0 {
-		err = ErrMissingRerouteMark
 		return
 	}
 
@@ -48,11 +42,17 @@ func (t *Table) initStructure() (err error) {
 		return
 	}
 
-	t.bypassCgroupSets = map[uint32]cgroupSet{}
-
 	t.initProtoSet()
 
-	t.cgroupMaps = map[uint32]cgroupSet{}
+	err = t.initCgroupMap()
+	if err != nil {
+		return
+	}
+
+	err = t.initMarkMap()
+	if err != nil {
+		return
+	}
 
 	t.policy = nftables.ChainPolicyAccept
 
@@ -86,6 +86,7 @@ func (t *Table) initIPV4BypassSet() (err error) {
 	}
 
 	elements := []nftables.SetElement{}
+
 	for i := range t.bypassIPv4 {
 		elements = append(elements, nftables.SetElement{
 			Key: []byte(net.ParseIP(t.bypassIPv4[i]).To4()),
@@ -113,6 +114,7 @@ func (t *Table) initIPV6BypassSet() (err error) {
 	}
 
 	elements := []nftables.SetElement{}
+
 	for i := range t.bypassIPv6 {
 		elements = append(elements, nftables.SetElement{
 			Key: []byte(net.ParseIP(t.bypassIPv6[i]).To16()),
@@ -146,6 +148,52 @@ func (t *Table) initProtoSet() {
 	}
 }
 
+func (t *Table) initCgroupMap() (err error) {
+	t.cgroupMap = &nftables.Set{
+		Table:    t.table,
+		Name:     "cgroup-vmap",
+		KeyType:  nftables.TypeCGroupV2,
+		DataType: nftables.TypeVerdict,
+		IsMap:    true,
+	}
+
+	t.cgroupMapElement = make(map[string]nftables.SetElement)
+
+	err = t.conn.AddSet(t.cgroupMap, []nftables.SetElement{})
+	if err != nil {
+		return
+	}
+
+	err = t.conn.Flush()
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (t *Table) initMarkMap() (err error) {
+	t.markMap = &nftables.Set{
+		Table:    t.table,
+		Name:     "mark-vmap",
+		KeyType:  nftables.TypeMark,
+		DataType: nftables.TypeVerdict,
+		IsMap:    true,
+	}
+
+	err = t.conn.AddSet(t.markMap, []nftables.SetElement{})
+	if err != nil {
+		return
+	}
+
+	err = t.conn.Flush()
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func (t *Table) initOutputChain() (err error) {
 	// type filter hook prerouting priority mangle; policy accept;
 	t.outputChain = t.conn.AddChain(&nftables.Chain{
@@ -162,14 +210,9 @@ func (t *Table) initOutputChain() (err error) {
 		return
 	}
 
-	var (
-		exprs []expr.Any
-		rule  *nftables.Rule
-	)
-
 	// ip daddr @bypass return
 
-	exprs = []expr.Any{
+	exprs := []expr.Any{
 		&expr.Meta{ // meta load nfproto => reg 1
 			Key:      expr.MetaKeyNFPROTO,
 			Register: 1,
@@ -196,7 +239,9 @@ func (t *Table) initOutputChain() (err error) {
 		},
 	}
 
-	rule = t.conn.AddRule(&nftables.Rule{
+	exprs = addDebugCounter(exprs)
+
+	t.conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.outputChain,
 		Exprs: exprs,
@@ -206,8 +251,6 @@ func (t *Table) initOutputChain() (err error) {
 	if err != nil {
 		return
 	}
-
-	t.outputRules = append(t.outputRules, rule)
 
 	// ip6 daddr @bypass6 return
 
@@ -238,7 +281,9 @@ func (t *Table) initOutputChain() (err error) {
 		},
 	}
 
-	rule = t.conn.AddRule(&nftables.Rule{
+	exprs = addDebugCounter(exprs)
+
+	t.conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.outputChain,
 		Exprs: exprs,
@@ -248,8 +293,6 @@ func (t *Table) initOutputChain() (err error) {
 	if err != nil {
 		return
 	}
-
-	t.outputRules = append(t.outputRules, rule)
 
 	// meta l4proto != { tcp, udp } return
 
@@ -274,7 +317,9 @@ func (t *Table) initOutputChain() (err error) {
 		},
 	}
 
-	rule = t.conn.AddRule(&nftables.Rule{
+	exprs = addDebugCounter(exprs)
+
+	t.conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.outputChain,
 		Exprs: exprs,
@@ -284,37 +329,6 @@ func (t *Table) initOutputChain() (err error) {
 	if err != nil {
 		return
 	}
-
-	t.outputRules = append(t.outputRules, rule)
-
-	// meta mark set ...
-
-	exprs = []expr.Any{
-		&expr.Immediate{ // immediate reg 1 ...
-			Register: 1,
-			Data: binaryutil.NativeEndian.PutUint32(
-				uint32(t.rerouteMark),
-			),
-		},
-		&expr.Meta{
-			Key:            expr.MetaKeyMARK,
-			SourceRegister: true,
-			Register:       1,
-		},
-	}
-
-	rule = t.conn.AddRule(&nftables.Rule{
-		Table: t.table,
-		Chain: t.outputChain,
-		Exprs: exprs,
-	})
-
-	err = t.conn.Flush()
-	if err != nil {
-		return
-	}
-
-	t.outputRules = append(t.outputRules, rule)
 
 	return
 }
@@ -335,13 +349,8 @@ func (t *Table) initPreroutingChain() (err error) {
 		return
 	}
 
-	var (
-		exprs []expr.Any
-		rule  *nftables.Rule
-	)
-
 	// ip daddr @bypass return
-	exprs = []expr.Any{
+	exprs := []expr.Any{
 		&expr.Meta{ // meta load nfproto => reg 1
 			Key:      expr.MetaKeyNFPROTO,
 			Register: 1,
@@ -368,7 +377,9 @@ func (t *Table) initPreroutingChain() (err error) {
 		},
 	}
 
-	rule = t.conn.AddRule(&nftables.Rule{
+	exprs = addDebugCounter(exprs)
+
+	t.conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.preroutingChain,
 		Exprs: exprs,
@@ -378,8 +389,6 @@ func (t *Table) initPreroutingChain() (err error) {
 	if err != nil {
 		return
 	}
-
-	t.preroutingRules = append(t.preroutingRules, rule)
 
 	// ip6 daddr @bypass6 return
 	exprs = []expr.Any{
@@ -409,7 +418,9 @@ func (t *Table) initPreroutingChain() (err error) {
 		},
 	}
 
-	rule = t.conn.AddRule(&nftables.Rule{
+	exprs = addDebugCounter(exprs)
+
+	t.conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.preroutingChain,
 		Exprs: exprs,
@@ -420,16 +431,22 @@ func (t *Table) initPreroutingChain() (err error) {
 		return
 	}
 
-	t.preroutingRules = append(t.preroutingRules, rule)
-
-	// accept
+	// meta mark vmap @mark-vmap
 	exprs = []expr.Any{
-		&expr.Verdict{ // accept
-			Kind: expr.VerdictAccept,
+		&expr.Meta{
+			Key:      expr.MetaKeyMARK,
+			Register: 1,
+		},
+		&expr.Lookup{ // lookup reg 1 set cgroup-map-x dreg 0
+			SourceRegister: 1,
+			IsDestRegSet:   true,
+			SetName:        t.markMap.Name,
+			SetID:        t.markMap.ID,
 		},
 	}
+	exprs = addDebugCounter(exprs)
 
-	rule = t.conn.AddRule(&nftables.Rule{
+	t.conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.preroutingChain,
 		Exprs: exprs,
@@ -439,8 +456,6 @@ func (t *Table) initPreroutingChain() (err error) {
 	if err != nil {
 		return
 	}
-
-	t.preroutingRules = append(t.preroutingRules, rule)
 
 	return
 }

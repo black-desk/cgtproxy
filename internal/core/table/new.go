@@ -8,35 +8,28 @@ import (
 )
 
 type Table struct {
-	conn        *nftables.Conn
-	rerouteMark config.RerouteMark
-	cgroupRoot  config.CgroupRoot
-	bypassIPv4  []string
-	bypassIPv6  []string
+	conn       *nftables.Conn
+	cgroupRoot config.CgroupRoot
+	bypassIPv4 []string
+	bypassIPv6 []string
 
 	table *nftables.Table
 
 	ipv4BypassSet *nftables.Set
 	ipv6BypassSet *nftables.Set
 
-	bypassCgroupSets map[uint32]cgroupSet // level -> cgroupSet
-
 	protoSet        *nftables.Set
 	protoSetElement []nftables.SetElement // keep anonymous set elements
 
 	policy nftables.ChainPolicy
 
-	cgroupMaps map[uint32]cgroupSet // level -> cgroupSet
+	cgroupMap        *nftables.Set
+	cgroupMapElement map[string]nftables.SetElement
+
+	markMap        *nftables.Set
 
 	outputChain     *nftables.Chain
-	outputRules     []*nftables.Rule
 	preroutingChain *nftables.Chain
-	preroutingRules []*nftables.Rule
-}
-
-type cgroupSet struct {
-	set      *nftables.Set
-	elements map[string]nftables.SetElement
 }
 
 type Opt = (func(*Table) (*Table, error))
@@ -72,6 +65,10 @@ func New(opts ...Opt) (ret *Table, err error) {
 
 func WithBypass(bypass *config.Bypass) Opt {
 	return func(table *Table) (*Table, error) {
+		if bypass == nil {
+			return table, nil
+		}
+
 		table.bypassIPv4 = bypass.IPV4
 		table.bypassIPv6 = bypass.IPV6
 		return table, nil
@@ -81,13 +78,6 @@ func WithBypass(bypass *config.Bypass) Opt {
 func WithConn(conn *nftables.Conn) Opt {
 	return func(table *Table) (*Table, error) {
 		table.conn = conn
-		return table, nil
-	}
-}
-
-func WithRerouteMark(mark config.RerouteMark) Opt {
-	return func(table *Table) (*Table, error) {
-		table.rerouteMark = mark
 		return table, nil
 	}
 }

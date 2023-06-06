@@ -11,11 +11,11 @@ type ConfigV1 struct {
 	Proxies  map[string]*Proxy  `yaml:"proxies" validate:"dive"`
 	TProxies map[string]*TProxy `yaml:"tproxies" validate:"dive"`
 
-	Rules      []Rule      `yaml:"rules" validate:"dive"`
-	Bypass     *Bypass     `yaml:"bypass"`
-	CgroupRoot CgroupRoot  `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
-	RouteTable int         `yaml:"route-table"`
-	Mark       RerouteMark `yaml:"mark"`
+	Rules      []Rule     `yaml:"rules" validate:"dive"`
+	Bypass     *Bypass    `yaml:"bypass"`
+	CgroupRoot CgroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
+	RouteTable int        `yaml:"route-table"`
+	Marks      string     `yaml:"marks" validate:"required"`
 }
 
 type CgroupRoot string
@@ -36,11 +36,12 @@ type Rule struct {
 }
 
 type TProxy struct {
-	Name   string  `yaml:"-"`
-	NoUDP  bool    `yaml:"no-udp"`
-	NoIPv6 bool    `yaml:"no-ipv6"`
-	Addr   *string `yaml:"addr" validate:"hostname|ip"`
-	Port   uint16  `yaml:"port" validate:"required"`
+	Name   string      `yaml:"-"`
+	NoUDP  bool        `yaml:"no-udp"`
+	NoIPv6 bool        `yaml:"no-ipv6"`
+	Addr   *string     `yaml:"addr" validate:"hostname|ip"`
+	Port   uint16      `yaml:"port" validate:"required"`
+	Mark   RerouteMark `yaml:"mark"`
 }
 
 type Repeater struct {

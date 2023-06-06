@@ -54,7 +54,6 @@ var _ = Describe("Netfliter table", Ordered, func() {
 				t, err = table.New(
 					table.WithConn(conn),
 					table.WithCgroupRoot(config.CgroupRoot("/sys/fs/cgroup")),
-					table.WithRerouteMark(config.RerouteMark(1)),
 				)
 				Expect(err).To(Succeed())
 			})

@@ -11,9 +11,4 @@ I recommend use `nft --debug netlink -f ...` to check only the netlink level
 expr written into netlink socket, which helps you find out which structure in
 `github.com/google/nftables/expr` you should use.
 
-`./deepin-network-proxy-manager.nft` contains all rule pattern needs in this
-porject, you can have a try with `nft --debug netlink -f
-./deepin-network-proxy-manager.nft`. And clear it with `nft delete table inet
-deepin-network-proxy`.
-
 [==link1==]: https://github.com/google/nftables/issues/5#issuecomment-451373151

@@ -22,8 +22,8 @@ type RuleManager struct {
 		target table.Target
 	}
 
-	rule  *netlink.Rule
-	route *netlink.Route
+	rule  []*netlink.Rule
+	route []*netlink.Route
 }
 
 func New(opts ...Opt) (ret *RuleManager, err error) {
@@ -63,6 +63,10 @@ func New(opts ...Opt) (ret *RuleManager, err error) {
 				m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
 		} else {
 			panic("this should never happened.")
+		}
+
+		if matcher.target.Chain != "" {
+			matcher.target.Chain += "-MARK"
 		}
 
 		m.matchers = append(m.matchers, &matcher)

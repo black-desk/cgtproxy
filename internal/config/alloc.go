@@ -30,8 +30,7 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 		)
 	}
 
-	for name := range c.TProxies {
-		tp := c.TProxies[name]
+	for _, tp := range c.TProxies {
 
 		if tp.Port != 0 {
 			continue
@@ -43,12 +42,35 @@ func (c *ConfigV1) allocPorts(begin, end uint16) (err error) {
 		}
 
 		tp.Port = begin
-		Log.Debugw("Allocate port for tproxy",
-			"port", tp.Port, "tproxy", tp,
+		Log.Debugw("Allocate port for tproxy.",
+			"tproxy", tp,
 		)
 
 		begin++
 	}
 
+	return
+}
+
+func (c *ConfigV1) allocMarks(begin, end int) (err error) {
+	for _, tp := range c.TProxies {
+		if tp.Mark != 0 {
+			continue
+		}
+
+		if begin >= end {
+			err = ErrTooFewMarks
+			return
+		}
+
+		tp.Mark = RerouteMark(begin)
+
+		Log.Debugw("Allocate mark for tproxy.",
+			"tproxy", tp,
+		)
+
+		begin++
+
+	}
 	return
 }

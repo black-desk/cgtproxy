@@ -42,9 +42,9 @@ func injectedRuleManager(core *Core) (*rulemanager.RuleManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	rerouteMark := provideRerouteMark(config)
 	cgroupRoot := provideCgroupRoot(config)
-	table, err := provideTable(conn, rerouteMark, cgroupRoot)
+	bypass := provideBypass(config)
+	table, err := provideTable(conn, cgroupRoot, bypass)
 	if err != nil {
 		return nil, err
 	}
