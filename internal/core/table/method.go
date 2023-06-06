@@ -477,7 +477,9 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 		return
 	}
 
-	Log.Debug("chain and rules added for this tproxy.")
+	Log.Debug("Nftable chain added for this tproxy.",
+		"tproxy", tp,
+	)
 
 	DumpNFTableRules()
 
