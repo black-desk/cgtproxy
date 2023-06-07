@@ -7,8 +7,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/cgtproxy/internal/config"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
+	. "github.com/black-desk/cgtproxy/internal/log"
+	"github.com/black-desk/cgtproxy/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
 )
 

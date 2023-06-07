@@ -3,8 +3,8 @@ package table
 import (
 	"net"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/cgtproxy/internal/consts"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/expr"
@@ -441,7 +441,7 @@ func (t *Table) initPreroutingChain() (err error) {
 			SourceRegister: 1,
 			IsDestRegSet:   true,
 			SetName:        t.markMap.Name,
-			SetID:        t.markMap.ID,
+			SetID:          t.markMap.ID,
 		},
 	}
 	exprs = addDebugCounter(exprs)

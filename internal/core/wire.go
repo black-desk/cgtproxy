@@ -4,10 +4,10 @@
 package core
 
 import (
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/repeater"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
+	"github.com/black-desk/cgtproxy/internal/core/monitor"
+	"github.com/black-desk/cgtproxy/internal/core/repeater"
+	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
+	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	"github.com/google/wire"
 )
 

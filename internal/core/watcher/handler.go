@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	fsevents "github.com/tywkeene/go-fsevents"
 )
 

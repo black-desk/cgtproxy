@@ -1,8 +1,8 @@
 package table
 
 import (
-	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/cgtproxy/internal/config"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 )
@@ -26,7 +26,7 @@ type Table struct {
 	cgroupMap        *nftables.Set
 	cgroupMapElement map[string]nftables.SetElement
 
-	markMap        *nftables.Set
+	markMap *nftables.Set
 
 	outputChain     *nftables.Chain
 	preroutingChain *nftables.Chain

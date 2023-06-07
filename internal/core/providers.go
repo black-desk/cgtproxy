@@ -3,13 +3,13 @@ package core
 import (
 	"sync"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/repeater"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/table"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/types"
+	"github.com/black-desk/cgtproxy/internal/config"
+	"github.com/black-desk/cgtproxy/internal/core/monitor"
+	"github.com/black-desk/cgtproxy/internal/core/repeater"
+	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
+	"github.com/black-desk/cgtproxy/internal/core/table"
+	"github.com/black-desk/cgtproxy/internal/core/watcher"
+	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
 
 	"github.com/google/wire"

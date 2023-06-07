@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
+	"github.com/black-desk/cgtproxy/internal/consts"
 )
 
 var (

@@ -6,11 +6,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/monitor"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/repeater"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/rulemanager"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core/watcher"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/cgtproxy/internal/core/monitor"
+	"github.com/black-desk/cgtproxy/internal/core/repeater"
+	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
+	"github.com/black-desk/cgtproxy/internal/core/watcher"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
@@ -120,7 +120,7 @@ func (c *Core) runWatcher(ctx context.Context) (err error) {
 		return
 	}
 
-        Log.Debugw("Start filesystem watcher.")
+	Log.Debugw("Start filesystem watcher.")
 
 	err = w.Run(ctx)
 	if err != nil {

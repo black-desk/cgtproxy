@@ -1,8 +1,8 @@
 package watcher
 
 import (
-	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/cgtproxy/internal/config"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	fsevents "github.com/tywkeene/go-fsevents"
 )

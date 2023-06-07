@@ -2,8 +2,8 @@
 	all \
 	coverage \
 	debug-build \
-	deepin-network-proxy-manager \
-	deepin-network-proxy-manager-debug \
+	cgtproxy \
+	cgtproxy-debug \
 	dlv-headless \
 	generate \
 	install \
@@ -12,22 +12,22 @@
 	test \
 	test/coverage.html
 
-all: deepin-network-proxy-manager
+all: cgtproxy
 
 coverage: test/coverage.html
 
-debug-build: deepin-network-proxy-manager-debug
+debug-build: cgtproxy-debug
 
-deepin-network-proxy-manager: generate
-	go build ./cmd/deepin-network-proxy-manager
-	strip ./deepin-network-proxy-manager
+cgtproxy: generate
+	go build ./cmd/cgtproxy
+	strip ./cgtproxy
 
-deepin-network-proxy-manager-debug: generate
-	go build -tags debug -o deepin-network-proxy-manager-debug \
-		./cmd/deepin-network-proxy-manager
+cgtproxy-debug: generate
+	go build -tags debug -o cgtproxy-debug \
+		./cmd/cgtproxy
 
 dlv-headless: generate
-	dlv debug ./cmd/deepin-network-proxy-manager --headless
+	dlv debug ./cmd/cgtproxy --headless
 
 generate:
 	go generate ./...

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/config"
+	. "github.com/black-desk/cgtproxy/internal/config"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/black-desk/lib/go/gomega-helper"
 	"github.com/go-playground/validator/v10"

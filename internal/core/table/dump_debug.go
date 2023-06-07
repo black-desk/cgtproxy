@@ -6,8 +6,8 @@ package table
 import (
 	"go.uber.org/zap"
 
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/core/table/internal"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	. "github.com/black-desk/cgtproxy/internal/core/table/internal"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/google/nftables/expr"
 )
 

@@ -5,8 +5,8 @@ import (
 
 	"github.com/sourcegraph/conc/pool"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/cgtproxy/internal/config"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
@@ -19,7 +19,7 @@ type Core struct {
 type Opt = (func(*Core) (*Core, error))
 
 func New(opts ...Opt) (ret *Core, err error) {
-	defer Wrap(&err, "Failed to create new deepin-network-proxy-manager core.")
+	defer Wrap(&err, "Failed to create new cgtproxy core.")
 
 	core := &Core{}
 	for i := range opts {

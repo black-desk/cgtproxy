@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/black-desk/deepin-network-proxy-manager/internal/config"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/consts"
-	"github.com/black-desk/deepin-network-proxy-manager/internal/core"
-	. "github.com/black-desk/deepin-network-proxy-manager/internal/log"
+	"github.com/black-desk/cgtproxy/internal/config"
+	"github.com/black-desk/cgtproxy/internal/consts"
+	"github.com/black-desk/cgtproxy/internal/core"
+	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +17,7 @@ var flags struct {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "deepin-network-proxy-manager",
+	Use:   "cgtproxy",
 	Short: "A transparent network proxy manager for deepin",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		defer func() {
@@ -25,7 +25,7 @@ var rootCmd = &cobra.Command{
 				return
 			}
 
-			Log.Errorw("Error occur while running deepin-network-proxy-manager.",
+			Log.Errorw("Error occur while running cgtproxy.",
 				"config", flags.CfgPath,
 				"error", err,
 			)
