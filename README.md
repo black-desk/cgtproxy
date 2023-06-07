@@ -12,8 +12,10 @@ as well as redirect some traffic to a [TPROXY] server.
 [TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
 [by cgroup]: https://www.spinics.net/lists/netfilter/msg60360.html
 
-Systemd has a work-in-progress XDG integration documentation suggest that
+Systemd has a work-in-progress XDG integration [documentation] suggest that
 XDG applications should be launched in a systemd managed unit.
+
+[documentation]: https://systemd.io/DESKTOP_ENVIRONMENTS
 
 For example, telegram might be launched at some cgroup like
 `/user.slice/user-1000.slice/user@1000.service/app.slice/app-flatpak-org.telegram.desktop@12345.service`
