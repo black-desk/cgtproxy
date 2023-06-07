@@ -1,5 +1,6 @@
 version: 1
 cgroup-root: AUTO
+marks: '[100,300)'
 
 tproxies:
   clash:

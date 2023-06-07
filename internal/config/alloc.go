@@ -70,7 +70,6 @@ func (c *ConfigV1) allocMarks(begin, end int) (err error) {
 		)
 
 		begin++
-
 	}
 	return
 }

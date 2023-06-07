@@ -160,7 +160,6 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 		delete(t.cgroupMapElement, path)
 
 		DumpNFTableRules()
-
 	} else {
 		Log.Debugw("Nothing to do with this cgroup",
 			"cgroup", path,
