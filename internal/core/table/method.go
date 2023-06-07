@@ -345,29 +345,6 @@ func (t *Table) removeCgroupRoot(path string) string {
 	return path
 }
 
-func (t *Table) getRules(
-	tb *nftables.Table, ch *nftables.Chain,
-) (
-	ret []*nftables.Rule,
-) {
-	// FIXME(black_desk): (nftables.Conn).GetRules has a bug.
-	// It does not recognize a nftable event has NFT_MSG_NEWGEN in header.
-	// And return an error in this situation.
-	// According to `nft` source, when this kind of event arrive,
-	// it set errno to EINTR,
-	// which properly means that caller should have a retry.
-	// Check https://git.netfilter.org/nftables/tree/src/mnl.c?id=6ab0fd6c67dbccedb49209b94eb7f740dd32fd2a#n169
-
-	var err error
-	for {
-		ret, err = t.conn.GetRules(tb, ch)
-		if err == nil {
-			break
-		}
-	}
-	return
-}
-
 func (t *Table) addCgroupRuleForLevel(level int) (err error) {
 	defer Wrap(&err,
 		"Failed to update output chain for level %d cgroup.", level)
