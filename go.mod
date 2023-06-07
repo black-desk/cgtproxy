@@ -8,7 +8,7 @@ require (
 	github.com/deniswernert/go-fstab v0.0.0-20141204152952-eb4090f26517
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-playground/validator/v10 v10.14.0
-	github.com/google/nftables v0.1.1-0.20230506084933-b18665a6ecb7
+	github.com/google/nftables v0.1.1-0.20230520162352-45645ffbf5ba
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
 	github.com/sourcegraph/conc v0.3.0

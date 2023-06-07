@@ -7,6 +7,7 @@ import (
 	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
+	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
 )
@@ -80,9 +81,10 @@ func (t *Table) initStructure() (err error) {
 
 func (t *Table) initIPV4BypassSet() (err error) {
 	t.ipv4BypassSet = &nftables.Set{
-		Table:   t.table,
-		Name:    "bypass",
-		KeyType: nftables.TypeIPAddr,
+		Table:        t.table,
+		Name:         "bypass",
+		KeyType:      nftables.TypeIPAddr,
+		KeyByteOrder: binaryutil.BigEndian,
 	}
 
 	elements := []nftables.SetElement{}
@@ -108,9 +110,10 @@ func (t *Table) initIPV4BypassSet() (err error) {
 
 func (t *Table) initIPV6BypassSet() (err error) {
 	t.ipv6BypassSet = &nftables.Set{
-		Table:   t.table,
-		Name:    "bypass6",
-		KeyType: nftables.TypeIP6Addr,
+		Table:        t.table,
+		Name:         "bypass6",
+		KeyType:      nftables.TypeIP6Addr,
+		KeyByteOrder: binaryutil.BigEndian,
 	}
 
 	elements := []nftables.SetElement{}
@@ -150,11 +153,12 @@ func (t *Table) initProtoSet() {
 
 func (t *Table) initCgroupMap() (err error) {
 	t.cgroupMap = &nftables.Set{
-		Table:    t.table,
-		Name:     "cgroup-vmap",
-		KeyType:  nftables.TypeCGroupV2,
-		DataType: nftables.TypeVerdict,
-		IsMap:    true,
+		Table:        t.table,
+		Name:         "cgroup-vmap",
+		KeyType:      nftables.TypeCGroupV2,
+		DataType:     nftables.TypeVerdict,
+		IsMap:        true,
+		KeyByteOrder: binaryutil.BigEndian,
 	}
 
 	t.cgroupMapElement = make(map[string]nftables.SetElement)

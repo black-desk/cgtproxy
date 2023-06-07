@@ -175,21 +175,16 @@ var _ = Describe("Netfliter table", Ordered, func() {
 							ContainSubstring("socket cgroupv2 level 2 vmap @cgroup-vmap"),
 						)
 
-            // FIXME(black_desk): `nft` cgroup path parsing seems have some problem.
-            // Skip follow tests for now.
-
-            return
-
 						Expect(result).To(
 							ContainSubstring(`test/d/d`),
 						)
 
 						Expect(result).To(
-							ContainSubstring(`"test/a" : jump`),
+							ContainSubstring(`"test/a" : goto tproxy`),
 						)
 
 						Expect(result).To(
-							ContainSubstring(`"test/b" : jump`),
+							ContainSubstring(`"test/b" : goto tproxy`),
 						)
 
 						Expect(result).To(
