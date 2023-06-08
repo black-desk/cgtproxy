@@ -113,6 +113,11 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		return
 	}
 
+	err = t.initOutputChain()
+	if err != nil {
+		return
+	}
+
 	for i := len(levels) - 1; i >= 0; i-- {
 		err = t.addCgroupRuleForLevel(levels[i])
 		if err != nil {
