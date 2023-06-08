@@ -175,6 +175,10 @@ func (m *RuleManager) removeRoute() {
 }
 
 func (m *RuleManager) handleNewCgroup(path string) {
+	Log.Debugw("Handling new cgroup.",
+		"path", path,
+	)
+
 	var target table.Target
 	for i := range m.matchers {
 		if !m.matchers[i].reg.Match([]byte(path)) {
@@ -207,6 +211,10 @@ func (m *RuleManager) handleNewCgroup(path string) {
 }
 
 func (m *RuleManager) handleDeleteCgroup(path string) {
+	Log.Debugw("Handling delete cgroup.",
+		"path", path,
+	)
+
 	err := m.nft.RemoveCgroup(path)
 	if err != nil {
 		Log.Errorw("Failed to update nft for removed cgroup", "error", err)
