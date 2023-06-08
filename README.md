@@ -33,10 +33,35 @@ This project is inspired by [cgproxy](https://github.com/springzfx/cgproxy).
 
 But it has some differences:
 
-- It works more dynamically.
-- No bpf.
-- Only CAP_NETWORK_ADMIN needed. No more capabilities.
-- Programs will not get moved from original cgroup.
+- It use nftable;
+
+  cgproxy using iptables, while cgtproxy use nftables.
+
+- It use TPROXY only, no REDIR;
+
+  cgproxy use TPROXY along with REDIR.
+
+- It works more dynamically;
+
+  cgproxy can only working with exsiting cgroup with fixed name.
+  But cgtproxy can update nftables rules dynamically, for newly created cgroups.
+
+- No BPF;
+
+  cgproxy achieving per-app proxy setting by using BPF to trace syscall exec.
+  cgtproxy implement this feature in the other way that doesn't required BPF.
+
+- Less capabilities needed. (only CAP_NETWORK_ADMIN);
+
+  To use BPF, more capabilities is required by cgproxy.
+  But cgtproxy only require CAP_NETWORK_ADMIN
+  to update route rules and nftables.
+
+- Programs never get moved from original cgroup;
+
+  cgproxy daemon will move processes
+  with certain executable path into special cgroup.
+  cgtproxy will never do that.
 
 ## Develop
 
