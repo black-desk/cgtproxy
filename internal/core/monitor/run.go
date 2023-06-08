@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"context"
+	"errors"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -37,13 +38,21 @@ func (m *Monitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, e
 
 func (m *Monitor) walk(ctx context.Context, path string) {
 	err := m.doWalk(ctx, path)
-	if err != nil {
-		Log.Errorw("Errors occurred.",
-			"path", path,
-			"error", err,
-		)
+	if err == nil {
+		return
 	}
 
+	if errors.Is(err, fs.ErrNotExist) {
+		Log.Debug("Cgroup had been removed.",
+			"path", path,
+		)
+		return
+	}
+
+	Log.Errorw("Errors occurred.",
+		"path", path,
+		"error", err,
+	)
 	return
 }
 
