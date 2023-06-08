@@ -60,5 +60,6 @@ test/coverage.html: generate
 	"
 	go tool cover -html=test/coverprofile -o test/coverage.html
 
-install: generate
-	go install
+install:
+	install -m755 -D cgtproxy /usr/local/bin/cgtproxy
+	install -m644 -D misc/systemd/cgtproxy.service /usr/local/lib/systemd/system/cgtproxy.service

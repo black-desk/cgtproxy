@@ -1,0 +1,22 @@
+[Unit]
+Description=Manage nftables according to cgroupv2
+Documentation=https://github.com/black-desk/cgtproxy
+
+[Service]
+Type=simple
+ExecStart=cgtproxy
+CapabilityBoundingSet=CAP_NET_ADMIN
+LimitNPROC=1
+
+ProtectHome=true
+ProtectSystem=full
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ConfigurationDirectory=cgtproxy
+ConfigurationDirectoryMode=0555
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

@@ -98,9 +98,16 @@ func Execute() {
 }
 
 func init() {
+	cfgPath := os.Getenv("CONFIGURATION_DIRECTORY")
+	if cfgPath == "" {
+		cfgPath = consts.CfgPath
+	} else {
+		cfgPath += "/config.yaml"
+	}
+
 	rootCmd.PersistentFlags().StringVarP(
 		&flags.CfgPath,
-		"config", "c", consts.CfgPath,
+		"config", "c", cfgPath,
 		"the configure file to use",
 	)
 }
