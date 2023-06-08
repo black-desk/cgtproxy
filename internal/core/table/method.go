@@ -54,7 +54,7 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 	)
 
 	setElement := nftables.SetElement{
-		Key:         binaryutil.BigEndian.PutUint64(inode),
+		Key:         binaryutil.NativeEndian.PutUint64(inode),
 		VerdictData: nil,
 	}
 
@@ -294,7 +294,7 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 
 	{
 		setElement := nftables.SetElement{
-			Key: binaryutil.BigEndian.PutUint32(uint32(tp.Mark)),
+			Key: binaryutil.NativeEndian.PutUint32(uint32(tp.Mark)),
 			VerdictData: &expr.Verdict{
 				Kind:  expr.VerdictGoto,
 				Chain: tp.Name,

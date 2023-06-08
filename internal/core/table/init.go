@@ -158,7 +158,7 @@ func (t *Table) initCgroupMap() (err error) {
 		KeyType:      nftables.TypeCGroupV2,
 		DataType:     nftables.TypeVerdict,
 		IsMap:        true,
-		KeyByteOrder: binaryutil.BigEndian,
+		KeyByteOrder: binaryutil.NativeEndian,
 	}
 
 	t.cgroupMapElement = make(map[string]nftables.SetElement)
@@ -178,11 +178,12 @@ func (t *Table) initCgroupMap() (err error) {
 
 func (t *Table) initMarkMap() (err error) {
 	t.markMap = &nftables.Set{
-		Table:    t.table,
-		Name:     "mark-vmap",
-		KeyType:  nftables.TypeMark,
-		DataType: nftables.TypeVerdict,
-		IsMap:    true,
+		Table:        t.table,
+		Name:         "mark-vmap",
+		KeyType:      nftables.TypeMark,
+		DataType:     nftables.TypeVerdict,
+		IsMap:        true,
+		KeyByteOrder: binaryutil.NativeEndian,
 	}
 
 	err = t.conn.AddSet(t.markMap, []nftables.SetElement{})
