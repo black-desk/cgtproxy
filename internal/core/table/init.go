@@ -232,8 +232,16 @@ func (t *Table) initOutputChain() (err error) {
 		return
 	}
 
-	// ip daddr @bypass return
+	err = t.fillOutputChain()
+	if err != nil {
+		return
+	}
 
+	return
+}
+
+func (t *Table) fillOutputChain() (err error) {
+	// ip daddr @bypass return
 	exprs := []expr.Any{
 		&expr.Meta{ // meta load nfproto => reg 1
 			Key:      expr.MetaKeyNFPROTO,

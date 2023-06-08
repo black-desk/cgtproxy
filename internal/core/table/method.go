@@ -108,6 +108,8 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		"levels", levels,
 	)
 
+	Log.Debugw("Flushing output chain.")
+
 	t.conn.FlushChain(t.outputChain)
 	err = t.conn.Flush()
 	ignoreNoBufferSpaceAvailable(&err)
@@ -115,7 +117,9 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		return
 	}
 
-	err = t.initOutputChain()
+	Log.Debugw("Fill output chain again.")
+
+	err = t.fillOutputChain()
 	if err != nil {
 		return
 	}
