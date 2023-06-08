@@ -1,15 +1,20 @@
 version: 1
-cgroup-root: AUTO
-marks: '[3000,3100)'
+cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
+marks: '[3000,3100)' # fwmark range for identify tproxy target
 
 tproxies:
   clash:
     port: 7893
-    addr: 127.0.0.1
+    addr: 127.0.0.1 # ignored for now
+    # no-udp: false
+    # no-ipv6: false
+    # mark: 4000 # you can set mark for each tproxies
 
 rules:
   - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/app\.slice\/.*
     tproxy: clash
+    # drop: true
+    # direct: true
 
 bypass:
   ipv4:

@@ -27,6 +27,10 @@ This program will listening cgroupfs change with inotify.
 And update the nftable rules when new cgroup hierarchy created,
 according to your configuration.
 
+## Configuration
+
+[example](./misc/config/example_without_repeater.yaml)
+
 ## Differences between cgproxy
 
 This project is inspired by [cgproxy](https://github.com/springzfx/cgproxy).
