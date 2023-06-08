@@ -11,8 +11,15 @@ import (
 type handle struct{}
 
 func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
+	isDirRemoved := event.IsDirRemoved()
+	isDirCreated := event.IsDirCreated()
+	path := event.Path
+
 	Log.Debugw("Handling new filesystem event.",
 		"event", event,
+		"isDirRemoved", isDirRemoved,
+		"isDirCreated", isDirCreated,
+		"path", path,
 	)
 
 	go func() {
@@ -20,17 +27,17 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 	}()
 
 	go func() {
-		if !event.IsDirRemoved() {
+		if !isDirRemoved {
 			return
 		}
 
-		err := w.RemoveDescriptor(event.Path)
+		err := w.RemoveDescriptor(path)
 		if err == nil {
 			return
 		}
 
 		Log.Errorw("Failed to remove descriptor from watcher.",
-			"path", event.Path,
+			"path", path,
 			"error", err,
 		)
 
@@ -38,16 +45,16 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 	}()
 
 	go func() {
-		if !event.IsDirCreated() {
+		if !isDirCreated {
 			return
 		}
 
 		Log.Debugw("Add path to watcher recursively.",
-			"path", event.Path,
+			"path", path,
 		)
 
 		err := w.RecursiveAdd(
-			event.Path,
+			path,
 			fsevents.DirCreatedEvent|fsevents.DirRemovedEvent,
 		)
 		if err == nil {
@@ -56,11 +63,11 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 
 		if errors.Is(err, os.ErrNotExist) {
 			Log.Debugw("Try to add a non-exist path to watcher.",
-				"path", event.Path,
+				"path", path,
 			)
 		} else {
 			Log.Errorw("Failed to add path to watcher.",
-				"path", event.Path,
+				"path", path,
 				"error", err,
 			)
 		}
