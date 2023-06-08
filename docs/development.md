@@ -5,19 +5,19 @@
     new underlying event (file system event from inoitfy for now)
     |
     | received by
-    |
+    v
     cgroup monitor
     |
     | produce
-    |
+    v
     cgroup event
     |
     | send to
-    |
+    v
     rulemanager
     |
     | write rules to
-    |
+    v
     nftable
 
 ## nftables rule development

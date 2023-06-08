@@ -31,41 +31,69 @@ according to your configuration.
 
 [example](./misc/config/example_without_repeater.yaml)
 
+## Tips
+
+If you want a temporary shell without any transparent proxy,
+you can write rules like this:
+
+```yaml
+- match: \/system\.slice\/system-clash\d+\.slice/.*
+  direct: true
+- match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/direct\.slice\/.*
+  direct: true
+- match: \/.*
+  tproxy: clash
+```
+
+Then you can just start a new shell with this command.
+
+```bash
+systemd-run --user --shell --slice direct
+```
+
+The command above start the new shell in a cgroup like
+`/user.slice/user-1000.slice/user@1000.service/direct.slice/run-u22.service`,
+which match the regex in your configuration.
+
+Then cgtproxy will produce nft rules to
+make that `run-u22.service` get rid of transparent proxy.
+
 ## Differences between cgproxy
 
 This project is inspired by [cgproxy](https://github.com/springzfx/cgproxy).
 
-But it has some differences:
+But there are some differences between cgproxy and cgtproxy:
 
-- It use nftable;
+- cgproxy using iptables, but cgtproxy use nftables.
 
-  cgproxy using iptables, while cgtproxy use nftables.
+  <https://wiki.nftables.org/wiki-nftables/index.php/Main_differences_with_iptables>
 
-- It use TPROXY only, no REDIR;
+- cgproxy using REDIR **AND** TPROXY only, but cgtproxy use only TPROXY.
 
-  cgproxy use TPROXY along with REDIR.
+- cgproxy can only working with exsiting cgroup,
+  but cgtproxy can update nftables rules dynamically for new cgroups.
 
-- It works more dynamically;
+- cgproxy use BPF, but cgtproxy not;
 
-  cgproxy can only working with exsiting cgroup with fixed name.
-  But cgtproxy can update nftables rules dynamically, for newly created cgroups.
+  cgproxy handle per-app proxy by using BPF to trace the execve syscall.
+  If the new executable file of that process matched some pattern,
+  cgproxy daemon will put that process into a special hierarchy `proxy.slice`.
 
-- No BPF;
+  This weird behavior make process escape from the user-level hierarchy,
+  which means the systemd resource control settings will not take any effect.
 
-  cgproxy achieving per-app proxy setting by using BPF to trace syscall exec.
-  cgtproxy implement this feature in the other way that doesn't required BPF.
+- cgproxy require at least CAP_NETWORK_ADMIN and CAP_BPF,
+  but cgtproxy require only CAP_NETWORK_ADMIN.
 
-- Less capabilities needed. (only CAP_NETWORK_ADMIN);
-
-  To use BPF, more capabilities is required by cgproxy.
-  But cgtproxy only require CAP_NETWORK_ADMIN
-  to update route rules and nftables.
+  Check the [systemd service file] for details.
 
 - Programs never get moved from original cgroup;
 
   cgproxy daemon will move processes
   with certain executable path into special cgroup.
   cgtproxy will never do that.
+
+[systemd service file]: ./misc/systemd/cgtproxy.service
 
 ## TODO
 

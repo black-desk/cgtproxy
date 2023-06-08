@@ -11,7 +11,11 @@ tproxies:
     # mark: 4000 # you can set mark for each tproxies
 
 rules:
-  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/app\.slice\/.*
+  - match: \/system\.slice\/system-clash\d+\.slice/.*
+    direct: true
+  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/direct\.slice\/.*
+    direct: true
+  - match: \/.*
     tproxy: clash
     # drop: true
     # direct: true
