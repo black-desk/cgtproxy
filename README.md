@@ -63,6 +63,13 @@ But it has some differences:
   with certain executable path into special cgroup.
   cgtproxy will never do that.
 
+## TODO
+
+- [ ] optional cgroup monitor implementation listening on D-Bus
+      instead of filesystem;
+- [ ] DNS hijack for fake-ip;
+- [ ] builtin TPROXY server.
+
 ## Develop
 
 Check this documentation [here](docs/development.md)
