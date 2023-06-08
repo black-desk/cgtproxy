@@ -1,7 +1,9 @@
 package table
 
 import (
+	"errors"
 	"net"
+	"syscall"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
 	. "github.com/black-desk/cgtproxy/internal/log"
@@ -11,6 +13,15 @@ import (
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
 )
+
+func ignoreNoBufferSpaceAvailable(perr *error) {
+	var errno syscall.Errno
+	if errors.As(*perr, &errno) && errno == syscall.ENOBUFS {
+		*perr = nil
+		Log.Errorw("ENOBUFS occurred.")
+		//FIXME: https://github.com/google/nftables/issues/103
+	}
+}
 
 func (t *Table) initChecks() (err error) {
 	defer Wrap(&err)
@@ -68,6 +79,7 @@ func (t *Table) initStructure() (err error) {
 	}
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -101,6 +113,7 @@ func (t *Table) initIPV4BypassSet() (err error) {
 	}
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -130,6 +143,7 @@ func (t *Table) initIPV6BypassSet() (err error) {
 	}
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -169,6 +183,7 @@ func (t *Table) initCgroupMap() (err error) {
 	}
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -192,6 +207,7 @@ func (t *Table) initMarkMap() (err error) {
 	}
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -211,6 +227,7 @@ func (t *Table) initOutputChain() (err error) {
 	})
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -253,6 +270,7 @@ func (t *Table) initOutputChain() (err error) {
 	})
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -295,6 +313,7 @@ func (t *Table) initOutputChain() (err error) {
 	})
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -331,6 +350,7 @@ func (t *Table) initOutputChain() (err error) {
 	})
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -350,6 +370,7 @@ func (t *Table) initPreroutingChain() (err error) {
 	})
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -391,6 +412,7 @@ func (t *Table) initPreroutingChain() (err error) {
 	})
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -432,6 +454,7 @@ func (t *Table) initPreroutingChain() (err error) {
 	})
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -458,6 +481,7 @@ func (t *Table) initPreroutingChain() (err error) {
 	})
 
 	err = t.conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
