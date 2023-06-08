@@ -30,6 +30,7 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 		}
 
 		Log.Errorw("Failed to remove descriptor from watcher.",
+			"path", event.Path,
 			"error", err,
 		)
 
