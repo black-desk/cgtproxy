@@ -102,6 +102,8 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 				}
 			} else {
 				err = &ErrUnexpectFsEvent{fsEvent.RawEvent}
+				Log.Error(err)
+				err = nil
 				return
 			}
 
