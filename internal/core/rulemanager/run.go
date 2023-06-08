@@ -143,6 +143,12 @@ func (m *RuleManager) addRoute() (err error) {
 		}
 
 		err = netlink.RouteAdd(route)
+		if errors.Is(err, os.ErrExist) {
+			Log.Infow("Route already exists.",
+				"route", route,
+			)
+			err = nil
+		}
 		if err != nil {
 			return
 		}
