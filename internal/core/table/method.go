@@ -117,12 +117,15 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		return
 	}
 
-	Log.Debugw("Fill output chain again.")
+	Log.Debugw("Filling output chain again.")
 
 	err = t.fillOutputChain()
 	if err != nil {
 		return
 	}
+
+	Log.Debugw("Output chain refilled.")
+	DumpNFTableRules()
 
 	for i := len(levels) - 1; i >= 0; i-- {
 		err = t.addCgroupRuleForLevel(levels[i])
@@ -150,7 +153,7 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 	path = t.removeCgroupRoot(path)
 
 	if _, ok := t.cgroupMapElement[path]; ok {
-		Log.Infow("Removing bypass rule from nft for this cgroup.",
+		Log.Infow("Removing rule from nft for this cgroup.",
 			"cgroup", path,
 		)
 

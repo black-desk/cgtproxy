@@ -205,6 +205,7 @@ func (m *RuleManager) handleNewCgroup(path string) {
 	err := m.nft.AddCgroup(path, &target)
 	if err != nil {
 		Log.Errorw("Failed to update nft for new cgroup",
+			"cgroup", path,
 			"error", err,
 		)
 	}

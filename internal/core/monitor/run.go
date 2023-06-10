@@ -120,7 +120,8 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 }
 
 func (m *Monitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err error) {
-	cgEvent.Path = strings.TrimRight(cgEvent.Path, "/")
+	path := strings.TrimRight(cgEvent.Path, "/")
+	cgEvent.Path = path
 
 	Log.Debugw("New cgroup envent.",
 		"event", cgEvent,
@@ -131,7 +132,9 @@ func (m *Monitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err err
 		err = ctx.Err()
 		return
 	case m.output <- cgEvent:
-		Log.Debugw("Cgroup event sent.")
+		Log.Debugw("Cgroup event sent.",
+			"path", path,
+		)
 	}
 
 	return
