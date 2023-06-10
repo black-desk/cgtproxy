@@ -23,62 +23,57 @@ func ignoreNoBufferSpaceAvailable(perr *error) {
 	}
 }
 
-func (t *Table) initChecks() (err error) {
-	defer Wrap(&err)
-
-	if t.conn == nil {
-		err = ErrMissingNftableConn
-		return
-	}
-
-	return
-}
-
 func (t *Table) initStructure() (err error) {
 	defer Wrap(&err, "Failed to flush initial content of nft table.")
 
 	Log.Debug("Initialing nft table structure.")
 
-	t.table = t.conn.AddTable(&nftables.Table{
-		Name:   consts.NftTableName,
-		Family: nftables.TableFamilyINet,
-	})
-
-	err = t.initIPV4BypassSet()
+	var conn *nftables.Conn
+	conn, err = nftables.New()
 	if err != nil {
 		return
 	}
 
-	err = t.initIPV6BypassSet()
+	t.table = conn.AddTable(&nftables.Table{
+		Name:   consts.NftTableName,
+		Family: nftables.TableFamilyINet,
+	})
+
+	err = t.initIPV4BypassSet(conn)
+	if err != nil {
+		return
+	}
+
+	err = t.initIPV6BypassSet(conn)
 	if err != nil {
 		return
 	}
 
 	t.initProtoSet()
 
-	err = t.initCgroupMap()
+	err = t.initCgroupMap(conn)
 	if err != nil {
 		return
 	}
 
-	err = t.initMarkMap()
+	err = t.initMarkMap(conn)
 	if err != nil {
 		return
 	}
 
 	t.policy = nftables.ChainPolicyAccept
 
-	err = t.initOutputChain()
+	err = t.initOutputChain(conn)
 	if err != nil {
 		return
 	}
 
-	err = t.initPreroutingChain()
+	err = t.initPreroutingChain(conn)
 	if err != nil {
 		return
 	}
 
-	err = t.conn.Flush()
+	err = conn.Flush()
 	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
@@ -91,7 +86,7 @@ func (t *Table) initStructure() (err error) {
 	return
 }
 
-func (t *Table) initIPV4BypassSet() (err error) {
+func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 	t.ipv4BypassSet = &nftables.Set{
 		Table:        t.table,
 		Name:         "bypass",
@@ -107,13 +102,7 @@ func (t *Table) initIPV4BypassSet() (err error) {
 		})
 	}
 
-	err = t.conn.AddSet(t.ipv4BypassSet, elements)
-	if err != nil {
-		return
-	}
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
+	err = conn.AddSet(t.ipv4BypassSet, elements)
 	if err != nil {
 		return
 	}
@@ -121,7 +110,7 @@ func (t *Table) initIPV4BypassSet() (err error) {
 	return
 }
 
-func (t *Table) initIPV6BypassSet() (err error) {
+func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 	t.ipv6BypassSet = &nftables.Set{
 		Table:        t.table,
 		Name:         "bypass6",
@@ -137,13 +126,7 @@ func (t *Table) initIPV6BypassSet() (err error) {
 		})
 	}
 
-	err = t.conn.AddSet(t.ipv6BypassSet, elements)
-	if err != nil {
-		return
-	}
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
+	err = conn.AddSet(t.ipv6BypassSet, elements)
 	if err != nil {
 		return
 	}
@@ -165,7 +148,7 @@ func (t *Table) initProtoSet() {
 	}
 }
 
-func (t *Table) initCgroupMap() (err error) {
+func (t *Table) initCgroupMap(conn *nftables.Conn) (err error) {
 	t.cgroupMap = &nftables.Set{
 		Table:        t.table,
 		Name:         "cgroup-vmap",
@@ -177,13 +160,7 @@ func (t *Table) initCgroupMap() (err error) {
 
 	t.cgroupMapElement = make(map[string]nftables.SetElement)
 
-	err = t.conn.AddSet(t.cgroupMap, []nftables.SetElement{})
-	if err != nil {
-		return
-	}
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
+	err = conn.AddSet(t.cgroupMap, []nftables.SetElement{})
 	if err != nil {
 		return
 	}
@@ -191,7 +168,7 @@ func (t *Table) initCgroupMap() (err error) {
 	return
 }
 
-func (t *Table) initMarkMap() (err error) {
+func (t *Table) initMarkMap(conn *nftables.Conn) (err error) {
 	t.markMap = &nftables.Set{
 		Table:        t.table,
 		Name:         "mark-vmap",
@@ -201,13 +178,7 @@ func (t *Table) initMarkMap() (err error) {
 		KeyByteOrder: binaryutil.NativeEndian,
 	}
 
-	err = t.conn.AddSet(t.markMap, []nftables.SetElement{})
-	if err != nil {
-		return
-	}
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
+	err = conn.AddSet(t.markMap, []nftables.SetElement{})
 	if err != nil {
 		return
 	}
@@ -215,9 +186,9 @@ func (t *Table) initMarkMap() (err error) {
 	return
 }
 
-func (t *Table) initOutputChain() (err error) {
+func (t *Table) initOutputChain(conn *nftables.Conn) (err error) {
 	// type filter hook prerouting priority mangle; policy accept;
-	t.outputChain = t.conn.AddChain(&nftables.Chain{
+	t.outputChain = conn.AddChain(&nftables.Chain{
 		Table:    t.table,
 		Name:     "output",
 		Type:     nftables.ChainTypeRoute,
@@ -226,13 +197,7 @@ func (t *Table) initOutputChain() (err error) {
 		Policy:   &t.policy,
 	})
 
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
-
-	err = t.fillOutputChain()
+	err = t.fillOutputChain(conn)
 	if err != nil {
 		return
 	}
@@ -240,7 +205,7 @@ func (t *Table) initOutputChain() (err error) {
 	return
 }
 
-func (t *Table) fillOutputChain() (err error) {
+func (t *Table) fillOutputChain(conn *nftables.Conn) (err error) {
 	// ip daddr @bypass return
 	exprs := []expr.Any{
 		&expr.Meta{ // meta load nfproto => reg 1
@@ -271,17 +236,11 @@ func (t *Table) fillOutputChain() (err error) {
 
 	exprs = addDebugCounter(exprs)
 
-	t.conn.AddRule(&nftables.Rule{
+	conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.outputChain,
 		Exprs: exprs,
 	})
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
 
 	// ip6 daddr @bypass6 return
 
@@ -314,21 +273,15 @@ func (t *Table) fillOutputChain() (err error) {
 
 	exprs = addDebugCounter(exprs)
 
-	t.conn.AddRule(&nftables.Rule{
+	conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.outputChain,
 		Exprs: exprs,
 	})
 
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
-
 	// meta l4proto != { tcp, udp } return
 
-	err = t.conn.AddSet(t.protoSet, t.protoSetElement)
+	err = conn.AddSet(t.protoSet, t.protoSetElement)
 	if err != nil {
 		return
 	}
@@ -351,24 +304,18 @@ func (t *Table) fillOutputChain() (err error) {
 
 	exprs = addDebugCounter(exprs)
 
-	t.conn.AddRule(&nftables.Rule{
+	conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.outputChain,
 		Exprs: exprs,
 	})
 
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
-func (t *Table) initPreroutingChain() (err error) {
+func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
 	// type route hook output priority mangle; policy accept;
-	t.preroutingChain = t.conn.AddChain(&nftables.Chain{
+	t.preroutingChain = conn.AddChain(&nftables.Chain{
 		Table:    t.table,
 		Name:     "prerouting",
 		Type:     nftables.ChainTypeFilter,
@@ -376,12 +323,6 @@ func (t *Table) initPreroutingChain() (err error) {
 		Priority: nftables.ChainPriorityMangle,
 		Policy:   &t.policy,
 	})
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
 
 	// ip daddr @bypass return
 	exprs := []expr.Any{
@@ -413,17 +354,11 @@ func (t *Table) initPreroutingChain() (err error) {
 
 	exprs = addDebugCounter(exprs)
 
-	t.conn.AddRule(&nftables.Rule{
+	conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.preroutingChain,
 		Exprs: exprs,
 	})
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
 
 	// ip6 daddr @bypass6 return
 	exprs = []expr.Any{
@@ -455,17 +390,11 @@ func (t *Table) initPreroutingChain() (err error) {
 
 	exprs = addDebugCounter(exprs)
 
-	t.conn.AddRule(&nftables.Rule{
+	conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.preroutingChain,
 		Exprs: exprs,
 	})
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
 
 	// meta mark vmap @mark-vmap
 	exprs = []expr.Any{
@@ -482,17 +411,11 @@ func (t *Table) initPreroutingChain() (err error) {
 	}
 	exprs = addDebugCounter(exprs)
 
-	t.conn.AddRule(&nftables.Rule{
+	conn.AddRule(&nftables.Rule{
 		Table: t.table,
 		Chain: t.preroutingChain,
 		Exprs: exprs,
 	})
-
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
 
 	return
 }

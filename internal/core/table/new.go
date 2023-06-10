@@ -8,7 +8,6 @@ import (
 )
 
 type Table struct {
-	conn       *nftables.Conn
 	cgroupRoot config.CgroupRoot
 	bypassIPv4 []string
 	bypassIPv6 []string
@@ -47,11 +46,6 @@ func New(opts ...Opt) (ret *Table, err error) {
 		}
 	}
 
-	err = t.initChecks()
-	if err != nil {
-		return
-	}
-
 	err = t.initStructure()
 	if err != nil {
 		return
@@ -71,13 +65,6 @@ func WithBypass(bypass *config.Bypass) Opt {
 
 		table.bypassIPv4 = bypass.IPV4
 		table.bypassIPv6 = bypass.IPV6
-		return table, nil
-	}
-}
-
-func WithConn(conn *nftables.Conn) Opt {
-	return func(table *Table) (*Table, error) {
-		table.conn = conn
 		return table, nil
 	}
 }

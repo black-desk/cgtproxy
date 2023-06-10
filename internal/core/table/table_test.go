@@ -10,9 +10,7 @@ import (
 	"github.com/black-desk/cgtproxy/internal/consts"
 	"github.com/black-desk/cgtproxy/internal/core/table"
 	. "github.com/black-desk/cgtproxy/internal/core/table/internal"
-	tabletest "github.com/black-desk/cgtproxy/internal/core/table/internal/test"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
-	"github.com/google/nftables"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -38,21 +36,14 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 	Context("created", func() {
 		var (
-			conn *nftables.Conn
-			t    *table.Table
+			t *table.Table
 
 			result string
 		)
 
 		BeforeEach(func() {
-			By("Create a nftable connection.", func() {
-				conn, err = tabletest.InjectedConn()
-				Expect(err).To(Succeed())
-			})
-
 			By("Create a Table object.", func() {
 				t, err = table.New(
-					table.WithConn(conn),
 					table.WithCgroupRoot(config.CgroupRoot("/sys/fs/cgroup")),
 				)
 				Expect(err).To(Succeed())
@@ -65,11 +56,6 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					return
 				}
 				err = t.Clear()
-				Expect(err).To(Succeed())
-			})
-
-			By("Close nftable connection.", func() {
-				err = conn.CloseLasting()
 				Expect(err).To(Succeed())
 			})
 		})

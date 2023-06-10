@@ -100,7 +100,6 @@ var (
 )
 
 func provideTable(
-	conn *nftables.Conn,
 	root config.CgroupRoot,
 	bypass *config.Bypass,
 ) (
@@ -109,7 +108,6 @@ func provideTable(
 ) {
 	_tableOnce.Do(func() {
 		_table, _tableErr = table.New(
-			table.WithConn(conn),
 			table.WithCgroupRoot(root),
 			table.WithBypass(bypass),
 		)
@@ -199,7 +197,6 @@ var set = wire.NewSet(
 	provideWatcher,
 	provideInputChan,
 	provideOutputChan,
-	provideNftConn,
 	provideTable,
 	provideRuleManager,
 	provideRepeater,

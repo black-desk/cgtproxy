@@ -34,17 +34,13 @@ func injectedMonitor(core *Core) (*monitor.Monitor, error) {
 }
 
 func injectedRuleManager(core *Core) (*rulemanager.RuleManager, error) {
-	conn, err := provideNftConn()
-	if err != nil {
-		return nil, err
-	}
 	config, err := provideConfig(core)
 	if err != nil {
 		return nil, err
 	}
 	cgroupRoot := provideCgroupRoot(config)
 	bypass := provideBypass(config)
-	table, err := provideTable(conn, cgroupRoot, bypass)
+	table, err := provideTable(cgroupRoot, bypass)
 	if err != nil {
 		return nil, err
 	}

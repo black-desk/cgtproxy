@@ -80,15 +80,16 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		}
 	}
 
-	err = t.conn.SetAddElements(
-		t.cgroupMap,
-		[]nftables.SetElement{setElement},
-	)
+	var conn *nftables.Conn
+	conn, err = nftables.New()
 	if err != nil {
 		return
 	}
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
+
+	err = conn.SetAddElements(
+		t.cgroupMap,
+		[]nftables.SetElement{setElement},
+	)
 	if err != nil {
 		return
 	}
@@ -112,18 +113,9 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		"levels", levels,
 	)
 
-	Log.Debugw("Flushing output chain.")
+	conn.FlushChain(t.outputChain)
 
-	t.conn.FlushChain(t.outputChain)
-	err = t.conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
-
-	Log.Debugw("Filling output chain again.")
-
-	err = t.fillOutputChain()
+	err = t.fillOutputChain(conn)
 	if err != nil {
 		return
 	}
@@ -132,10 +124,16 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 	DumpNFTableRules()
 
 	for i := len(levels) - 1; i >= 0; i-- {
-		err = t.addCgroupRuleForLevel(levels[i])
+		err = t.addCgroupRuleForLevel(conn, levels[i])
 		if err != nil {
 			return
 		}
+	}
+
+	err = conn.Flush()
+	ignoreNoBufferSpaceAvailable(&err)
+	if err != nil {
+		return
 	}
 
 	Log.Infow("New cgroup added to nft.",
@@ -161,7 +159,13 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 			"cgroup", path,
 		)
 
-		t.conn.SetDeleteElements(
+		var conn *nftables.Conn
+		conn, err = nftables.New()
+		if err != nil {
+			return
+		}
+
+		conn.SetDeleteElements(
 			t.cgroupMap,
 			[]nftables.SetElement{
 				t.cgroupMapElement[path],
@@ -170,7 +174,8 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 		if err != nil {
 			return
 		}
-		err = t.conn.Flush()
+
+		err = conn.Flush()
 		ignoreNoBufferSpaceAvailable(&err)
 		if err != nil {
 			return
@@ -199,6 +204,12 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 		"tproxy", tp,
 	)
 
+	var conn *nftables.Conn
+	conn, err = nftables.New()
+	if err != nil {
+		return
+	}
+
 	{ // -MARK chain
 
 		chain := &nftables.Chain{
@@ -206,12 +217,7 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 			Name:  tp.Name + "-MARK",
 		}
 
-		t.conn.AddChain(chain)
-		err = t.conn.Flush()
-		ignoreNoBufferSpaceAvailable(&err)
-		if err != nil {
-			return
-		}
+		conn.AddChain(chain)
 
 		// meta mark set ...
 
@@ -231,17 +237,11 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 
 		exprs = addDebugCounter(exprs)
 
-		t.conn.AddRule(&nftables.Rule{
+		conn.AddRule(&nftables.Rule{
 			Table: t.table,
 			Chain: chain,
 			Exprs: exprs,
 		})
-
-		err = t.conn.Flush()
-		ignoreNoBufferSpaceAvailable(&err)
-		if err != nil {
-			return
-		}
 	}
 
 	{ // tproxy chain
@@ -250,19 +250,14 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 			Name:  tp.Name,
 		}
 
-		t.conn.AddChain(chain)
-		err = t.conn.Flush()
-		ignoreNoBufferSpaceAvailable(&err)
-		if err != nil {
-			return
-		}
+		conn.AddChain(chain)
 
 		tproxy := &expr.TProxy{ // tproxy port reg 1
 			Family:  byte(nftables.TableFamilyUnspecified),
 			RegPort: 1,
 		}
 
-		err = t.conn.AddSet(t.protoSet, t.protoSetElement)
+		err = conn.AddSet(t.protoSet, t.protoSetElement)
 		if err != nil {
 			return
 		}
@@ -307,12 +302,7 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 			Exprs: exprs,
 		}
 
-		t.conn.AddRule(rule)
-		err = t.conn.Flush()
-		ignoreNoBufferSpaceAvailable(&err)
-		if err != nil {
-			return
-		}
+		conn.AddRule(rule)
 	}
 
 	{
@@ -323,15 +313,15 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 				Chain: tp.Name,
 			},
 		}
-		err = t.conn.SetAddElements(t.markMap, []nftables.SetElement{setElement})
+		err = conn.SetAddElements(t.markMap, []nftables.SetElement{setElement})
 		if err != nil {
 			return
 		}
-		err = t.conn.Flush()
-		ignoreNoBufferSpaceAvailable(&err)
-		if err != nil {
-			return
-		}
+	}
+
+	err = conn.Flush()
+	if err != nil {
+		return
 	}
 
 	Log.Debug("Nftable chain added for this tproxy.",
@@ -346,8 +336,14 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 func (t *Table) Clear() (err error) {
 	defer Wrap(&err, "Error occurs while removing nftable.")
 
-	t.conn.DelTable(t.table)
-	err = t.conn.Flush()
+	var conn *nftables.Conn
+	conn, err = nftables.New()
+	if err != nil {
+		return
+	}
+
+	conn.DelTable(t.table)
+	err = conn.Flush()
 	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
@@ -370,7 +366,7 @@ func (t *Table) removeCgroupRoot(path string) string {
 	return path
 }
 
-func (t *Table) addCgroupRuleForLevel(level int) (err error) {
+func (t *Table) addCgroupRuleForLevel(conn *nftables.Conn, level int) (err error) {
 	defer Wrap(&err,
 		"Failed to update output chain for level %d cgroup.", level)
 
@@ -396,8 +392,8 @@ func (t *Table) addCgroupRuleForLevel(level int) (err error) {
 		Exprs: exprs,
 	}
 
-	t.conn.AddRule(rule)
-	err = t.conn.Flush()
+	conn.AddRule(rule)
+	err = conn.Flush()
 	ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
