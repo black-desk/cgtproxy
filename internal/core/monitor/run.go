@@ -123,6 +123,11 @@ func (m *Monitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err err
 	path := strings.TrimRight(cgEvent.Path, "/")
 	cgEvent.Path = path
 
+	if cgEvent.Path == string(m.root) {
+		// NOTE: Ignore cgroup root.
+		return nil
+	}
+
 	Log.Debugw("New cgroup envent.",
 		"event", cgEvent,
 	)

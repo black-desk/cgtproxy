@@ -101,12 +101,10 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 				cgroupEvents = append(cgroupEvents, cgroupEvent)
 			}
 
-			Expect(len(expectResult) + 1).To(Equal(len(cgroupEvents)))
+			Expect(len(expectResult)).To(Equal(len(cgroupEvents)))
 
-			Expect(cgroupEvents[0].Path).To(Equal(tmpDir))
-
-			for i := range cgroupEvents[1:] {
-				Expect(*cgroupEvents[i+1]).To(Equal(*expectResult[i]))
+			for i := range cgroupEvents {
+				Expect(*cgroupEvents[i]).To(Equal(*expectResult[i]))
 			}
 
 			err = p.Wait()
