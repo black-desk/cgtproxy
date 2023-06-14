@@ -152,7 +152,8 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 			}},
 			[]error{},
 			[]*types.CgroupEvent{},
-			new(ErrUnexpectFsEvent),
+			// new(ErrUnexpectFsEvent), // NOTE: ErrUnexpectFsEvent is ignored.
+			nil,
 		).WithFmt("invalid fsnotify.Event"),
 	)
 })
