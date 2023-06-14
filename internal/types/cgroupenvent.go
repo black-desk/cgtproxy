@@ -7,7 +7,7 @@ const (
 	CgroupEventTypeDelete                        // Delete
 )
 
-//go:generate stringer -type=CgroupEventType -linecomment
+//go:generate go run golang.org/x/tools/cmd/stringer -type=CgroupEventType -linecomment
 
 type CgroupEvent struct {
 	Path      string
