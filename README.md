@@ -1,7 +1,7 @@
 # cgtproxy
 
-cgtproxy is a transparent proxy rules manager written in go.
-It will automatically update your nftable rules according to your configuration,
+cgtproxy is a transparent proxy **RULE** manager written in go.
+It will automatically update your nft ruleset according to your configuration,
 to archive per-app transparent proxy settings.
 
 ## How it works
