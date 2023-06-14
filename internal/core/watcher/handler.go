@@ -22,11 +22,41 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 		"path", path,
 	)
 
-	go func() {
-		w.Events <- event
+	func() {
+		if !isDirCreated {
+			return
+		}
+
+		Log.Debugw("Add path to watcher recursively.",
+			"path", path,
+		)
+
+		err := w.RecursiveAdd(
+			path,
+			fsevents.DirCreatedEvent|fsevents.DirRemovedEvent,
+		)
+
+		Log.Debugw("Finish add path to watcher recursively.",
+			"path", path,
+		)
+
+		if err == nil {
+			return
+		}
+
+		if errors.Is(err, os.ErrNotExist) {
+			Log.Debugw("Try to add a non-exist path to watcher.",
+				"path", path,
+			)
+		} else {
+			Log.Errorw("Failed to add path to watcher.",
+				"path", path,
+				"error", err,
+			)
+		}
 	}()
 
-	go func() {
+	func() {
 		if !isDirRemoved {
 			return
 		}
@@ -44,33 +74,8 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 		return
 	}()
 
-	go func() {
-		if !isDirCreated {
-			return
-		}
-
-		Log.Debugw("Add path to watcher recursively.",
-			"path", path,
-		)
-
-		err := w.RecursiveAdd(
-			path,
-			fsevents.DirCreatedEvent|fsevents.DirRemovedEvent,
-		)
-		if err == nil {
-			return
-		}
-
-		if errors.Is(err, os.ErrNotExist) {
-			Log.Debugw("Try to add a non-exist path to watcher.",
-				"path", path,
-			)
-		} else {
-			Log.Errorw("Failed to add path to watcher.",
-				"path", path,
-				"error", err,
-			)
-		}
+	func() {
+		w.Events <- event
 	}()
 
 	return nil

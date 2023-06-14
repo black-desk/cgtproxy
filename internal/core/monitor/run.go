@@ -93,7 +93,7 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 					EventType: types.CgroupEventTypeNew,
 				}
 
-				go m.walk(ctx, fsEvent.Path)
+				m.walk(ctx, fsEvent.Path)
 
 			} else if fsEvent.IsDirRemoved() {
 				cgEvent = &types.CgroupEvent{
