@@ -38,6 +38,10 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		"target", target,
 	)
 
+	if _, ok := t.cgroupMapElement[path]; ok {
+		return os.ErrExist
+	}
+
 	var fileInfo os.FileInfo
 	fileInfo, err = os.Stat(path)
 	if err != nil {
