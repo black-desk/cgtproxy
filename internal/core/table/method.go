@@ -1,6 +1,7 @@
 package table
 
 import (
+	"errors"
 	"net"
 	"os"
 	"path/filepath"
@@ -540,7 +541,12 @@ func (t *Table) Clear() (err error) {
 	conn.DelTable(t.table)
 	err = conn.Flush()
 	ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
+	if errors.Is(err, os.ErrNotExist) {
+		Log.Debugw("Table not exist, nothing to remove.",
+			"table", t.table.Name,
+                )
+		err = nil
+	} else if err != nil {
 		return
 	}
 
