@@ -1,6 +1,10 @@
 # cgtproxy
 
-cgtproxy is a transparent proxy **RULE** manager written in go.
+cgtproxy is a transparent proxy **RULE** manager written in go
+inspired by [cgproxy].
+
+[cgproxy]: https://github.com/springzfx/cgproxy
+
 It will automatically update your nft ruleset according to your configuration,
 to archive per-app transparent proxy settings.
 
@@ -31,6 +35,10 @@ according to your configuration.
 
 [example](./misc/config/example_without_repeater.yaml)
 
+Configuration documentation can be found at [godoc].
+
+[godoc]: https://godoc.org/github.com/black-desk/cgtproxy/internal/config
+
 ## Tips
 
 If you want a temporary shell without any transparent proxy,
@@ -60,38 +68,31 @@ make that `run-u22.service` get rid of transparent proxy.
 
 ## Differences between cgproxy
 
-This project is inspired by [cgproxy](https://github.com/springzfx/cgproxy).
-
-But there are some differences between cgproxy and cgtproxy:
+There are some differences between cgproxy and cgtproxy:
 
 - cgproxy using iptables, but cgtproxy use nftables.
 
   <https://wiki.nftables.org/wiki-nftables/index.php/Main_differences_with_iptables>
-
-- cgproxy using REDIR **AND** TPROXY only, but cgtproxy use only TPROXY.
 
 - cgproxy can only working with exsiting cgroup,
   but cgtproxy can update nftables rules dynamically for new cgroups.
 
 - cgproxy use BPF, but cgtproxy not;
 
-  cgproxy handle per-app proxy by using BPF to trace the execve syscall.
+  cgproxy implement per-app proxy by using BPF to trace the execve syscall.
   If the new executable file of that process matched some pattern,
   cgproxy daemon will put that process into a special hierarchy `proxy.slice`.
 
   This weird behavior make process escape from the user-level hierarchy,
   which means the systemd resource control settings will not take any effect.
 
+  But cgtproxy implement per-app proxy by update nftable rules.
+  It do not write anything to cgroupfs at all.
+
 - cgproxy require at least CAP_NETWORK_ADMIN and CAP_BPF,
   but cgtproxy require only CAP_NETWORK_ADMIN.
 
   Check the [systemd service file] for details.
-
-- Programs never get moved from original cgroup;
-
-  cgproxy daemon will move processes
-  with certain executable path into special cgroup.
-  cgtproxy will never do that.
 
 [systemd service file]: ./misc/systemd/cgtproxy.service
 
