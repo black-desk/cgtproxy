@@ -206,8 +206,31 @@ func (t *Table) initOutputChain(conn *nftables.Conn) (err error) {
 }
 
 func (t *Table) fillOutputChain(conn *nftables.Conn) (err error) {
-	// ip daddr @bypass return
+	// ct direction == reply return
 	exprs := []expr.Any{
+		&expr.Ct{ // ct load direction => reg 1
+			Register: 1,
+			Key:      expr.CtKeyDIRECTION,
+		},
+		&expr.Cmp{ // cmp eq reg 1 0x00000001
+			Op:       expr.CmpOpEq,
+			Register: 1,
+			Data:     []byte{0x00000001}, // IP_CT_DIR_REPLY
+		},
+		&expr.Verdict{ // immediate reg 0 return
+			Kind: expr.VerdictReturn,
+		},
+	}
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: t.table,
+		Chain: t.outputChain,
+		Exprs: exprs,
+	})
+
+	// ip daddr @bypass return
+	exprs = []expr.Any{
 		&expr.Meta{ // meta load nfproto => reg 1
 			Key:      expr.MetaKeyNFPROTO,
 			Register: 1,
