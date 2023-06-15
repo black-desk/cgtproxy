@@ -44,10 +44,16 @@ var rootCmd = &cobra.Command{
 
 func rootCmdRun() (err error) {
 	content, err := os.ReadFile(flags.CfgPath)
-	if err != nil {
+	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == consts.CfgPath {
+		Log.Errorw("Configuration file missing fallback to default config.")
+
+		content = []byte(config.DefaultConfig)
+		err = nil
+	} else if err != nil {
 		Log.Errorw("Failed to read configuration from file",
 			"file", flags.CfgPath,
 			"error", err)
+
 		return err
 	}
 
@@ -87,7 +93,6 @@ func rootCmdRun() (err error) {
 	}
 
 	return
-
 }
 
 func Execute() {
