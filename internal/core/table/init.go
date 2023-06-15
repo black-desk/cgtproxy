@@ -61,6 +61,11 @@ func (t *Table) initStructure() (err error) {
 		return
 	}
 
+	err = t.initMarkDNSMap(conn)
+	if err != nil {
+		return
+	}
+
 	t.policy = nftables.ChainPolicyAccept
 
 	err = t.initOutputChain(conn)
@@ -169,7 +174,7 @@ func (t *Table) initCgroupMap(conn *nftables.Conn) (err error) {
 }
 
 func (t *Table) initMarkMap(conn *nftables.Conn) (err error) {
-	t.markMap = &nftables.Set{
+	t.markTproxyMap = &nftables.Set{
 		Table:        t.table,
 		Name:         "mark-vmap",
 		KeyType:      nftables.TypeMark,
@@ -178,7 +183,25 @@ func (t *Table) initMarkMap(conn *nftables.Conn) (err error) {
 		KeyByteOrder: binaryutil.NativeEndian,
 	}
 
-	err = conn.AddSet(t.markMap, []nftables.SetElement{})
+	err = conn.AddSet(t.markTproxyMap, []nftables.SetElement{})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (t *Table) initMarkDNSMap(conn *nftables.Conn) (err error) {
+	t.markDNSMap = &nftables.Set{
+		Table:        t.table,
+		Name:         "mark-dns-vmap",
+		KeyType:      nftables.TypeMark,
+		DataType:     nftables.TypeVerdict,
+		IsMap:        true,
+		KeyByteOrder: binaryutil.NativeEndian,
+	}
+
+	err = conn.AddSet(t.markDNSMap, []nftables.SetElement{})
 	if err != nil {
 		return
 	}
@@ -428,8 +451,8 @@ func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
 		&expr.Lookup{ // lookup reg 1 set cgroup-map-x dreg 0
 			SourceRegister: 1,
 			IsDestRegSet:   true,
-			SetName:        t.markMap.Name,
-			SetID:          t.markMap.ID,
+			SetName:        t.markTproxyMap.Name,
+			SetID:          t.markTproxyMap.ID,
 		},
 	}
 	exprs = addDebugCounter(exprs)

@@ -6,6 +6,9 @@ tproxies:
   clash:
     port: 7893
     addr: 127.0.0.1 # ignored for now
+    dns-hijack:
+      addr: 127.0.0.1
+      port: 53
     # no-udp: false
     # no-ipv6: false
     # mark: 4000 # you can set mark for each tproxies

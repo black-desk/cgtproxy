@@ -25,7 +25,8 @@ type Table struct {
 	cgroupMap        *nftables.Set
 	cgroupMapElement map[string]nftables.SetElement
 
-	markMap *nftables.Set
+	markTproxyMap *nftables.Set
+	markDNSMap    *nftables.Set
 
 	outputChain     *nftables.Chain
 	preroutingChain *nftables.Chain

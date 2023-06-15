@@ -36,12 +36,19 @@ type Rule struct {
 }
 
 type TProxy struct {
-	Name   string      `yaml:"-"`
-	NoUDP  bool        `yaml:"no-udp"`
-	NoIPv6 bool        `yaml:"no-ipv6"`
-	Addr   *string     `yaml:"addr" validate:"hostname|ip"`
-	Port   uint16      `yaml:"port" validate:"required"`
-	Mark   RerouteMark `yaml:"mark"`
+	Name      string      `yaml:"-"`
+	NoUDP     bool        `yaml:"no-udp"`
+	NoIPv6    bool        `yaml:"no-ipv6"`
+	Addr      *string     `yaml:"addr" validate:"hostname|ip"`
+	Port      uint16      `yaml:"port" validate:"required"`
+	Mark      RerouteMark `yaml:"mark"`
+	DNSHijack *DNSHijack  `yaml:"dns-hijack"`
+}
+
+type DNSHijack struct {
+	Addr string `yaml:"addr" validate:"ip4_addr"`
+	Port uint16 `yaml:"port"`
+	TCP  bool   `yaml:"tcp"`
 }
 
 type Repeater struct {
