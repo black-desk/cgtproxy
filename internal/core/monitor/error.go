@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrWatcherMissing = errors.New("Watcher is missing.")
-	ErrOutputMissing  = errors.New("Output is missing.")
+	ErrWatcherMissing    = errors.New("Watcher is missing.")
+	ErrOutputMissing     = errors.New("Output is missing.")
 	ErrCgroupRootMissing = errors.New("Cgroup root is missing")
 )
 
