@@ -45,12 +45,12 @@ If you want a temporary shell without any transparent proxy,
 you can write rules like this:
 
 ```yaml
-- match: \/system\.slice\/system-clash\d+\.slice/.*
+- match: \/system\.slice\/clash-meta\.service
   direct: true
 - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/direct\.slice\/.*
   direct: true
 - match: \/.*
-  tproxy: clash
+  tproxy: clash-meta
 ```
 
 Then you can just start a new shell with this command.

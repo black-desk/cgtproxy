@@ -9,8 +9,6 @@ tproxies:
     dns-hijack:
       addr: 127.0.0.1
       port: 53
-      # no-udp: false
-      # no-ipv6: false
 
 rules:
   - match: \/system\.slice\/clash-meta\.service
