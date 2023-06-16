@@ -68,7 +68,12 @@ func (t *Table) initStructure() (err error) {
 
 	t.policy = nftables.ChainPolicyAccept
 
-	err = t.initOutputChain(conn)
+	err = t.initOutputMangleChain(conn)
+	if err != nil {
+		return
+	}
+
+	err = t.initOutputNATChain(conn)
 	if err != nil {
 		return
 	}
@@ -209,18 +214,18 @@ func (t *Table) initMarkDNSMap(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (t *Table) initOutputChain(conn *nftables.Conn) (err error) {
+func (t *Table) initOutputMangleChain(conn *nftables.Conn) (err error) {
 	// type filter hook prerouting priority mangle; policy accept;
-	t.outputChain = conn.AddChain(&nftables.Chain{
+	t.outputMangleChain = conn.AddChain(&nftables.Chain{
 		Table:    t.table,
-		Name:     "output",
+		Name:     "output-mangle",
 		Type:     nftables.ChainTypeRoute,
 		Hooknum:  nftables.ChainHookOutput,
 		Priority: nftables.ChainPriorityMangle,
 		Policy:   &t.policy,
 	})
 
-	err = t.fillOutputChain(conn)
+	err = t.fillOutputMangleChain(conn, t.outputMangleChain)
 	if err != nil {
 		return
 	}
@@ -228,7 +233,11 @@ func (t *Table) initOutputChain(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (t *Table) fillOutputChain(conn *nftables.Conn) (err error) {
+func (t *Table) fillOutputMangleChain(
+	conn *nftables.Conn, chain *nftables.Chain,
+) (
+	err error,
+) {
 	// ct direction == reply return
 	exprs := []expr.Any{
 		&expr.Ct{ // ct load direction => reg 1
@@ -248,7 +257,7 @@ func (t *Table) fillOutputChain(conn *nftables.Conn) (err error) {
 
 	conn.AddRule(&nftables.Rule{
 		Table: t.table,
-		Chain: t.outputChain,
+		Chain: chain,
 		Exprs: exprs,
 	})
 
@@ -284,7 +293,7 @@ func (t *Table) fillOutputChain(conn *nftables.Conn) (err error) {
 
 	conn.AddRule(&nftables.Rule{
 		Table: t.table,
-		Chain: t.outputChain,
+		Chain: chain,
 		Exprs: exprs,
 	})
 
@@ -321,7 +330,7 @@ func (t *Table) fillOutputChain(conn *nftables.Conn) (err error) {
 
 	conn.AddRule(&nftables.Rule{
 		Table: t.table,
-		Chain: t.outputChain,
+		Chain: chain,
 		Exprs: exprs,
 	})
 
@@ -352,7 +361,42 @@ func (t *Table) fillOutputChain(conn *nftables.Conn) (err error) {
 
 	conn.AddRule(&nftables.Rule{
 		Table: t.table,
-		Chain: t.outputChain,
+		Chain: chain,
+		Exprs: exprs,
+	})
+
+	return
+}
+
+func (t *Table) initOutputNATChain(conn *nftables.Conn) (err error) {
+	// type nat hook prerouting priority -100; policy accept;
+	t.outputNATChain = conn.AddChain(&nftables.Chain{
+		Table:    t.table,
+		Name:     "output-nat",
+		Type:     nftables.ChainTypeNAT,
+		Hooknum:  nftables.ChainHookOutput,
+		Priority: nftables.ChainPriorityNATDest,
+		Policy:   &t.policy,
+	})
+
+	// meta mark vmap @
+	exprs := []expr.Any{
+		&expr.Meta{
+			Key:      expr.MetaKeyMARK,
+			Register: 1,
+		},
+		&expr.Lookup{ // lookup reg 1 set mark-vmap dreg 0
+			SourceRegister: 1,
+			IsDestRegSet:   true,
+			SetName:        t.markDNSMap.Name,
+			SetID:          t.markDNSMap.ID,
+		},
+	}
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: t.table,
+		Chain: t.outputNATChain,
 		Exprs: exprs,
 	})
 
@@ -448,7 +492,7 @@ func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
 			Key:      expr.MetaKeyMARK,
 			Register: 1,
 		},
-		&expr.Lookup{ // lookup reg 1 set cgroup-map-x dreg 0
+		&expr.Lookup{ // lookup reg 1 set mark-vmap dreg 0
 			SourceRegister: 1,
 			IsDestRegSet:   true,
 			SetName:        t.markTproxyMap.Name,

@@ -115,9 +115,9 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 		"levels", levels,
 	)
 
-	conn.FlushChain(t.outputChain)
+	conn.FlushChain(t.outputMangleChain)
 
-	err = t.fillOutputChain(conn)
+	err = t.fillOutputMangleChain(conn, t.outputMangleChain)
 	if err != nil {
 		return
 	}
@@ -544,7 +544,7 @@ func (t *Table) Clear() (err error) {
 	if errors.Is(err, os.ErrNotExist) {
 		Log.Debugw("Table not exist, nothing to remove.",
 			"table", t.table.Name,
-                )
+		)
 		err = nil
 	} else if err != nil {
 		return
@@ -593,7 +593,7 @@ func (t *Table) addCgroupRuleForLevel(
 
 	rule := &nftables.Rule{
 		Table: t.table,
-		Chain: t.outputChain,
+		Chain: t.outputMangleChain,
 		Exprs: exprs,
 	}
 

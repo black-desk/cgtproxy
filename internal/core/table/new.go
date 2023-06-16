@@ -28,8 +28,9 @@ type Table struct {
 	markTproxyMap *nftables.Set
 	markDNSMap    *nftables.Set
 
-	outputChain     *nftables.Chain
-	preroutingChain *nftables.Chain
+	outputMangleChain *nftables.Chain
+	outputNATChain    *nftables.Chain
+	preroutingChain   *nftables.Chain
 }
 
 type Opt = (func(*Table) (*Table, error))
