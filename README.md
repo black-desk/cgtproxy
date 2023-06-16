@@ -100,7 +100,9 @@ There are some differences between cgproxy and cgtproxy:
 
 - [ ] optional cgroup monitor implementation listening on D-Bus
       instead of filesystem;
-- [x] DNS hijack for fake-ip;
+- [ ] DNS hijack for fake-ip;
+  - [x] ipv4;
+  - [ ] ipv6;
 - [ ] builtin TPROXY server.
 
 ## Develop
