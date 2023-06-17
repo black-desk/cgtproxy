@@ -6,13 +6,13 @@ require (
 	github.com/black-desk/lib/go v0.0.0-20230527174101-0e6787ffeff2
 	github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b
 	github.com/deniswernert/go-fstab v0.0.0-20141204152952-eb4090f26517
-	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/google/nftables v0.1.1-0.20230520162352-45645ffbf5ba
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.7.0
+	github.com/tywkeene/go-fsevents v0.2.1-0.20210417193827-d7e9fb3063aa
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/sys v0.8.0
@@ -23,7 +23,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/google/subcommands v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/tywkeene/go-fsevents v0.2.1-0.20210417193827-d7e9fb3063aa // indirect
 	golang.org/x/mod v0.10.0 // indirect
 )
 
