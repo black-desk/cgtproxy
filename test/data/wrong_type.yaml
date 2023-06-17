@@ -1,28 +1,19 @@
 version: 1
 cgroup-root: AUTO
-marks: '[100,300)'
+route-table: 300
 
-proxies:
-  - socks1:
-      udp: true
-      port: 1080
-      protocol: socks
-      addr: 127.0.0.1
-  - socks2:
-      udp: true
-      port: 1081
-      protocol: socks
-      addr: 127.0.0.1
+tproxies:
+  - tproxy1:
+      port: 7893
+      mark: 4000
+  - tproxy2:
+      port: 8893
+      mark: 4001
 
 rules:
   - match: /user.slice/user-1000.slice/user@1000.service/app.slice/*
-    proxy: socks1
+    tproxy: socks1
   - match: /user.slice/user-1001.slice/user@1001.service/app.slice/*
     drop: true
   - match: /user.slice/user-1002.slice/user@1002.service/app.slice/*
-    proxy: socks2
-
-repeater:
-  listens:
-    - 127.0.0.1
-  tproxy-ports: "[13030,13031)"
+    tproxy: socks2

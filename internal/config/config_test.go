@@ -74,8 +74,6 @@ var _ = Describe("Configuration", func() {
 			Expect(err).To(MatchErr(expectErr))
 		})
 	},
-		ContextTableEntry("../../test/data/too_few_ports.yaml", ErrTooFewPorts).
-			WithFmt("../../test/data/too_few_ports.yaml"),
 		ContextTableEntry("../../test/data/wrong_type.yaml", new(yaml.TypeError)).
 			WithFmt("../../test/data/wrong_type.yaml"),
 		ContextTableEntry("../../test/data/validation_fail.yaml", validator.ValidationErrors{}).

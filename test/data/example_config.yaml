@@ -1,28 +1,22 @@
 version: 1
 cgroup-root: AUTO
-marks: '[100,300)'
+route-table: 300
 
 tproxies:
   clash:
     port: 7893
-    addr: 127.0.0.1
-
-proxies:
-  proxy1:
-    udp: true
-    port: 1080
-    protocol: socks
-    addr: 127.0.0.1
+    mark: 4000
+  clash-meta:
+    port: 8893
+    mark: 4001
+  v2ray:
+    port: 12345
+    mark: 4002
 
 rules:
   - match: /user.slice/user-1000.slice/user@1000.service/app.slice/*
     tproxy: clash
   - match: /user.slice/user-1001.slice/user@1001.service/app.slice/*
-    proxy: proxy1
+    tproxy: clash-meta
   - match: /user.slice/user-1002.slice/user@1002.service/app.slice/*
-    proxy: proxy1
-
-repeater:
-  listens:
-    - 127.0.0.1
-  tproxy-ports: "[13030,13040)"
+    tproxy: v2ray
