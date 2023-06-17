@@ -11,4 +11,6 @@ https://github.com/black-desk/cgtproxy
 	PortsPattern = `^\[(\d+),(\d+)\)$`
 
 	NftTableName = "cgtproxy"
+
+	IPv4LocalhostStr = "127.0.0.1"
 )

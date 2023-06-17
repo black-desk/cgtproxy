@@ -7,7 +7,6 @@ import (
 	"syscall"
 
 	"github.com/black-desk/cgtproxy/internal/core/monitor"
-	"github.com/black-desk/cgtproxy/internal/core/repeater"
 	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
 	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	. "github.com/black-desk/cgtproxy/internal/log"
@@ -21,7 +20,6 @@ func (c *Core) Run() (err error) {
 	c.pool.Go(c.runWatcher)
 	c.pool.Go(c.runMonitor)
 	c.pool.Go(c.runRuleManager)
-	c.pool.Go(c.runRepeater)
 
 	return c.pool.Wait()
 }
@@ -78,32 +76,6 @@ func (c *Core) runRuleManager(ctx context.Context) (err error) {
 	Log.Debugw("Start nft rule manager.")
 
 	err = r.Run()
-	if err != nil {
-		return
-	}
-
-	return ctx.Err()
-}
-
-func (c *Core) runRepeater(ctx context.Context) (err error) {
-	if c.cfg.Repeater == nil {
-		return
-	}
-
-	defer Log.Debugw("Repeater exited.")
-
-	var r *repeater.Repeater
-	r, err = injectedRepeater(c)
-	if err != nil {
-		Wrap(&err)
-		Log.Panicw("Failed to create repeater.",
-			"error", err,
-		)
-	}
-
-	Log.Debugw("Start network traffic repeater.")
-
-	err = r.Run(ctx)
 	if err != nil {
 		return
 	}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/config"
 	"github.com/black-desk/cgtproxy/internal/core/monitor"
-	"github.com/black-desk/cgtproxy/internal/core/repeater"
 	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
 	"github.com/black-desk/cgtproxy/internal/core/table"
 	"github.com/black-desk/cgtproxy/internal/core/watcher"
@@ -151,10 +150,6 @@ func provideRuleManager(
 	return
 }
 
-func provideRepeater() (*repeater.Repeater, error) {
-	return repeater.New()
-}
-
 var (
 	_monitorOnce sync.Once
 	_monitor     *monitor.Monitor
@@ -199,7 +194,6 @@ var set = wire.NewSet(
 	provideOutputChan,
 	provideTable,
 	provideRuleManager,
-	provideRepeater,
 	provideMonitor,
 	provideCgroupRoot,
 	provideBypass,

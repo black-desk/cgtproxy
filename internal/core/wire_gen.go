@@ -8,7 +8,6 @@ package core
 
 import (
 	"github.com/black-desk/cgtproxy/internal/core/monitor"
-	"github.com/black-desk/cgtproxy/internal/core/repeater"
 	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
 	"github.com/black-desk/cgtproxy/internal/core/watcher"
 )
@@ -50,14 +49,6 @@ func injectedRuleManager(core *Core) (*rulemanager.RuleManager, error) {
 		return nil, err
 	}
 	return ruleManager, nil
-}
-
-func injectedRepeater(core *Core) (*repeater.Repeater, error) {
-	repeaterRepeater, err := provideRepeater()
-	if err != nil {
-		return nil, err
-	}
-	return repeaterRepeater, nil
 }
 
 func injectedWatcher(core *Core) (*watcher.Watcher, error) {

@@ -5,7 +5,6 @@ package core
 
 import (
 	"github.com/black-desk/cgtproxy/internal/core/monitor"
-	"github.com/black-desk/cgtproxy/internal/core/repeater"
 	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
 	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	"github.com/google/wire"
@@ -16,10 +15,6 @@ func injectedMonitor(*Core) (*monitor.Monitor, error) {
 }
 
 func injectedRuleManager(*Core) (*rulemanager.RuleManager, error) {
-	panic(wire.Build(set))
-}
-
-func injectedRepeater(*Core) (*repeater.Repeater, error) {
 	panic(wire.Build(set))
 }
 

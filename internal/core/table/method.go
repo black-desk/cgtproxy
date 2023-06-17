@@ -366,7 +366,7 @@ func (t *Table) addTproxyChainForTProxy(
 }
 
 func (t *Table) updateMarkTproxyMap(
-	conn *nftables.Conn, mark config.RerouteMark, chain string,
+	conn *nftables.Conn, mark config.FireWallMark, chain string,
 ) (
 	err error,
 ) {
@@ -389,7 +389,7 @@ func (t *Table) updateMarkTproxyMap(
 }
 
 func (t *Table) updateMarkDNSMap(
-	conn *nftables.Conn, mark config.RerouteMark, chain string,
+	conn *nftables.Conn, mark config.FireWallMark, chain string,
 ) (
 	err error,
 ) {
@@ -455,7 +455,7 @@ func (t *Table) addDNSChainForTproxy(
 		},
 		&expr.Immediate{ // immediate reg 1 xxx
 			Register: 1,
-			Data:     net.ParseIP(tp.DNSHijack.Addr).To4(),
+			Data:     net.ParseIP(*tp.DNSHijack.Addr).To4(),
 		},
 		&expr.Immediate{ // immediate reg 2 xxx
 			Register: 2,
@@ -505,7 +505,7 @@ func (t *Table) addDNSChainForTproxy(
 		},
 		&expr.Immediate{ // immediate reg 1 xxx
 			Register: 1,
-			Data:     net.ParseIP(tp.DNSHijack.Addr).To4(),
+			Data:     net.ParseIP(*tp.DNSHijack.Addr).To4(),
 		},
 		&expr.Immediate{ // immediate reg 2 xxx
 			Register: 2,

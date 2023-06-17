@@ -53,10 +53,6 @@ func New(opts ...Opt) (ret *RuleManager, err error) {
 			matcher.target.Op = table.TargetDirect
 		} else if m.cfg.Rules[i].Drop {
 			matcher.target.Op = table.TargetDrop
-		} else if m.cfg.Rules[i].Proxy != "" {
-			matcher.target.Op = table.TargetTProxy
-			matcher.target.Chain =
-				m.cfg.Proxies[m.cfg.Rules[i].Proxy].TProxy.Name
 		} else if m.cfg.Rules[i].TProxy != "" {
 			matcher.target.Op = table.TargetTProxy
 			matcher.target.Chain =

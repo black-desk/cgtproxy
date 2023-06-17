@@ -80,7 +80,7 @@ func (m *RuleManager) removeNftableRules() {
 	return
 }
 
-func (m *RuleManager) addRule(mark config.RerouteMark) (err error) {
+func (m *RuleManager) addRule(mark config.FireWallMark) (err error) {
 	defer Wrap(&err, "Failed to add route rule.")
 
 	Log.Infow("Adding route rule.",

@@ -2,10 +2,6 @@ package config
 
 import (
 	"fmt"
-	"math/rand"
-	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
 	. "github.com/black-desk/cgtproxy/internal/log"
@@ -24,129 +20,38 @@ func (c *ConfigV1) check() (err error) {
 		return
 	}
 
-	{
-		if c.CgroupRoot == "AUTO" {
-			var cgroupRoot CgroupRoot
-			cgroupRoot, err = getCgroupRoot()
-			if err != nil {
-				return
-			}
-
-			c.CgroupRoot = cgroupRoot
-
-			Log.Infow(
-				"Cgroup mount point auto detection done.",
-				"cgroup root", cgroupRoot,
-			)
-		}
-	}
-
-	{
-		if c.RouteTable == 0 {
-			c.RouteTable = rand.Int()
-		}
-	}
-
-	{
-		if c.Rules == nil {
-			Log.Warnw("No rules in config.")
-		}
-	}
-
-	{
-		if c.Proxies == nil {
-			c.Proxies = map[string]*Proxy{}
-		}
-
-		if c.TProxies == nil {
-			c.TProxies = map[string]*TProxy{}
-		}
-
-		for name := range c.TProxies {
-			tp := c.TProxies[name]
-			if tp.Name == "" {
-				tp.Name = name
-			}
-
-			if strings.HasSuffix(tp.Name, "-MARK") {
-				err = &ErrBadProxyName{
-					Actual: tp.Name,
-				}
-				Wrap(&err)
-				return
-			}
-		}
-	}
-
-	if c.Repeater != nil {
-		var (
-			begin uint64
-			end   uint64
-		)
-
-		begin, end, err = parseRange(c.Repeater.TProxyPorts)
+	if c.CgroupRoot == "AUTO" {
+		var cgroupRoot CgroupRoot
+		cgroupRoot, err = getCgroupRoot()
 		if err != nil {
 			return
 		}
 
-		err = c.allocPorts(uint16(begin), uint16(end))
-		if err != nil {
-			return
-		}
-	}
+		c.CgroupRoot = cgroupRoot
 
-	{
-		var (
-			begin uint64
-			end   uint64
+		Log.Infow(
+			"Cgroup mount point auto detection done.",
+			"cgroup root", cgroupRoot,
 		)
-
-		begin, end, err = parseRange(c.Marks)
-		if err != nil {
-			return
-		}
-
-		err = c.allocMarks(int(begin), int(end))
-		if err != nil {
-			return
-		}
 	}
 
-	return
-}
+	if c.Rules == nil {
+		Log.Warnw("No rules in config.")
+	}
 
-func parseRange(str string) (begin uint64, end uint64, err error) {
-	defer Wrap(&err, "Failed to parse range.")
+	if c.TProxies == nil {
+		c.TProxies = map[string]*TProxy{}
+	}
 
-	rangeExp := regexp.MustCompile(consts.PortsPattern)
-
-	matchs := rangeExp.FindStringSubmatch(str)
-
-	if len(matchs) != 3 {
-		err = &ErrBadRange{
-			Actual: str,
+	for name := range c.TProxies {
+		tp := c.TProxies[name]
+		if tp.Name == "" {
+			tp.Name = name
 		}
-		Wrap(&err)
-
-		return
-	}
-
-	begin, err = strconv.ParseUint(matchs[1], 10, 16)
-	if err != nil {
-		Wrap(&err,
-			"Failed to parse range begin from %s.",
-			matchs[0],
-		)
-		return
-	}
-
-	end, err = strconv.ParseUint(matchs[2], 10, 16)
-	if err != nil {
-		Wrap(&err,
-			"Failed to parse range end from %s.",
-			matchs[1],
-		)
-		return
+		if tp.DNSHijack != nil && tp.DNSHijack.Addr == nil {
+			addr := consts.IPv4LocalhostStr
+			tp.DNSHijack.Addr = &addr
+		}
 	}
 
 	return

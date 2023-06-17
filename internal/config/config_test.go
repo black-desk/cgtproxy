@@ -80,8 +80,6 @@ var _ = Describe("Configuration", func() {
 			WithFmt("../../test/data/wrong_type.yaml"),
 		ContextTableEntry("../../test/data/validation_fail.yaml", validator.ValidationErrors{}).
 			WithFmt("../../test/data/validation_fail.yaml"),
-		ContextTableEntry("../../test/data/wrong_ports.yaml", new(ErrBadRange)).
-			WithFmt("../../test/data/wrong_ports.yaml"),
 	)
 })
 
