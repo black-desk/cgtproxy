@@ -4,20 +4,10 @@
 package core
 
 import (
-	"github.com/black-desk/cgtproxy/internal/core/monitor"
-	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
-	"github.com/black-desk/cgtproxy/internal/core/watcher"
+	"github.com/black-desk/cgtproxy/internal/config"
 	"github.com/google/wire"
 )
 
-func injectedMonitor(*Core) (*monitor.Monitor, error) {
-	panic(wire.Build(set))
-}
-
-func injectedRuleManager(*Core) (*rulemanager.RuleManager, error) {
-	panic(wire.Build(set))
-}
-
-func injectedWatcher(*Core) (*watcher.Watcher, error) {
+func injectedComponents(*config.Config) (*components, error) {
 	panic(wire.Build(set))
 }

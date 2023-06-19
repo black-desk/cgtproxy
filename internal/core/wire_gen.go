@@ -7,59 +7,33 @@
 package core
 
 import (
-	"github.com/black-desk/cgtproxy/internal/core/monitor"
-	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
-	"github.com/black-desk/cgtproxy/internal/core/watcher"
+	"github.com/black-desk/cgtproxy/internal/config"
 )
 
 // Injectors from wire.go:
 
-func injectedMonitor(core *Core) (*monitor.Monitor, error) {
-	v := provideOutputChan()
-	config, err := provideConfig(core)
-	if err != nil {
-		return nil, err
-	}
-	cgroupRoot := provideCgroupRoot(config)
+func injectedComponents(configConfig *config.Config) (*components, error) {
+	cgroupRoot := provideCgroupRoot(configConfig)
 	watcher, err := provideWatcher(cgroupRoot)
 	if err != nil {
 		return nil, err
 	}
-	monitorMonitor, err := provideMonitor(v, watcher, cgroupRoot)
+	coreChans := provideChans()
+	v := provideOutputChan(coreChans)
+	monitor, err := provideMonitor(v, watcher, cgroupRoot)
 	if err != nil {
 		return nil, err
 	}
-	return monitorMonitor, nil
-}
-
-func injectedRuleManager(core *Core) (*rulemanager.RuleManager, error) {
-	config, err := provideConfig(core)
-	if err != nil {
-		return nil, err
-	}
-	cgroupRoot := provideCgroupRoot(config)
-	bypass := provideBypass(config)
+	bypass := provideBypass(configConfig)
 	table, err := provideTable(cgroupRoot, bypass)
 	if err != nil {
 		return nil, err
 	}
-	v := provideInputChan()
-	ruleManager, err := provideRuleManager(table, config, v)
+	v2 := provideInputChan(coreChans)
+	ruleManager, err := provideRuleManager(table, configConfig, v2)
 	if err != nil {
 		return nil, err
 	}
-	return ruleManager, nil
-}
-
-func injectedWatcher(core *Core) (*watcher.Watcher, error) {
-	config, err := provideConfig(core)
-	if err != nil {
-		return nil, err
-	}
-	cgroupRoot := provideCgroupRoot(config)
-	watcherWatcher, err := provideWatcher(cgroupRoot)
-	if err != nil {
-		return nil, err
-	}
-	return watcherWatcher, nil
+	coreComponents := provideComponents(watcher, monitor, ruleManager)
+	return coreComponents, nil
 }

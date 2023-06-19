@@ -1,8 +1,6 @@
 package core
 
 import (
-	"sync"
-
 	"github.com/black-desk/cgtproxy/internal/config"
 	"github.com/black-desk/cgtproxy/internal/core/monitor"
 	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
@@ -14,89 +12,51 @@ import (
 	"github.com/google/wire"
 )
 
-func provideConfig(c *Core) (cfg *config.Config, err error) {
-	if c.cfg == nil {
-		err = ErrConfigMissing
-		return
-	}
-
-	cfg = c.cfg
-	return
-}
-
-var (
-	_watcherOnce sync.Once
-	_watcher     *watcher.Watcher
-	_wathcerErr  error
-)
-
 func provideWatcher(cgroupRoot config.CgroupRoot,
 ) (
 	ret *watcher.Watcher, err error,
 ) {
-	_watcherOnce.Do(func() {
-		_watcher, _wathcerErr = watcher.New(
-			watcher.WithCgroupRoot(cgroupRoot),
-		)
-	})
+	var w *watcher.Watcher
 
-	if _wathcerErr != nil {
-		err = _wathcerErr
+	w, err = watcher.New(watcher.WithCgroupRoot(cgroupRoot))
+	if err != nil {
 		return
 	}
 
-	ret = _watcher
-	return
-
-}
-
-var (
-	_chanOnce sync.Once
-	_ch       chan *types.CgroupEvent
-)
-
-func provideChan() (ret chan *types.CgroupEvent) {
-	_chanOnce.Do(func() {
-		_ch = make(chan *types.CgroupEvent)
-	})
-
-	ret = _ch
+	ret = w
 	return
 }
 
-func provideInputChan() (ret <-chan *types.CgroupEvent) {
-	return provideChan()
+type chans struct {
+	in  <-chan *types.CgroupEvent
+	out chan<- *types.CgroupEvent
 }
 
-func provideOutputChan() (ret chan<- *types.CgroupEvent) {
-	return provideChan()
+func provideChans() chans {
+	ch := make(chan *types.CgroupEvent)
+
+	return chans{ch, ch}
 }
 
-var (
-	_nftConnOnce sync.Once
-	_nftConn     *nftables.Conn
-	_nftErr      error
-)
+func provideInputChan(chs chans) <-chan *types.CgroupEvent {
+	return chs.in
+}
+
+func provideOutputChan(chs chans) chan<- *types.CgroupEvent {
+	return chs.out
+}
 
 func provideNftConn() (ret *nftables.Conn, err error) {
-	_nftConnOnce.Do(func() {
-		_nftConn, _nftErr = nftables.New(nftables.AsLasting())
-	})
+	var nftConn *nftables.Conn
 
-	if _nftErr != nil {
-		err = _nftErr
+	nftConn, err = nftables.New(nftables.AsLasting())
+	if err != nil {
 		return
 	}
 
-	ret = _nftConn
+	ret = nftConn
 	return
 }
-
-var (
-	_tableOnce sync.Once
-	_table     *table.Table
-	_tableErr  error
-)
 
 func provideTable(
 	root config.CgroupRoot,
@@ -105,56 +65,40 @@ func provideTable(
 	ret *table.Table,
 	err error,
 ) {
-	_tableOnce.Do(func() {
-		_table, _tableErr = table.New(
-			table.WithCgroupRoot(root),
-			table.WithBypass(bypass),
-		)
-	})
+	var t *table.Table
+	t, err = table.New(
+		table.WithCgroupRoot(root),
+		table.WithBypass(bypass),
+	)
 
-	if _tableErr != nil {
-		err = _tableErr
+	if err != nil {
 		return
 	}
 
-	ret = _table
+	ret = t
 	return
 
 }
-
-var (
-	_ruleManagerOnce sync.Once
-	_ruleMananger    *rulemanager.RuleManager
-	_ruleManagerErr  error
-)
 
 func provideRuleManager(
 	t *table.Table, cfg *config.Config, ch <-chan *types.CgroupEvent,
 ) (
 	ret *rulemanager.RuleManager, err error,
 ) {
-	_ruleManagerOnce.Do(func() {
-		_ruleMananger, _ruleManagerErr = rulemanager.New(
-			rulemanager.WithTable(t),
-			rulemanager.WithConfig(cfg),
-			rulemanager.WithCgroupEventChan(ch),
-		)
-	})
+	var r *rulemanager.RuleManager
+	r, err = rulemanager.New(
+		rulemanager.WithTable(t),
+		rulemanager.WithConfig(cfg),
+		rulemanager.WithCgroupEventChan(ch),
+	)
 
-	if _ruleManagerErr != nil {
-		err = _ruleManagerErr
+	if err != nil {
 		return
 	}
 
-	ret = _ruleMananger
+	ret = r
 	return
 }
-
-var (
-	_monitorOnce sync.Once
-	_monitor     *monitor.Monitor
-	_monitorErr  error
-)
 
 func provideMonitor(
 	ch chan<- *types.CgroupEvent,
@@ -163,19 +107,18 @@ func provideMonitor(
 ) (
 	ret *monitor.Monitor, err error,
 ) {
-	_monitorOnce.Do(func() {
-		_monitor, _monitorErr = monitor.New(
-			monitor.WithOutput(ch),
-			monitor.WithWatcher(w),
-			monitor.WithCgroupRoot(root),
-		)
-	})
-	if _monitorErr != nil {
-		err = _monitorErr
+	var m *monitor.Monitor
+
+	m, err = monitor.New(
+		monitor.WithOutput(ch),
+		monitor.WithWatcher(w),
+		monitor.WithCgroupRoot(root),
+	)
+	if err != nil {
 		return
 	}
 
-	ret = _monitor
+	ret = m
 	return
 }
 
@@ -187,9 +130,16 @@ func provideBypass(cfg *config.Config) *config.Bypass {
 	return cfg.Bypass
 }
 
+func provideComponents(
+	w *watcher.Watcher, m *monitor.Monitor, r *rulemanager.RuleManager,
+) *components {
+	return &components{w: w, m: m, r: r}
+}
+
 var set = wire.NewSet(
-	provideConfig,
+	provideComponents,
 	provideWatcher,
+	provideChans,
 	provideInputChan,
 	provideOutputChan,
 	provideTable,

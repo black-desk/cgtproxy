@@ -6,6 +6,9 @@ import (
 	"github.com/sourcegraph/conc/pool"
 
 	"github.com/black-desk/cgtproxy/internal/config"
+	"github.com/black-desk/cgtproxy/internal/core/monitor"
+	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
+	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 )
@@ -14,6 +17,14 @@ type Core struct {
 	cfg *config.Config
 
 	pool *pool.ContextPool
+
+	components *components
+}
+
+type components struct {
+	w *watcher.Watcher
+	m *monitor.Monitor
+	r *rulemanager.RuleManager
 }
 
 type Opt = (func(*Core) (*Core, error))

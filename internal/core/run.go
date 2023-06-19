@@ -6,15 +6,17 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/black-desk/cgtproxy/internal/core/monitor"
-	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
-	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
 func (c *Core) Run() (err error) {
 	defer Wrap(&err, "Error occurs while running the core.")
+
+	c.components, err = injectedComponents(c.cfg)
+	if err != nil {
+		return
+	}
 
 	c.pool.Go(c.waitSig)
 	c.pool.Go(c.runWatcher)
@@ -46,15 +48,9 @@ func (c *Core) waitSig(ctx context.Context) (err error) {
 func (c *Core) runMonitor(ctx context.Context) (err error) {
 	defer Log.Debugw("Cgroup monitor exited.")
 
-	var m *monitor.Monitor
-	m, err = injectedMonitor(c)
-	if err != nil {
-		return err
-	}
-
 	Log.Debugw("Start cgroup monitor.")
 
-	err = m.Run(ctx)
+	err = c.components.m.Run(ctx)
 	if err != nil {
 		return
 	}
@@ -65,17 +61,9 @@ func (c *Core) runMonitor(ctx context.Context) (err error) {
 func (c *Core) runRuleManager(ctx context.Context) (err error) {
 	defer Log.Debugw("Rule manager exited.")
 
-	var r *rulemanager.RuleManager
-	r, err = injectedRuleManager(c)
-	if err != nil {
-		Log.Panicw("Failed to create rule manager.",
-			"error", err,
-		)
-	}
-
 	Log.Debugw("Start nft rule manager.")
 
-	err = r.Run()
+	err = c.components.r.Run()
 	if err != nil {
 		return
 	}
@@ -86,15 +74,9 @@ func (c *Core) runRuleManager(ctx context.Context) (err error) {
 func (c *Core) runWatcher(ctx context.Context) (err error) {
 	defer Log.Debugw("Watcher exited.")
 
-	var w *watcher.Watcher
-	w, err = injectedWatcher(c)
-	if err != nil {
-		return
-	}
-
 	Log.Debugw("Start filesystem watcher.")
 
-	err = w.Run(ctx)
+	err = c.components.w.Run(ctx)
 	if err != nil {
 		return
 	}
