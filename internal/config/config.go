@@ -67,6 +67,7 @@ type DNSHijack struct {
 	IP   *string `yaml:"ip" validate:"ip4_addr"`
 	Port uint16  `yaml:"port"`
 	// If TCP is set to true,
-	// tcp traffic to any 53 port will be hijacked too.
+	// tcp traffic will be hijacked, too,
+	// when it's destination port is 53.
 	TCP bool `yaml:"tcp"`
 }
