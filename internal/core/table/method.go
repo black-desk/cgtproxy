@@ -455,7 +455,7 @@ func (t *Table) addDNSChainForTproxy(
 		},
 		&expr.Immediate{ // immediate reg 1 xxx
 			Register: 1,
-			Data:     net.ParseIP(*tp.DNSHijack.Addr).To4(),
+			Data:     net.ParseIP(*tp.DNSHijack.IP).To4(),
 		},
 		&expr.Immediate{ // immediate reg 2 xxx
 			Register: 2,
@@ -505,7 +505,7 @@ func (t *Table) addDNSChainForTproxy(
 		},
 		&expr.Immediate{ // immediate reg 1 xxx
 			Register: 1,
-			Data:     net.ParseIP(*tp.DNSHijack.Addr).To4(),
+			Data:     net.ParseIP(*tp.DNSHijack.IP).To4(),
 		},
 		&expr.Immediate{ // immediate reg 2 xxx
 			Register: 2,

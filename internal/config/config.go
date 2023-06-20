@@ -60,7 +60,7 @@ type TProxy struct {
 }
 
 type DNSHijack struct {
-	Addr *string `yaml:"addr" validate:"ip4_addr"`
+	IP   *string `yaml:"ip" validate:"ip4_addr"`
 	Port uint16  `yaml:"port"`
 	// If TCP is set to true,
 	// tcp traffic to any 53 port will be hijacked too.
