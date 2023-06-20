@@ -1,0 +1,69 @@
+# Configuration documentation can be found at
+# https://godoc.org/github.com/black-desk/cgtproxy/internal/config
+
+version: 1
+cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
+route-table: 300
+
+# This means any traffic send to 127.0.0.1 will be directly send.
+bypass:
+  ipv4:
+    - 127.0.0.1
+
+tproxies:
+  clash-meta:
+    mark: 3000
+    port: 7893
+    # Do not proxy UDP traffic. They will be send directly.
+    # no-udp: false
+    # Do not proxy IPv6 traffic. They will be send directly.
+    # no-ipv6: false
+    # Hijack all IPv4 traffic which destination port is 53
+    # and redirect them to ip:port.
+    # This field is optional.
+    dns-hijack:
+      ip: 127.0.0.1
+      port: 53
+
+# Rules are matched in order.
+# `match` is an regex to match the cgroup path.
+# `direct` means the traffic will not be redirect to any TPROXY server;
+# `drop` means the traffic will be drop;
+# `tproxy` means the traffic will be redirect to that TPROXY server.
+#
+# NOTE: You can use systemd-cgls to check the cgroup layout on your system.
+# NOTE: Any web service will provide their service directly.
+#       Traffics in connection created by remote host
+#       will never redirect to TPROXY server or drop.
+rules:
+  # `clash-meta.service` will be launched by systemd
+  # at `/system.slice/clash-meta.service`.
+  # This regex match that path,
+  # and will make traffic from it directly send
+  # by produce and apply nft rules
+  # when such cgroup is created.
+  - match: \/system\.slice\/clash-meta\.service
+    direct: true
+
+  # Same as above,
+  # lets configure the user-level cgtproxy-direct.slice and cgtproxy-drop.slice
+  # cgroup.
+  #
+  # Using this setup, you can start a non-proxy shell
+  # by run
+  #
+  # systemd-run --user --slice cgtproxy-direct.slice --shell
+  #
+  # The command above start the new shell in a cgroup like
+  # `/user.slice/user-1000.slice/user@1000.service/cgtproxy.slice/cgtproxy-direct.slice/run-u22.service`,
+  # which match the regex in your configuration.
+  # Then cgtproxy will produce nft rules to
+  # make that `run-u22.service` get rid of transparent proxy.
+  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-direct\.slice\/.*
+    direct: true
+  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-drop\.slice\/.*
+    drop: true
+
+  # For any cgroup else, TPROXY to clash-meta.
+  - match: \/.*
+    tproxy: clash-meta

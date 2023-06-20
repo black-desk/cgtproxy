@@ -11,7 +11,9 @@ type ConfigV1 struct {
 	Bypass     *Bypass            `yaml:"bypass"`
 	TProxies   map[string]*TProxy `yaml:"tproxies" validate:"dive"`
 	Rules      []Rule             `yaml:"rules" validate:"dive"`
-	RouteTable int                `yaml:"route-table" validate:"required"`
+	// The route table number cgtproxy will create to route TPROXY traffic.
+	// This table will be removed when cgtproxy stopped.
+	RouteTable int `yaml:"route-table" validate:"required"`
 }
 
 type CgroupRoot string
@@ -44,13 +46,15 @@ type TProxy struct {
 	Name   string `yaml:"-"`
 	NoUDP  bool   `yaml:"no-udp"`
 	NoIPv6 bool   `yaml:"no-ipv6"`
-	// NOTE: This field is not used yet.
-	Port uint16  `yaml:"port" validate:"required"`
-	// Mark is the fwmark used to identify the TPROXY server.
+	Port   uint16 `yaml:"port" validate:"required"`
+	// Mark is the fire wall mark used to identify the TPROXY server
+	// and trigger reroute operation of netfliter
+	// from OUTPUT to PREROUTING internally.
 	// It **NOT** means that this TPROXY server
 	// must send traffic with the fwmark.
-	// This mark cgtproxy use internally designed to be changeable
-	// to void fwmark confliction with other program using nftables.
+	// This mark is designed to be changeable for user
+	// to make sure this mark is not conflict
+	// with any fire wall mark in use.
 	Mark FireWallMark `yaml:"mark" validate:"required"`
 	// DNSHijack will hijack the dns request traffic
 	// should redirect to this TPROXY server,

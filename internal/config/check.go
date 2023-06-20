@@ -48,9 +48,9 @@ func (c *ConfigV1) check() (err error) {
 		if tp.Name == "" {
 			tp.Name = name
 		}
-		if tp.DNSHijack != nil && tp.DNSHijack.Addr == nil {
+		if tp.DNSHijack != nil && tp.DNSHijack.IP == nil {
 			addr := consts.IPv4LocalhostStr
-			tp.DNSHijack.Addr = &addr
+			tp.DNSHijack.IP = &addr
 		}
 	}
 

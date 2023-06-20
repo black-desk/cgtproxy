@@ -1,70 +1,71 @@
 # cgtproxy
 
-cgtproxy is a transparent proxy **RULE** manager written in go
+`cgtproxy` is a transparent proxy **RULE** manager written in go
 inspired by [cgproxy].
 
 [cgproxy]: https://github.com/springzfx/cgproxy
 
 It will automatically update your nft ruleset according to your configuration,
-to archive per-app transparent proxy settings.
+make it easier to archive per-app transparent proxy settings.
 
-## How it works
+## Why you might need such program?
 
-Netfliter can be configured to filter network traffic [by cgroup],
-as well as redirect some traffic to a [TPROXY] server.
+On a linux desktop environment,
+there are only few ways to configure network proxy settings at app level.
 
-[TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
-[by cgroup]: https://www.spinics.net/lists/netfilter/msg60360.html
+1. Set some network proxy environment variables,
+   only for some applications.
 
-Systemd has a work-in-progress XDG integration [documentation] suggest that
-XDG applications should be launched in a systemd managed unit.
+   There is no elegant way to do this,
+   but you can update the `.desktop` file of that application.
 
-[documentation]: https://systemd.io/DESKTOP_ENVIRONMENTS
+   But there is a problem that some applications
+   might just ignore environment variables.
 
-For example, telegram might be launched at some cgroup like
-`/user.slice/user-1000.slice/user@1000.service/app.slice/app-flatpak-org.telegram.desktop@12345.service`
+   That's why you might need a transparent network proxy setting.
 
-That means the cgroup path for the application has a pattern,
-which we can match by a regex expression.
+2. If you using a proxy client such as clash,
+   which can route packets based on the name of process
+   that is sending the packet.
 
-This program will listening cgroupfs change with inotify.
-And update the nftable rules when new cgroup hierarchy created,
-according to your configuration.
+   Clash implement this feature by
+   [going through procfs] when new connection created.
 
-## Configuration
+   [going through procfs]: https://github.com/Dreamacro/clash/blob/4d66da2277ddaf41f83bd889b064c0a584f7a8ad/component/process/process_linux.go#L129
 
-[example](./misc/config/example_without_repeater.yaml)
+   If there is a lot of processes,
+   this implementation seems to have some performance issues.
 
-Configuration documentation can be found at [godoc].
+   And if you need that executable,
+   which you have configured to use proxy,
+   temporarily connect to Internet directly.
+   You have to update your clash configuration and restart clash,
+   which means to close all old connections,
+   which is quite annoying.
 
-[godoc]: https://godoc.org/github.com/black-desk/cgtproxy/internal/config
+3. If your proxy client support [TPROXY], you can use [cgproxy].
 
-## Tips
+   It can only update iptables for exsiting cgroup.
 
-If you want a temporary shell without any transparent proxy,
-you can write rules like this:
+   For processes in cgroups that create later,
+   it use BPF hooked on execve to match executable filename
+   and move matched process to some other cgroup.
 
-```yaml
-- match: \/system\.slice\/clash-meta\.service
-  direct: true
-- match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/direct\.slice\/.*
-  direct: true
-- match: \/.*
-  tproxy: clash-meta
-```
+   This design has some serious problems:
 
-Then you can just start a new shell with this command.
+   1. It will make processes removed from the original cgroup,
+      even out of user slice.
+   2. The `cgnoproxy` command it provided
+      make any program can easily escape from original cgroup
+      without any authentication.
+   2. It create cgroup hierarchy without let systemd known.
+      This behavior break the [single-writer rule]
+      of design rules of the systemd cgroup API.
 
-```bash
-systemd-run --user --shell --slice direct
-```
+      [single-writer rule]: https://systemd.io/CGROUP_DELEGATION#two-key-design-rules
 
-The command above start the new shell in a cgroup like
-`/user.slice/user-1000.slice/user@1000.service/direct.slice/run-u22.service`,
-which match the regex in your configuration.
-
-Then cgtproxy will produce nft rules to
-make that `run-u22.service` get rid of transparent proxy.
+By using cgtproxy,
+you can have flexible user-level per-app transparent network proxy settings.
 
 ## Differences between cgproxy
 
@@ -96,6 +97,33 @@ There are some differences between cgproxy and cgtproxy:
 
 [systemd service file]: ./misc/systemd/cgtproxy.service
 
+## Configuration
+
+[example](./misc/config/example.yaml)
+
+## How cgtproxy works
+
+Netfliter can be configured to filter network traffic [by cgroup],
+as well as redirect some traffic to a [TPROXY] server.
+
+[TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
+[by cgroup]: https://www.spinics.net/lists/netfilter/msg60360.html
+
+Systemd has a work-in-progress XDG integration [documentation] suggest that
+XDG applications should be launched in a systemd managed unit.
+
+[documentation]: https://systemd.io/DESKTOP_ENVIRONMENTS
+
+For example, telegram might be launched at some cgroup like
+`/user.slice/user-1000.slice/user@1000.service/app.slice/app-flatpak-org.telegram.desktop@12345.service`
+
+That means the cgroup path for the application has a pattern,
+which we can match by a regex expression.
+
+This program will listening cgroupfs change with inotify.
+And update the nftable rules when new cgroup hierarchy created,
+according to your configuration.
+
 ## TODO
 
 - [ ] optional cgroup monitor implementation listening on D-Bus
@@ -107,4 +135,4 @@ There are some differences between cgproxy and cgtproxy:
 
 ## Develop
 
-Check this documentation [here](docs/development.md)
+Check this documentation [here](docs/development.md).
