@@ -199,7 +199,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					Context("then add some of them back", func() {
 						BeforeEach(func() {
 							err = t.AddCgroup("/sys/fs/cgroup/test/a",
-								&table.Target{Op: table.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name},
+								&table.Target{Op: table.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 							)
 							Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 						})
