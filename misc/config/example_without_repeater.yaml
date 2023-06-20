@@ -1,11 +1,12 @@
 version: 1
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
-marks: '[3000,3100)' # fwmark range for identify tproxy target
+route-table: 300
 
 tproxies:
   clash:
     port: 7893
     addr: 127.0.0.1 # ignored for now
+    mark: 3000
     dns-hijack:
       addr: 127.0.0.1
       port: 53
