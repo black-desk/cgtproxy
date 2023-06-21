@@ -1,6 +1,8 @@
 package table
 
 import (
+	"net"
+
 	"github.com/black-desk/cgtproxy/internal/config"
 	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -59,14 +61,32 @@ func New(opts ...Opt) (ret *Table, err error) {
 	return
 }
 
-func WithBypass(bypass *config.Bypass) Opt {
-	return func(table *Table) (*Table, error) {
+func WithBypass(bypass config.Bypass) Opt {
+	return func(table *Table) (ret *Table, err error) {
 		if bypass == nil {
-			return table, nil
+			ret = table
+			return
 		}
 
-		table.bypassIPv4 = bypass.IPV4
-		table.bypassIPv6 = bypass.IPV6
+		for i := range bypass {
+			ip := net.ParseIP(bypass[i])
+
+			if ip == nil {
+				ip, _, err = net.ParseCIDR(bypass[i])
+				if err != nil {
+					return
+				}
+			}
+
+			if ip.To4() != nil {
+				table.bypassIPv4 = append(table.bypassIPv4, bypass[i])
+			} else if ip.To16() != nil {
+				table.bypassIPv6 = append(table.bypassIPv6, bypass[i])
+			} else {
+				panic("this should never happened")
+			}
+		}
+
 		return table, nil
 	}
 }

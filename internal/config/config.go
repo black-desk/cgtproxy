@@ -7,24 +7,20 @@ type Config struct {
 type ConfigV1 struct {
 	Version uint8 `yaml:"version" validate:"required,eq=1"`
 
-	CgroupRoot CgroupRoot         `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
-	Bypass     *Bypass            `yaml:"bypass"`
-	TProxies   map[string]*TProxy `yaml:"tproxies" validate:"dive"`
-	Rules      []Rule             `yaml:"rules" validate:"dive"`
+	CgroupRoot CgroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
+	// Bypass describes the bypass rules apply to all the TPROXY servers.
+	// If the destination matched in Bypass, the traffic will not be touched.
+	Bypass   Bypass             `yaml:"bypass" validate:"dive,ipv4|cidrv4|ipv6|cidrv6"`
+	TProxies map[string]*TProxy `yaml:"tproxies" validate:"dive"`
+	Rules    []Rule             `yaml:"rules" validate:"dive"`
 	// The route table number cgtproxy will create to route TPROXY traffic.
 	// This table will be removed when cgtproxy stopped.
 	RouteTable int `yaml:"route-table" validate:"required"`
 }
 
-type CgroupRoot string
-type FireWallMark uint32
+type Bypass []string
 
-// Bypass describes the bypass rules apply to all the TPROXY servers.
-// If the destination matched in Bypass, the traffic will not be touched.
-type Bypass struct {
-	IPV4 []string `yaml:"ipv4" validate:"dive,ipv4|cidrv4"`
-	IPV6 []string `yaml:"ipv6" validate:"dive,ipv6|cidrv6"`
-}
+type CgroupRoot string
 
 // Rule describes a rule about how to handle traffic comes from a cgroup.
 type Rule struct {
@@ -34,11 +30,11 @@ type Rule struct {
 
 	// TProxy means that the traffic comes from this cgroup
 	// should be redirected to a TPROXY server.
-	TProxy string `yaml:"tproxy" validate:"required_without_all=Proxy Drop Direct,excluded_with=Proxy Drop Direct"`
+	TProxy string `yaml:"tproxy" validate:"required_without_all=Drop Direct,excluded_with=Drop Direct"`
 	// Drop means that the traffic comes from this cgroup will be dropped.
-	Drop bool `yaml:"drop" validate:"required_without_all=TProxy Proxy Direct,excluded_with=TProxy Proxy Direct"`
+	Drop bool `yaml:"drop" validate:"required_without_all=TProxy Direct,excluded_with=TProxy Direct"`
 	// Direct means that the traffic comes from this cgroup will not be touched.
-	Direct bool `yaml:"direct" validate:"required_without_all=TProxy Proxy Drop,excluded_with=TProxy Proxy Drop"`
+	Direct bool `yaml:"direct" validate:"required_without_all=TProxy Drop,excluded_with=TProxy Drop"`
 }
 
 // TProxy describes a TPROXY server.
@@ -62,6 +58,8 @@ type TProxy struct {
 	// This option is for fake-ip.
 	DNSHijack *DNSHijack `yaml:"dns-hijack"`
 }
+
+type FireWallMark uint32
 
 type DNSHijack struct {
 	IP   *string `yaml:"ip" validate:"ip4_addr"`

@@ -60,7 +60,7 @@ func provideNftConn() (ret *nftables.Conn, err error) {
 
 func provideTable(
 	root config.CgroupRoot,
-	bypass *config.Bypass,
+	bypass config.Bypass,
 ) (
 	ret *table.Table,
 	err error,
@@ -126,7 +126,7 @@ func provideCgroupRoot(cfg *config.Config) config.CgroupRoot {
 	return cfg.CgroupRoot
 }
 
-func provideBypass(cfg *config.Config) *config.Bypass {
+func provideBypass(cfg *config.Config) config.Bypass {
 	return cfg.Bypass
 }
 
