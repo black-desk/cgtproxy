@@ -9,8 +9,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/black-desk/cgtproxy/internal/config"
 	. "github.com/black-desk/cgtproxy/internal/log"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"

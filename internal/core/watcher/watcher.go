@@ -1,8 +1,8 @@
 package watcher
 
 import (
-	"github.com/black-desk/cgtproxy/internal/config"
 	. "github.com/black-desk/cgtproxy/internal/log"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
 	fsevents "github.com/tywkeene/go-fsevents"
 )

@@ -1,12 +1,12 @@
 package core
 
 import (
-	"github.com/black-desk/cgtproxy/internal/config"
 	"github.com/black-desk/cgtproxy/internal/core/monitor"
 	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
 	"github.com/black-desk/cgtproxy/internal/core/table"
 	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	"github.com/black-desk/cgtproxy/internal/types"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/google/nftables"
 
 	"github.com/google/wire"

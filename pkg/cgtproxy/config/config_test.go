@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/black-desk/cgtproxy/internal/config"
+	. "github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/black-desk/lib/go/gomega-helper"
 	"github.com/go-playground/validator/v10"
@@ -43,7 +43,7 @@ var _ = Describe("Configuration", func() {
 			Expect(err).To(BeNil())
 		})
 	},
-		ContextTableEntry("../../test/data/example_config.yaml"),
+		ContextTableEntry("../../../test/data/example_config.yaml"),
 	)
 
 	ContextTable("load from invalid configuration (%s)", func(path string, expectErr error) {
@@ -74,10 +74,10 @@ var _ = Describe("Configuration", func() {
 			Expect(err).To(MatchErr(expectErr))
 		})
 	},
-		ContextTableEntry("../../test/data/wrong_type.yaml", new(yaml.TypeError)).
-			WithFmt("../../test/data/wrong_type.yaml"),
-		ContextTableEntry("../../test/data/validation_fail.yaml", validator.ValidationErrors{}).
-			WithFmt("../../test/data/validation_fail.yaml"),
+		ContextTableEntry("../../../test/data/wrong_type.yaml", new(yaml.TypeError)).
+			WithFmt("../../../test/data/wrong_type.yaml"),
+		ContextTableEntry("../../../test/data/validation_fail.yaml", validator.ValidationErrors{}).
+			WithFmt("../../../test/data/validation_fail.yaml"),
 	)
 })
 

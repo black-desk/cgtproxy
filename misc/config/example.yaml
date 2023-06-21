@@ -1,5 +1,5 @@
 # Configuration documentation can be found at
-# https://godoc.org/github.com/black-desk/cgtproxy/internal/config
+# https://godoc.org/github.com/black-desk/cgtproxy/pkg/cgtproxy/config
 
 version: 1
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"

@@ -3,14 +3,16 @@ package core
 import (
 	"context"
 
+	. "github.com/black-desk/lib/go/errwrap"
+
 	"github.com/sourcegraph/conc/pool"
 
-	"github.com/black-desk/cgtproxy/internal/config"
 	"github.com/black-desk/cgtproxy/internal/core/monitor"
 	"github.com/black-desk/cgtproxy/internal/core/rulemanager"
 	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	. "github.com/black-desk/cgtproxy/internal/log"
-	. "github.com/black-desk/lib/go/errwrap"
+
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 )
 
 type Core struct {

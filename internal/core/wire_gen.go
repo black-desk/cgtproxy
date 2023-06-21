@@ -7,7 +7,7 @@
 package core
 
 import (
-	"github.com/black-desk/cgtproxy/internal/config"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 )
 
 // Injectors from wire.go:

@@ -6,10 +6,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/black-desk/cgtproxy/internal/config"
 	. "github.com/black-desk/cgtproxy/internal/core/monitor"
 	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	"github.com/black-desk/cgtproxy/internal/types"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/black-desk/lib/go/gomega-helper"
 	. "github.com/onsi/ginkgo/v2"
