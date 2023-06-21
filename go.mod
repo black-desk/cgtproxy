@@ -3,23 +3,23 @@ module github.com/black-desk/cgtproxy
 go 1.20
 
 require (
-	github.com/black-desk/lib/go v0.0.0-20230527174101-0e6787ffeff2
-	github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b
+	github.com/black-desk/lib/go v0.0.0-20230621155552-98b88628572e
 	github.com/deniswernert/go-fstab v0.0.0-20141204152952-eb4090f26517
-	github.com/go-playground/validator/v10 v10.14.0
+	github.com/go-playground/validator/v10 v10.14.1
 	github.com/google/nftables v0.1.1-0.20230520162352-45645ffbf5ba
-	github.com/onsi/ginkgo/v2 v2.9.5
-	github.com/onsi/gomega v1.27.7
+	github.com/onsi/ginkgo/v2 v2.11.0
+	github.com/onsi/gomega v1.27.8
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.7.0
 	github.com/tywkeene/go-fsevents v0.2.1-0.20210417193827-d7e9fb3063aa
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/sys v0.8.0
+	golang.org/x/sys v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
+	github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/google/subcommands v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -43,9 +43,9 @@ require (
 	github.com/vishvananda/netns v0.0.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sync v0.2.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
-	golang.org/x/tools v0.9.1 // indirect
+	golang.org/x/crypto v0.10.0 // indirect
+	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/text v0.10.0 // indirect
+	golang.org/x/tools v0.9.3 // indirect
 )
