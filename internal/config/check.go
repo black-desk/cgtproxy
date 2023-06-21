@@ -10,7 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func (c *ConfigV1) check() (err error) {
+func (c *Config) check() (err error) {
 	defer Wrap(&err, "Invalid configuration.")
 
 	var validator = validator.New()

@@ -1,10 +1,6 @@
 package config
 
 type Config struct {
-	ConfigV1 `yaml:",inline"`
-}
-
-type ConfigV1 struct {
 	Version uint8 `yaml:"version" validate:"required,eq=1"`
 
 	CgroupRoot CgroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
