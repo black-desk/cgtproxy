@@ -3,7 +3,6 @@ package monitor
 import (
 	"errors"
 	"fmt"
-
 	"golang.org/x/sys/unix"
 )
 

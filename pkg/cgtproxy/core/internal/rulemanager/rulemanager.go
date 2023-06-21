@@ -1,14 +1,13 @@
 package rulemanager
 
 import (
-	"regexp"
-
-	"github.com/black-desk/cgtproxy/internal/core/table"
 	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
+	"regexp"
 )
 
 type RuleManager struct {

@@ -2,7 +2,6 @@ package tabletest
 
 import (
 	"sync"
-
 	"github.com/google/nftables"
 	"github.com/google/wire"
 )

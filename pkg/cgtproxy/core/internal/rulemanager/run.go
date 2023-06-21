@@ -2,16 +2,15 @@ package rulemanager
 
 import (
 	"errors"
-	"net"
-	"os"
-
-	"github.com/black-desk/cgtproxy/internal/core/table"
 	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
+	"net"
+	"os"
 )
 
 func (m *RuleManager) Run() (err error) {

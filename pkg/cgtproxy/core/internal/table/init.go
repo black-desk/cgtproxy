@@ -2,9 +2,6 @@ package table
 
 import (
 	"errors"
-	"net"
-	"syscall"
-
 	"github.com/black-desk/cgtproxy/internal/consts"
 	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -12,6 +9,8 @@ import (
 	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
+	"net"
+	"syscall"
 )
 
 func ignoreNoBufferSpaceAvailable(perr *error) {

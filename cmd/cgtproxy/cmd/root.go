@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
-	"github.com/black-desk/cgtproxy/internal/core"
 	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core"
 	"github.com/spf13/cobra"
 )
 

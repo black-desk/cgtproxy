@@ -2,7 +2,6 @@ package watcher
 
 import (
 	"context"
-
 	. "github.com/black-desk/lib/go/errwrap"
 	fsevents "github.com/tywkeene/go-fsevents"
 )

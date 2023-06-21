@@ -3,7 +3,6 @@ package watcher
 import (
 	"errors"
 	"os"
-
 	. "github.com/black-desk/cgtproxy/internal/log"
 	fsevents "github.com/tywkeene/go-fsevents"
 )

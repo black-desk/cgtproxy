@@ -3,13 +3,12 @@ package monitor
 import (
 	"context"
 	"errors"
-	"io/fs"
-	"path/filepath"
-	"strings"
-
 	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
+	"io/fs"
+	"path/filepath"
+	"strings"
 )
 
 func (m *Monitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, err error) error {

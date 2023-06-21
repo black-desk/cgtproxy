@@ -1,10 +1,10 @@
 package monitor
 
 import (
-	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/watcher"
 	. "github.com/black-desk/lib/go/errwrap"
 )
 

@@ -1,18 +1,17 @@
 package table_test
 
 import (
+	"github.com/black-desk/cgtproxy/internal/consts"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table"
+	. "github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table/internal"
+	. "github.com/black-desk/lib/go/ginkgo-helper"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"math/rand"
 	"os"
 	"syscall"
 	"testing"
-
-	"github.com/black-desk/cgtproxy/internal/consts"
-	"github.com/black-desk/cgtproxy/internal/core/table"
-	. "github.com/black-desk/cgtproxy/internal/core/table/internal"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	. "github.com/black-desk/lib/go/ginkgo-helper"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Netfliter table", Ordered, func() {

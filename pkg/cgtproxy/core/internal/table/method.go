@@ -2,13 +2,6 @@ package table
 
 import (
 	"errors"
-	"net"
-	"os"
-	"path/filepath"
-	"sort"
-	"strings"
-	"syscall"
-
 	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -16,6 +9,12 @@ import (
 	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
+	"net"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"syscall"
 )
 
 type TargetOp uint32

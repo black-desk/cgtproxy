@@ -3,13 +3,10 @@ package monitor_test
 import (
 	"context"
 	"fmt"
-	"os"
-	"testing"
-
-	. "github.com/black-desk/cgtproxy/internal/core/monitor"
-	"github.com/black-desk/cgtproxy/internal/core/watcher"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	. "github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/monitor"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/watcher"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/black-desk/lib/go/gomega-helper"
 	. "github.com/onsi/ginkgo/v2"
@@ -17,6 +14,8 @@ import (
 	"github.com/sourcegraph/conc/pool"
 	"github.com/tywkeene/go-fsevents"
 	"golang.org/x/sys/unix"
+	"os"
+	"testing"
 )
 
 var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, func() {

@@ -2,12 +2,11 @@ package core
 
 import (
 	"context"
+	. "github.com/black-desk/cgtproxy/internal/log"
+	. "github.com/black-desk/lib/go/errwrap"
 	"os"
 	"os/signal"
 	"syscall"
-
-	. "github.com/black-desk/cgtproxy/internal/log"
-	. "github.com/black-desk/lib/go/errwrap"
 )
 
 func (c *Core) Run() (err error) {

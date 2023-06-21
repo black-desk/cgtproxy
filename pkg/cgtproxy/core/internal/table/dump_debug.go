@@ -4,11 +4,10 @@
 package table
 
 import (
-	"go.uber.org/zap"
-
-	. "github.com/black-desk/cgtproxy/internal/core/table/internal"
 	. "github.com/black-desk/cgtproxy/internal/log"
+	. "github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table/internal"
 	"github.com/google/nftables/expr"
+	"go.uber.org/zap"
 )
 
 func DumpNFTableRules() {
