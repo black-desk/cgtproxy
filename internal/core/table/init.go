@@ -102,14 +102,47 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 		Name:         "bypass",
 		KeyType:      nftables.TypeIPAddr,
 		KeyByteOrder: binaryutil.BigEndian,
+		Interval:     true,
 	}
 
-	elements := []nftables.SetElement{}
+	elements := []nftables.SetElement{{
+		Key:         net.ParseIP("0.0.0.0").To4(),
+		IntervalEnd: true,
+	}}
 
 	for i := range t.bypassIPv4 {
-		elements = append(elements, nftables.SetElement{
-			Key: []byte(net.ParseIP(t.bypassIPv4[i]).To4()),
-		})
+		bypass := t.bypassIPv4[i]
+		ip := net.ParseIP(bypass)
+
+		if ip != nil {
+			elements = append(elements,
+				nftables.SetElement{
+					Key: ip.To4(),
+				},
+				nftables.SetElement{
+					Key:         nextIP(ip).To4(),
+					IntervalEnd: true,
+				},
+			)
+			continue
+		}
+
+		_, cidr, err := net.ParseCIDR(bypass)
+		if err != nil {
+			// This should never happened,
+			// as string has been checked by validator.
+			panic(err)
+		}
+
+		elements = append(elements,
+			nftables.SetElement{
+				Key: cidr.IP.To4(),
+			},
+			nftables.SetElement{
+				Key:         nextIP(lastIP(cidr).To4()),
+				IntervalEnd: true,
+			},
+		)
 	}
 
 	err = conn.AddSet(t.ipv4BypassSet, elements)
@@ -120,20 +153,85 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 	return
 }
 
+func nextIP(ip net.IP) (ret net.IP) {
+	next := make(net.IP, len(ip))
+	copy(next, ip)
+
+	for i := range next {
+		i = len(next) - i - 1
+		old := next[i]
+		next[i] += 1
+		if next[i] >= old {
+			break
+		}
+	}
+
+	Log.Debugf("Next IP of %s is %s", ip.String(), next.String())
+
+	ret = next
+	return
+}
+
+func lastIP(ipnet *net.IPNet) (ret net.IP) {
+	ip := make(net.IP, len(ipnet.IP))
+	copy(ip, ipnet.IP)
+
+	for i := range ip {
+		ip[i] |= ^ipnet.Mask[i]
+	}
+
+	Log.Debugf("Last IP in net %s is %s", ipnet.String(), ip.String())
+
+	ret = ip
+	return
+}
+
 func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 	t.ipv6BypassSet = &nftables.Set{
 		Table:        t.table,
 		Name:         "bypass6",
 		KeyType:      nftables.TypeIP6Addr,
 		KeyByteOrder: binaryutil.BigEndian,
+		Interval:     true,
 	}
 
-	elements := []nftables.SetElement{}
+	elements := []nftables.SetElement{{
+		Key:         net.ParseIP("::").To16(),
+		IntervalEnd: true,
+	}}
 
 	for i := range t.bypassIPv6 {
-		elements = append(elements, nftables.SetElement{
-			Key: []byte(net.ParseIP(t.bypassIPv6[i]).To16()),
-		})
+		bypass := t.bypassIPv6[i]
+		ip := net.ParseIP(bypass)
+		if ip != nil {
+			elements = append(elements,
+				nftables.SetElement{
+					Key: ip.To16(),
+				},
+				nftables.SetElement{
+					Key:         nextIP(ip.To16()),
+					IntervalEnd: true,
+				},
+			)
+			continue
+		}
+
+		_, cidr, err := net.ParseCIDR(bypass)
+		if err != nil {
+			// This should never happened,
+			// as string has been checked by validator.
+			panic(err)
+		}
+
+		elements = append(elements,
+			nftables.SetElement{
+				Key: cidr.IP.To16(),
+			},
+			nftables.SetElement{
+				Key:         nextIP(lastIP(cidr).To16()),
+				IntervalEnd: true,
+			},
+		)
 	}
 
 	err = conn.AddSet(t.ipv6BypassSet, elements)
