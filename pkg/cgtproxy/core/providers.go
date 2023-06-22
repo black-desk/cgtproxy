@@ -1,23 +1,23 @@
 package core
 
 import (
+	"github.com/black-desk/cgtproxy/internal/cgmon"
+	"github.com/black-desk/cgtproxy/internal/fswatcher"
+	"github.com/black-desk/cgtproxy/internal/nftman"
+	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/monitor"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/rulemanager"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/watcher"
 	"github.com/google/nftables"
 	"github.com/google/wire"
 )
 
 func provideWatcher(cgroupRoot config.CgroupRoot,
 ) (
-	ret *watcher.Watcher, err error,
+	ret *fswatcher.Watcher, err error,
 ) {
-	var w *watcher.Watcher
+	var w *fswatcher.Watcher
 
-	w, err = watcher.New(watcher.WithCgroupRoot(cgroupRoot))
+	w, err = fswatcher.New(fswatcher.WithCgroupRoot(cgroupRoot))
 	if err != nil {
 		return
 	}
@@ -61,13 +61,13 @@ func provideTable(
 	root config.CgroupRoot,
 	bypass config.Bypass,
 ) (
-	ret *table.Table,
+	ret *nftman.Table,
 	err error,
 ) {
-	var t *table.Table
-	t, err = table.New(
-		table.WithCgroupRoot(root),
-		table.WithBypass(bypass),
+	var t *nftman.Table
+	t, err = nftman.New(
+		nftman.WithCgroupRoot(root),
+		nftman.WithBypass(bypass),
 	)
 
 	if err != nil {
@@ -80,15 +80,15 @@ func provideTable(
 }
 
 func provideRuleManager(
-	t *table.Table, cfg *config.Config, ch <-chan *types.CgroupEvent,
+	t *nftman.Table, cfg *config.Config, ch <-chan *types.CgroupEvent,
 ) (
-	ret *rulemanager.RuleManager, err error,
+	ret *routeman.RouteManager, err error,
 ) {
-	var r *rulemanager.RuleManager
-	r, err = rulemanager.New(
-		rulemanager.WithTable(t),
-		rulemanager.WithConfig(cfg),
-		rulemanager.WithCgroupEventChan(ch),
+	var r *routeman.RouteManager
+	r, err = routeman.New(
+		routeman.WithTable(t),
+		routeman.WithConfig(cfg),
+		routeman.WithCgroupEventChan(ch),
 	)
 
 	if err != nil {
@@ -101,17 +101,17 @@ func provideRuleManager(
 
 func provideMonitor(
 	ch chan<- *types.CgroupEvent,
-	w *watcher.Watcher,
+	w *fswatcher.Watcher,
 	root config.CgroupRoot,
 ) (
-	ret *monitor.Monitor, err error,
+	ret *cgmon.Monitor, err error,
 ) {
-	var m *monitor.Monitor
+	var m *cgmon.Monitor
 
-	m, err = monitor.New(
-		monitor.WithOutput(ch),
-		monitor.WithWatcher(w),
-		monitor.WithCgroupRoot(root),
+	m, err = cgmon.New(
+		cgmon.WithOutput(ch),
+		cgmon.WithWatcher(w),
+		cgmon.WithCgroupRoot(root),
 	)
 	if err != nil {
 		return
@@ -130,7 +130,7 @@ func provideBypass(cfg *config.Config) config.Bypass {
 }
 
 func provideComponents(
-	w *watcher.Watcher, m *monitor.Monitor, r *rulemanager.RuleManager,
+	w *fswatcher.Watcher, m *cgmon.Monitor, r *routeman.RouteManager,
 ) *components {
 	return &components{w: w, m: m, r: r}
 }

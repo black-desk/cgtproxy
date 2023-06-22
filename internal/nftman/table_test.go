@@ -1,10 +1,10 @@
-package table_test
+package nftman_test
 
 import (
 	"github.com/black-desk/cgtproxy/internal/consts"
+	"github.com/black-desk/cgtproxy/internal/nftman"
+	. "github.com/black-desk/cgtproxy/internal/nftman/internal"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table"
-	. "github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table/internal"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -35,15 +35,15 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 	Context("created", func() {
 		var (
-			t *table.Table
+			t *nftman.Table
 
 			result string
 		)
 
 		BeforeEach(func() {
 			By("Create a Table object.", func() {
-				t, err = table.New(
-					table.WithCgroupRoot(config.CgroupRoot("/sys/fs/cgroup")),
+				t, err = nftman.New(
+					nftman.WithCgroupRoot(config.CgroupRoot("/sys/fs/cgroup")),
 				)
 				Expect(err).To(Succeed())
 			})
@@ -105,28 +105,28 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					err = os.MkdirAll("/sys/fs/cgroup/test/a", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup("/sys/fs/cgroup/test/a",
-						&table.Target{Op: table.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
+						&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
 					err = os.MkdirAll("/sys/fs/cgroup/test/b", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup("/sys/fs/cgroup/test/b",
-						&table.Target{Op: table.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
+						&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
 					err = os.MkdirAll("/sys/fs/cgroup/test/c", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup("/sys/fs/cgroup/test/c",
-						&table.Target{Op: table.TargetDrop},
+						&nftman.Target{Op: nftman.TargetDrop},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
 					err = os.MkdirAll("/sys/fs/cgroup/test/d/d", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup("/sys/fs/cgroup/test/d/d",
-						&table.Target{Op: table.TargetDirect},
+						&nftman.Target{Op: nftman.TargetDirect},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 				})
@@ -198,7 +198,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					Context("then add some of them back", func() {
 						BeforeEach(func() {
 							err = t.AddCgroup("/sys/fs/cgroup/test/a",
-								&table.Target{Op: table.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
+								&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 							)
 							Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 						})

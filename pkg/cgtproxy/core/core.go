@@ -2,11 +2,11 @@ package core
 
 import (
 	"context"
+	"github.com/black-desk/cgtproxy/internal/cgmon"
+	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	. "github.com/black-desk/cgtproxy/internal/log"
+	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/monitor"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/rulemanager"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/watcher"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/sourcegraph/conc/pool"
 )
@@ -20,9 +20,9 @@ type Core struct {
 }
 
 type components struct {
-	w *watcher.Watcher
-	m *monitor.Monitor
-	r *rulemanager.RuleManager
+	w *fswatcher.Watcher
+	m *cgmon.Monitor
+	r *routeman.RouteManager
 }
 
 type Opt = (func(*Core) (*Core, error))

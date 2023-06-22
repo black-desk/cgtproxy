@@ -1,15 +1,15 @@
-package monitor
+package cgmon
 
 import (
 	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/watcher"
+	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
 type Monitor struct {
-	watcher *watcher.Watcher
+	watcher *fswatcher.Watcher
 	output  chan<- *types.CgroupEvent
 	root    config.CgroupRoot
 }
@@ -51,7 +51,7 @@ func New(opts ...Opt) (ret *Monitor, err error) {
 
 type Opt func(mon *Monitor) (ret *Monitor, err error)
 
-func WithWatcher(w *watcher.Watcher) Opt {
+func WithWatcher(w *fswatcher.Watcher) Opt {
 	return func(mon *Monitor) (ret *Monitor, err error) {
 		if w == nil {
 			err = ErrWatcherMissing

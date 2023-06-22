@@ -30,10 +30,10 @@ func injectedComponents(configConfig *config.Config) (*components, error) {
 		return nil, err
 	}
 	v2 := provideInputChan(coreChans)
-	ruleManager, err := provideRuleManager(table, configConfig, v2)
+	routeManager, err := provideRuleManager(table, configConfig, v2)
 	if err != nil {
 		return nil, err
 	}
-	coreComponents := provideComponents(watcher, monitor, ruleManager)
+	coreComponents := provideComponents(watcher, monitor, routeManager)
 	return coreComponents, nil
 }

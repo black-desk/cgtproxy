@@ -1,4 +1,4 @@
-package watcher
+package fswatcher
 
 import (
 	. "github.com/black-desk/cgtproxy/internal/log"

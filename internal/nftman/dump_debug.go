@@ -1,11 +1,11 @@
 //go:build debug
 // +build debug
 
-package table
+package nftman
 
 import (
 	. "github.com/black-desk/cgtproxy/internal/log"
-	. "github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table/internal"
+	. "github.com/black-desk/cgtproxy/internal/nftman/internal"
 	"github.com/google/nftables/expr"
 	"go.uber.org/zap"
 )

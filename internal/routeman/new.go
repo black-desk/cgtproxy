@@ -1,34 +1,34 @@
-package rulemanager
+package routeman
 
 import (
 	. "github.com/black-desk/cgtproxy/internal/log"
+	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"regexp"
 )
 
-type RuleManager struct {
-	cgroupEventChan <-chan *types.CgroupEvent `inject:"true"`
+type RouteManager struct {
+	cgroupEventChan <-chan *types.CgroupEvent
 
-	nft *table.Table   `inject:"true"`
-	cfg *config.Config `inject:"true"`
+	nft *nftman.Table
+	cfg *config.Config
 
 	matchers []*struct {
 		reg    *regexp.Regexp
-		target table.Target
+		target nftman.Target
 	}
 
 	rule  []*netlink.Rule
 	route []*netlink.Route
 }
 
-func New(opts ...Opt) (ret *RuleManager, err error) {
+func New(opts ...Opt) (ret *RouteManager, err error) {
 	defer Wrap(&err, "Failed to create the nftable rule manager.")
 
-	m := &RuleManager{}
+	m := &RouteManager{}
 	for i := range opts {
 		m, err = opts[i](m)
 		if err != nil {
@@ -40,7 +40,7 @@ func New(opts ...Opt) (ret *RuleManager, err error) {
 		regex := m.cfg.Rules[i].Match
 		var matcher struct {
 			reg    *regexp.Regexp
-			target table.Target
+			target nftman.Target
 		}
 
 		matcher.reg, err = regexp.Compile(regex)
@@ -49,11 +49,11 @@ func New(opts ...Opt) (ret *RuleManager, err error) {
 		}
 
 		if m.cfg.Rules[i].Direct {
-			matcher.target.Op = table.TargetDirect
+			matcher.target.Op = nftman.TargetDirect
 		} else if m.cfg.Rules[i].Drop {
-			matcher.target.Op = table.TargetDrop
+			matcher.target.Op = nftman.TargetDrop
 		} else if m.cfg.Rules[i].TProxy != "" {
-			matcher.target.Op = table.TargetTProxy
+			matcher.target.Op = nftman.TargetTProxy
 			matcher.target.Chain =
 				m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
 		} else {
@@ -73,10 +73,10 @@ func New(opts ...Opt) (ret *RuleManager, err error) {
 	return
 }
 
-type Opt func(m *RuleManager) (ret *RuleManager, err error)
+type Opt func(m *RouteManager) (ret *RouteManager, err error)
 
-func WithTable(t *table.Table) Opt {
-	return func(m *RuleManager) (ret *RuleManager, err error) {
+func WithTable(t *nftman.Table) Opt {
+	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if t == nil {
 			err = ErrTableMissing
 			return
@@ -89,7 +89,7 @@ func WithTable(t *table.Table) Opt {
 }
 
 func WithConfig(c *config.Config) Opt {
-	return func(m *RuleManager) (ret *RuleManager, err error) {
+	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if c == nil {
 			err = ErrConfigMissing
 			return
@@ -102,7 +102,7 @@ func WithConfig(c *config.Config) Opt {
 }
 
 func WithCgroupEventChan(ch <-chan *types.CgroupEvent) Opt {
-	return func(m *RuleManager) (ret *RuleManager, err error) {
+	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if ch == nil {
 			err = ErrCgroupEventChanMissing
 			return

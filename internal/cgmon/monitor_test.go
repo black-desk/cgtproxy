@@ -1,12 +1,12 @@
-package monitor_test
+package cgmon_test
 
 import (
 	"context"
 	"fmt"
+	. "github.com/black-desk/cgtproxy/internal/cgmon"
+	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	. "github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/monitor"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/watcher"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/black-desk/lib/go/gomega-helper"
 	. "github.com/onsi/ginkgo/v2"
@@ -20,7 +20,7 @@ import (
 
 var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, func() {
 	var (
-		w               *watcher.Watcher
+		w               *fswatcher.Watcher
 		cgroupEventChan chan *types.CgroupEvent
 		monitor         *Monitor
 		tmpDir          string
@@ -28,7 +28,7 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 	)
 
 	BeforeEach(func() {
-		w = &watcher.Watcher{
+		w = &fswatcher.Watcher{
 			Watcher: &fsevents.Watcher{
 				Events: make(chan *fsevents.FsEvent),
 				Errors: make(chan error),

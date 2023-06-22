@@ -1,7 +1,7 @@
 //go:build !debug
 // +build !debug
 
-package table
+package nftman
 
 import (
 	"github.com/google/nftables/expr"

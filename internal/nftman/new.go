@@ -1,4 +1,4 @@
-package table
+package nftman
 
 import (
 	. "github.com/black-desk/cgtproxy/internal/log"

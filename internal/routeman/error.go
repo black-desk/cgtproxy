@@ -1,4 +1,4 @@
-package rulemanager
+package routeman
 
 import "errors"
 

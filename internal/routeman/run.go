@@ -1,11 +1,11 @@
-package rulemanager
+package routeman
 
 import (
 	"errors"
 	. "github.com/black-desk/cgtproxy/internal/log"
+	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core/internal/table"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-func (m *RuleManager) Run() (err error) {
+func (m *RouteManager) Run() (err error) {
 	defer Wrap(&err, "Error occurs while running the nftable rules manager.")
 
 	defer m.removeRoute()
@@ -39,7 +39,7 @@ func (m *RuleManager) Run() (err error) {
 	return
 }
 
-func (m *RuleManager) initializeNftableRuels() (err error) {
+func (m *RouteManager) initializeNftableRuels() (err error) {
 	defer Wrap(&err, "Failed to initialize nftable ruels.")
 
 	for _, tp := range m.cfg.TProxies {
@@ -57,7 +57,7 @@ func (m *RuleManager) initializeNftableRuels() (err error) {
 	return
 }
 
-func (m *RuleManager) removeNftableRules() {
+func (m *RouteManager) removeNftableRules() {
 	err := m.nft.Clear()
 	if err != nil {
 		Log.Errorw("Failed to delete nft table.",
@@ -79,7 +79,7 @@ func (m *RuleManager) removeNftableRules() {
 	return
 }
 
-func (m *RuleManager) addRule(mark config.FireWallMark) (err error) {
+func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 	defer Wrap(&err, "Failed to add route rule.")
 
 	Log.Infow("Adding route rule.",
@@ -108,7 +108,7 @@ func (m *RuleManager) addRule(mark config.FireWallMark) (err error) {
 	return
 }
 
-func (m *RuleManager) addRoute() (err error) {
+func (m *RouteManager) addRoute() (err error) {
 	defer Wrap(&err, "Failed to add route.")
 
 	Log.Infow("Adding route.",
@@ -158,7 +158,7 @@ func (m *RuleManager) addRoute() (err error) {
 	return
 }
 
-func (m *RuleManager) removeRoute() {
+func (m *RouteManager) removeRoute() {
 	for i := range m.route {
 		err := netlink.RouteDel(m.route[i])
 
@@ -173,12 +173,12 @@ func (m *RuleManager) removeRoute() {
 	return
 }
 
-func (m *RuleManager) handleNewCgroup(path string) {
+func (m *RouteManager) handleNewCgroup(path string) {
 	Log.Debugw("Handling new cgroup.",
 		"path", path,
 	)
 
-	var target table.Target
+	var target nftman.Target
 	for i := range m.matchers {
 		if !m.matchers[i].reg.Match([]byte(path)) {
 			continue
@@ -194,7 +194,7 @@ func (m *RuleManager) handleNewCgroup(path string) {
 		break
 	}
 
-	if target.Op == table.TargetNoop {
+	if target.Op == nftman.TargetNoop {
 		Log.Debugw("No rule match this cgroup",
 			"cgroup", path,
 		)
@@ -210,7 +210,7 @@ func (m *RuleManager) handleNewCgroup(path string) {
 	}
 }
 
-func (m *RuleManager) handleDeleteCgroup(path string) {
+func (m *RouteManager) handleDeleteCgroup(path string) {
 	Log.Debugw("Handling delete cgroup.",
 		"path", path,
 	)
