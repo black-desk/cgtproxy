@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"os"
 	"os/signal"
@@ -12,7 +11,7 @@ import (
 func (c *Core) Run() (err error) {
 	defer Wrap(&err, "Error occurs while running the core.")
 
-	c.components, err = injectedComponents(c.cfg)
+	c.components, err = injectedComponents(c.cfg, c.log)
 	if err != nil {
 		return
 	}
@@ -36,7 +35,7 @@ func (c *Core) waitSig(ctx context.Context) (err error) {
 	case <-ctx.Done():
 		return ctx.Err()
 	case sig = <-sigChan:
-		Log.Debugw(
+		c.log.Debugw(
 			"Receive signal.",
 			"signal", sig,
 		)
@@ -45,9 +44,9 @@ func (c *Core) waitSig(ctx context.Context) (err error) {
 }
 
 func (c *Core) runMonitor(ctx context.Context) (err error) {
-	defer Log.Debugw("Cgroup monitor exited.")
+	defer c.log.Debugw("Cgroup monitor exited.")
 
-	Log.Debugw("Start cgroup monitor.")
+	c.log.Debugw("Start cgroup monitor.")
 
 	err = c.components.m.Run(ctx)
 	if err != nil {
@@ -58,9 +57,9 @@ func (c *Core) runMonitor(ctx context.Context) (err error) {
 }
 
 func (c *Core) runRuleManager(ctx context.Context) (err error) {
-	defer Log.Debugw("Rule manager exited.")
+	defer c.log.Debugw("Rule manager exited.")
 
-	Log.Debugw("Start nft rule manager.")
+	c.log.Debugw("Start nft rule manager.")
 
 	err = c.components.r.Run()
 	if err != nil {
@@ -71,9 +70,9 @@ func (c *Core) runRuleManager(ctx context.Context) (err error) {
 }
 
 func (c *Core) runWatcher(ctx context.Context) (err error) {
-	defer Log.Debugw("Watcher exited.")
+	defer c.log.Debugw("Watcher exited.")
 
-	Log.Debugw("Start filesystem watcher.")
+	c.log.Debugw("Start filesystem watcher.")
 
 	err = c.components.w.Run(ctx)
 	if err != nil {

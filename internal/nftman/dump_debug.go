@@ -4,14 +4,13 @@
 package nftman
 
 import (
-	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/cgtproxy/internal/nftman/internal"
 	"github.com/google/nftables/expr"
 	"go.uber.org/zap"
 )
 
-func DumpNFTableRules() {
-	Log.WithOptions(zap.AddStacktrace(zap.DebugLevel)).Debugw(
+func (t *Table) DumpNFTableRules() {
+	t.log.WithOptions(zap.AddStacktrace(zap.DebugLevel)).Debugw(
 		"Dump nft ruleset.",
 		"content", GetNFTableRules(),
 	)

@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
+	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -22,11 +22,6 @@ var checkConfigCmd = &cobra.Command{
 				return
 			}
 
-			Log.Errorw("Failed on check configuration.",
-				"config", flags.CfgPath,
-				"error", err,
-			)
-
 			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
 
 			return
@@ -40,6 +35,8 @@ var checkConfigCmd = &cobra.Command{
 func checkConfigCmdRun() (err error) {
 	defer Wrap(&err, "Failed to validate configuration.")
 
+	log := logger.Get("cgtproxy")
+
 	var content []byte
 	content, err = os.ReadFile(flags.CfgPath)
 	if err != nil {
@@ -51,7 +48,7 @@ func checkConfigCmdRun() (err error) {
 		return
 	}
 
-	_, err = config.Load(content)
+	_, err = config.Load(content, log)
 	if err != nil {
 		return
 	}

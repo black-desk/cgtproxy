@@ -1,17 +1,18 @@
 package cgmon
 
 import (
-	. "github.com/black-desk/cgtproxy/internal/log"
+	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	. "github.com/black-desk/lib/go/errwrap"
+	"go.uber.org/zap"
 )
 
 type Monitor struct {
 	watcher *fswatcher.Watcher
 	output  chan<- *types.CgroupEvent
 	root    config.CgroupRoot
+	log     *zap.SugaredLogger
 }
 
 func New(opts ...Opt) (ret *Monitor, err error) {
@@ -40,11 +41,15 @@ func New(opts ...Opt) (ret *Monitor, err error) {
 			err = ErrCgroupRootMissing
 			return
 		}
+
+		if m.log == nil {
+			m.log = zap.NewNop().Sugar()
+		}
 	}
 
 	ret = m
 
-	Log.Debugw("Create a new cgroup monitor.")
+	m.log.Debugw("Create a new cgroup monitor.")
 
 	return
 }
@@ -82,6 +87,14 @@ func WithCgroupRoot(root config.CgroupRoot) Opt {
 			return
 		}
 		mon.root = root
+		ret = mon
+		return
+	}
+}
+
+func WithLogger(logger *zap.SugaredLogger) Opt {
+	return func(mon *Monitor) (ret *Monitor, err error) {
+		mon.log = logger
 		ret = mon
 		return
 	}

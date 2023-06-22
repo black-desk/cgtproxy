@@ -34,7 +34,7 @@ var _ = Describe("Configuration", func() {
 				Fail(fmt.Sprintf("Failed to read configuration %s: %s", path, err.Error()))
 			}
 
-			_, err = Load(content)
+			_, err = Load(content, nil)
 		})
 		AfterEach(func() {
 			file.Close()
@@ -64,7 +64,7 @@ var _ = Describe("Configuration", func() {
 				Fail(fmt.Sprintf("Failed to read configuration %s: %s", path, err.Error()))
 			}
 
-			_, err = Load(content)
+			_, err = Load(content, nil)
 		})
 		AfterEach(func() {
 			file.Close()

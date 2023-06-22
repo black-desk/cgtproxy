@@ -2,13 +2,18 @@ package config
 
 import (
 	. "github.com/black-desk/lib/go/errwrap"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
-func Load(content []byte) (ret *Config, err error) {
+func Load(content []byte, log *zap.SugaredLogger) (ret *Config, err error) {
 	defer Wrap(&err, "Failed to load configuration")
 
 	cfg := &Config{}
+	cfg.log = log
+	if cfg.log == nil {
+		cfg.log = zap.NewNop().Sugar()
+	}
 
 	err = yaml.Unmarshal(content, cfg)
 	if err != nil {

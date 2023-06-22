@@ -2,7 +2,6 @@ package routeman
 
 import (
 	"errors"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
@@ -60,7 +59,7 @@ func (m *RouteManager) initializeNftableRuels() (err error) {
 func (m *RouteManager) removeNftableRules() {
 	err := m.nft.Clear()
 	if err != nil {
-		Log.Errorw("Failed to delete nft table.",
+		m.log.Errorw("Failed to delete nft table.",
 			"error", err,
 		)
 	}
@@ -71,7 +70,7 @@ func (m *RouteManager) removeNftableRules() {
 			continue
 		}
 
-		Log.Errorw("Failed to delete route rule.",
+		m.log.Errorw("Failed to delete route rule.",
 			"rule", rule,
 			"error", err,
 		)
@@ -82,7 +81,7 @@ func (m *RouteManager) removeNftableRules() {
 func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 	defer Wrap(&err, "Failed to add route rule.")
 
-	Log.Infow("Adding route rule.",
+	m.log.Infow("Adding route rule.",
 		"mark", mark,
 		"table", m.cfg.RouteTable,
 	)
@@ -96,7 +95,7 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 
 	err = netlink.RuleAdd(rule)
 	if errors.Is(err, os.ErrExist) {
-		Log.Infow("Rule already exists.")
+		m.log.Infow("Rule already exists.")
 		err = nil
 	}
 	if err != nil {
@@ -111,7 +110,7 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 func (m *RouteManager) addRoute() (err error) {
 	defer Wrap(&err, "Failed to add route.")
 
-	Log.Infow("Adding route.",
+	m.log.Infow("Adding route.",
 		"table", m.cfg.RouteTable,
 	)
 
@@ -143,7 +142,7 @@ func (m *RouteManager) addRoute() (err error) {
 
 		err = netlink.RouteAdd(route)
 		if errors.Is(err, os.ErrExist) {
-			Log.Infow("Route already exists.",
+			m.log.Infow("Route already exists.",
 				"route", route,
 			)
 			err = nil
@@ -166,7 +165,7 @@ func (m *RouteManager) removeRoute() {
 			continue
 		}
 
-		Log.Warnw("Failed to remove route",
+		m.log.Warnw("Failed to remove route",
 			"error", err)
 	}
 
@@ -174,7 +173,7 @@ func (m *RouteManager) removeRoute() {
 }
 
 func (m *RouteManager) handleNewCgroup(path string) {
-	Log.Debugw("Handling new cgroup.",
+	m.log.Debugw("Handling new cgroup.",
 		"path", path,
 	)
 
@@ -184,7 +183,7 @@ func (m *RouteManager) handleNewCgroup(path string) {
 			continue
 		}
 
-		Log.Infow("Rule found for this cgroup",
+		m.log.Infow("Rule found for this cgroup",
 			"cgroup", path,
 			"rule", m.cfg.Rules[i].String(),
 		)
@@ -195,7 +194,7 @@ func (m *RouteManager) handleNewCgroup(path string) {
 	}
 
 	if target.Op == nftman.TargetNoop {
-		Log.Debugw("No rule match this cgroup",
+		m.log.Debugw("No rule match this cgroup",
 			"cgroup", path,
 		)
 		return
@@ -203,7 +202,7 @@ func (m *RouteManager) handleNewCgroup(path string) {
 
 	err := m.nft.AddCgroup(path, &target)
 	if err != nil {
-		Log.Errorw("Failed to update nft for new cgroup",
+		m.log.Errorw("Failed to update nft for new cgroup",
 			"cgroup", path,
 			"error", err,
 		)
@@ -211,12 +210,12 @@ func (m *RouteManager) handleNewCgroup(path string) {
 }
 
 func (m *RouteManager) handleDeleteCgroup(path string) {
-	Log.Debugw("Handling delete cgroup.",
+	m.log.Debugw("Handling delete cgroup.",
 		"path", path,
 	)
 
 	err := m.nft.RemoveCgroup(path)
 	if err != nil {
-		Log.Errorw("Failed to update nft for removed cgroup", "error", err)
+		m.log.Errorw("Failed to update nft for removed cgroup", "error", err)
 	}
 }

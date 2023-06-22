@@ -8,29 +8,30 @@ package core
 
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"go.uber.org/zap"
 )
 
 // Injectors from wire.go:
 
-func injectedComponents(configConfig *config.Config) (*components, error) {
+func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredLogger) (*components, error) {
 	cgroupRoot := provideCgroupRoot(configConfig)
-	watcher, err := provideWatcher(cgroupRoot)
+	watcher, err := provideWatcher(cgroupRoot, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
 	coreChans := provideChans()
 	v := provideOutputChan(coreChans)
-	monitor, err := provideMonitor(v, watcher, cgroupRoot)
+	monitor, err := provideMonitor(v, watcher, cgroupRoot, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
 	bypass := provideBypass(configConfig)
-	table, err := provideTable(cgroupRoot, bypass)
+	table, err := provideTable(cgroupRoot, bypass, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
 	v2 := provideInputChan(coreChans)
-	routeManager, err := provideRuleManager(table, configConfig, v2)
+	routeManager, err := provideRuleManager(table, configConfig, v2, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}

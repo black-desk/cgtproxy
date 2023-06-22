@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +17,6 @@ var checkCmd = &cobra.Command{
 			if err == nil {
 				return
 			}
-
-			Log.Errorw("Failed to check system requirements.",
-				"config", flags.CfgPath,
-				"error", err,
-			)
 
 			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
 

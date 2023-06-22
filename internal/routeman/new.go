@@ -1,13 +1,14 @@
 package routeman
 
 import (
-	. "github.com/black-desk/cgtproxy/internal/log"
+	"regexp"
+
 	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
-	"regexp"
+	"go.uber.org/zap"
 )
 
 type RouteManager struct {
@@ -15,6 +16,7 @@ type RouteManager struct {
 
 	nft *nftman.Table
 	cfg *config.Config
+	log *zap.SugaredLogger
 
 	matchers []*struct {
 		reg    *regexp.Regexp
@@ -34,6 +36,10 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 		if err != nil {
 			return
 		}
+	}
+
+	if m.log == nil {
+		m.log = zap.NewNop().Sugar()
 	}
 
 	for i := range m.cfg.Rules {
@@ -69,7 +75,7 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 
 	ret = m
 
-	Log.Debugw("Create a new nft rule manager.")
+	m.log.Debugw("Create a new route manager.")
 	return
 }
 
@@ -109,6 +115,14 @@ func WithCgroupEventChan(ch <-chan *types.CgroupEvent) Opt {
 		}
 
 		m.cgroupEventChan = ch
+		ret = m
+		return
+	}
+}
+
+func WithLogger(log *zap.SugaredLogger) Opt {
+	return func(m *RouteManager) (ret *RouteManager, err error) {
+		m.log = log
 		ret = m
 		return
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/google/nftables/expr"
 )
 
-func DumpNFTableRules() {
+func (t *Table) DumpNFTableRules() {
 	return
 }
 

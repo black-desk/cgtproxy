@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core"
+	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -25,11 +25,6 @@ var rootCmd = &cobra.Command{
 				return
 			}
 
-			Log.Errorw("Error occur while running cgtproxy.",
-				"config", flags.CfgPath,
-				"error", err,
-			)
-
 			err = fmt.Errorf(
 				"\n\n%w\n"+consts.CheckDocumentString,
 				err,
@@ -43,14 +38,16 @@ var rootCmd = &cobra.Command{
 }
 
 func rootCmdRun() (err error) {
+	log := logger.Get("cgtproxy")
+
 	content, err := os.ReadFile(flags.CfgPath)
 	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == consts.CfgPath {
-		Log.Errorw("Configuration file missing fallback to default config.")
+		log.Errorw("Configuration file missing fallback to default config.")
 
 		content = []byte(config.DefaultConfig)
 		err = nil
 	} else if err != nil {
-		Log.Errorw("Failed to read configuration from file",
+		log.Errorw("Failed to read configuration from file",
 			"file", flags.CfgPath,
 			"error", err)
 
@@ -59,13 +56,14 @@ func rootCmdRun() (err error) {
 
 	var cfg *config.Config
 
-	cfg, err = config.Load(content)
+	cfg, err = config.Load(content, log)
 	if err != nil {
 		return
 	}
 
 	c, err := core.New(
 		core.WithConfig(cfg),
+		core.WithLogger(log),
 	)
 	if err != nil {
 		return
@@ -76,7 +74,7 @@ func rootCmdRun() (err error) {
 		return
 	}
 
-	Log.Debugw(
+	log.Debugw(
 		"Core exited with error.",
 		"error", err,
 	)
@@ -84,7 +82,7 @@ func rootCmdRun() (err error) {
 	{
 		var cancelBySignal *core.ErrCancelBySignal
 		if errors.As(err, &cancelBySignal) {
-			Log.Infow("Signal received, exiting...",
+			log.Infow("Signal received, exiting...",
 				"signal", cancelBySignal.Signal,
 			)
 			err = nil

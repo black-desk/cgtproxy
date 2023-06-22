@@ -3,7 +3,6 @@ package nftman
 import (
 	"errors"
 	"github.com/black-desk/cgtproxy/internal/consts"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
@@ -13,11 +12,11 @@ import (
 	"syscall"
 )
 
-func ignoreNoBufferSpaceAvailable(perr *error) {
+func (t *Table) ignoreNoBufferSpaceAvailable(perr *error) {
 	var errno syscall.Errno
 	if errors.As(*perr, &errno) && errno == syscall.ENOBUFS {
 		*perr = nil
-		Log.Errorw("ENOBUFS occurred.")
+		t.log.Errorw("ENOBUFS occurred.")
 		//FIXME: https://github.com/google/nftables/issues/103
 	}
 }
@@ -25,7 +24,7 @@ func ignoreNoBufferSpaceAvailable(perr *error) {
 func (t *Table) initStructure() (err error) {
 	defer Wrap(&err, "Failed to flush initial content of nft table.")
 
-	Log.Debug("Initialing nft table structure.")
+	t.log.Debug("Initialing nft table structure.")
 
 	var conn *nftables.Conn
 	conn, err = nftables.New()
@@ -83,14 +82,14 @@ func (t *Table) initStructure() (err error) {
 	}
 
 	err = conn.Flush()
-	ignoreNoBufferSpaceAvailable(&err)
+	t.ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
 
-	Log.Debug("nft table structure initialized.")
+	t.log.Debug("nft table structure initialized.")
 
-	DumpNFTableRules()
+	t.DumpNFTableRules()
 
 	return
 }
@@ -119,7 +118,7 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 					Key: ip.To4(),
 				},
 				nftables.SetElement{
-					Key:         nextIP(ip).To4(),
+					Key:         t.nextIP(ip).To4(),
 					IntervalEnd: true,
 				},
 			)
@@ -138,7 +137,7 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 				Key: cidr.IP.To4(),
 			},
 			nftables.SetElement{
-				Key:         nextIP(lastIP(cidr).To4()),
+				Key:         t.nextIP(t.lastIP(cidr).To4()),
 				IntervalEnd: true,
 			},
 		)
@@ -152,7 +151,7 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 	return
 }
 
-func nextIP(ip net.IP) (ret net.IP) {
+func (t *Table) nextIP(ip net.IP) (ret net.IP) {
 	next := make(net.IP, len(ip))
 	copy(next, ip)
 
@@ -165,13 +164,13 @@ func nextIP(ip net.IP) (ret net.IP) {
 		}
 	}
 
-	Log.Debugf("Next IP of %s is %s", ip.String(), next.String())
+	t.log.Debugf("Next IP of %s is %s", ip.String(), next.String())
 
 	ret = next
 	return
 }
 
-func lastIP(ipnet *net.IPNet) (ret net.IP) {
+func (t *Table) lastIP(ipnet *net.IPNet) (ret net.IP) {
 	ip := make(net.IP, len(ipnet.IP))
 	copy(ip, ipnet.IP)
 
@@ -179,7 +178,7 @@ func lastIP(ipnet *net.IPNet) (ret net.IP) {
 		ip[i] |= ^ipnet.Mask[i]
 	}
 
-	Log.Debugf("Last IP in net %s is %s", ipnet.String(), ip.String())
+	t.log.Debugf("Last IP in net %s is %s", ipnet.String(), ip.String())
 
 	ret = ip
 	return
@@ -208,7 +207,7 @@ func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 					Key: ip.To16(),
 				},
 				nftables.SetElement{
-					Key:         nextIP(ip.To16()),
+					Key:         t.nextIP(ip.To16()),
 					IntervalEnd: true,
 				},
 			)
@@ -227,7 +226,7 @@ func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 				Key: cidr.IP.To16(),
 			},
 			nftables.SetElement{
-				Key:         nextIP(lastIP(cidr).To16()),
+				Key:         t.nextIP(t.lastIP(cidr).To16()),
 				IntervalEnd: true,
 			},
 		)

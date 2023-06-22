@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/spf13/cobra"
 )
@@ -25,10 +24,6 @@ var checkKernelCmd = &cobra.Command{
 			if err == nil {
 				return
 			}
-
-			Log.Errorw("Failed on check kernel requirements.",
-				"error", err,
-			)
 
 			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
 

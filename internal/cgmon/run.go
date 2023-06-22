@@ -3,7 +3,6 @@ package cgmon
 import (
 	"context"
 	"errors"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	"github.com/black-desk/cgtproxy/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"io/fs"
@@ -42,13 +41,13 @@ func (m *Monitor) walk(ctx context.Context, path string) {
 	}
 
 	if errors.Is(err, fs.ErrNotExist) {
-		Log.Debug("Cgroup had been removed.",
+		m.log.Debug("Cgroup had been removed.",
 			"path", path,
 		)
 		return
 	}
 
-	Log.Errorw("Errors occurred.",
+	m.log.Errorw("Errors occurred.",
 		"path", path,
 		"error", err,
 	)
@@ -64,25 +63,27 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 	defer close(m.output)
 	defer Wrap(&err, "Error occurs while running the cgroup monitor.")
 
-	Log.Debugw("Initializing cgroup monitor...")
+	m.log.Debugw("Initializing cgroup monitor...")
 
 	err = m.doWalk(ctx, string(m.root))
 	if err != nil {
 		return
 	}
 
-	Log.Debugw("Initializing cgroup monitor done.")
+	m.log.Debugw("Initializing cgroup monitor done.")
 
 	var cgEvent *types.CgroupEvent
 	for {
 		select {
 		case fsEvent, ok := <-m.watcher.Events:
 			if !ok {
-				Log.Debugw("Filesystem watcher channel closed.")
+				m.log.Debugw(
+					"Filesystem watcher channel closed.",
+				)
 				return
 			}
 
-			Log.Debugw("New filesystem envent arrived.",
+			m.log.Debugw("New filesystem envent arrived.",
 				"event", fsEvent,
 			)
 
@@ -101,7 +102,7 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 				}
 			} else {
 				err = &ErrUnexpectFsEvent{fsEvent.RawEvent}
-				Log.Error(err)
+				m.log.Error(err)
 				err = nil
 				return
 			}
@@ -127,7 +128,7 @@ func (m *Monitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err err
 		return nil
 	}
 
-	Log.Debugw("New cgroup envent.",
+	m.log.Debugw("New cgroup envent.",
 		"event", cgEvent,
 	)
 
@@ -136,7 +137,7 @@ func (m *Monitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err err
 		err = ctx.Err()
 		return
 	case m.output <- cgEvent:
-		Log.Debugw("Cgroup event sent.",
+		m.log.Debugw("Cgroup event sent.",
 			"path", path,
 		)
 	}

@@ -1,17 +1,19 @@
 package nftman
 
 import (
-	. "github.com/black-desk/cgtproxy/internal/log"
+	"net"
+
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
-	"net"
+	"go.uber.org/zap"
 )
 
 type Table struct {
 	cgroupRoot config.CgroupRoot
 	bypassIPv4 []string
 	bypassIPv6 []string
+	log        *zap.SugaredLogger
 
 	table *nftables.Table
 
@@ -49,6 +51,10 @@ func New(opts ...Opt) (ret *Table, err error) {
 		}
 	}
 
+	if t.log == nil {
+		t.log = zap.NewNop().Sugar()
+	}
+
 	err = t.initStructure()
 	if err != nil {
 		return
@@ -56,7 +62,7 @@ func New(opts ...Opt) (ret *Table, err error) {
 
 	ret = t
 
-	Log.Debugw("Create a nft table.")
+	t.log.Debugw("Create a nft table.")
 	return
 }
 
@@ -93,6 +99,13 @@ func WithBypass(bypass config.Bypass) Opt {
 func WithCgroupRoot(root config.CgroupRoot) Opt {
 	return func(table *Table) (*Table, error) {
 		table.cgroupRoot = root
+		return table, nil
+	}
+}
+
+func WithLogger(log *zap.SugaredLogger) Opt {
+	return func(table *Table) (*Table, error) {
+		table.log = log
 		return table, nil
 	}
 }

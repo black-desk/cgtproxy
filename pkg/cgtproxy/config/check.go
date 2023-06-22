@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
-	. "github.com/black-desk/cgtproxy/internal/log"
 	. "github.com/black-desk/lib/go/errwrap"
 	fstab "github.com/deniswernert/go-fstab"
 	"github.com/go-playground/validator/v10"
@@ -29,14 +28,14 @@ func (c *Config) check() (err error) {
 
 		c.CgroupRoot = cgroupRoot
 
-		Log.Infow(
+		c.log.Infow(
 			"Cgroup mount point auto detection done.",
 			"cgroup root", cgroupRoot,
 		)
 	}
 
 	if c.Rules == nil {
-		Log.Warnw("No rules in config.")
+		c.log.Warnw("No rules in config.")
 	}
 
 	if c.TProxies == nil {

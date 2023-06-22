@@ -1,5 +1,7 @@
 package config
 
+import "go.uber.org/zap"
+
 type Config struct {
 	Version uint8 `yaml:"version" validate:"required,eq=1"`
 
@@ -12,6 +14,8 @@ type Config struct {
 	// The route table number cgtproxy will create to route TPROXY traffic.
 	// This table will be removed when cgtproxy stopped.
 	RouteTable int `yaml:"route-table" validate:"required"`
+
+	log *zap.SugaredLogger `yaml:"-"`
 }
 
 type Bypass []string

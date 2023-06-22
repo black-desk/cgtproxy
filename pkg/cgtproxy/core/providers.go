@@ -9,15 +9,21 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/google/nftables"
 	"github.com/google/wire"
+	"go.uber.org/zap"
 )
 
-func provideWatcher(cgroupRoot config.CgroupRoot,
+func provideWatcher(
+	cgroupRoot config.CgroupRoot,
+	logger *zap.SugaredLogger,
 ) (
 	ret *fswatcher.Watcher, err error,
 ) {
 	var w *fswatcher.Watcher
 
-	w, err = fswatcher.New(fswatcher.WithCgroupRoot(cgroupRoot))
+	w, err = fswatcher.New(
+		fswatcher.WithCgroupRoot(cgroupRoot),
+		fswatcher.WithLogger(logger),
+	)
 	if err != nil {
 		return
 	}
@@ -60,6 +66,7 @@ func provideNftConn() (ret *nftables.Conn, err error) {
 func provideTable(
 	root config.CgroupRoot,
 	bypass config.Bypass,
+	logger *zap.SugaredLogger,
 ) (
 	ret *nftman.Table,
 	err error,
@@ -68,6 +75,7 @@ func provideTable(
 	t, err = nftman.New(
 		nftman.WithCgroupRoot(root),
 		nftman.WithBypass(bypass),
+		nftman.WithLogger(logger),
 	)
 
 	if err != nil {
@@ -76,11 +84,13 @@ func provideTable(
 
 	ret = t
 	return
-
 }
 
 func provideRuleManager(
-	t *nftman.Table, cfg *config.Config, ch <-chan *types.CgroupEvent,
+	t *nftman.Table,
+	cfg *config.Config,
+	ch <-chan *types.CgroupEvent,
+	logger *zap.SugaredLogger,
 ) (
 	ret *routeman.RouteManager, err error,
 ) {
@@ -89,6 +99,7 @@ func provideRuleManager(
 		routeman.WithTable(t),
 		routeman.WithConfig(cfg),
 		routeman.WithCgroupEventChan(ch),
+		routeman.WithLogger(logger),
 	)
 
 	if err != nil {
@@ -103,6 +114,7 @@ func provideMonitor(
 	ch chan<- *types.CgroupEvent,
 	w *fswatcher.Watcher,
 	root config.CgroupRoot,
+	logger *zap.SugaredLogger,
 ) (
 	ret *cgmon.Monitor, err error,
 ) {
@@ -112,6 +124,7 @@ func provideMonitor(
 		cgmon.WithOutput(ch),
 		cgmon.WithWatcher(w),
 		cgmon.WithCgroupRoot(root),
+		cgmon.WithLogger(logger),
 	)
 	if err != nil {
 		return

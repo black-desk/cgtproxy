@@ -3,18 +3,21 @@ package fswatcher
 import (
 	"errors"
 	"os"
-	. "github.com/black-desk/cgtproxy/internal/log"
+
 	fsevents "github.com/tywkeene/go-fsevents"
+	"go.uber.org/zap"
 )
 
-type handle struct{}
+type handle struct {
+	log *zap.SugaredLogger
+}
 
 func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 	isDirRemoved := event.IsDirRemoved()
 	isDirCreated := event.IsDirCreated()
 	path := event.Path
 
-	Log.Debugw("Handling new filesystem event.",
+	h.log.Debugw("Handling new filesystem event.",
 		"event", event,
 		"isDirRemoved", isDirRemoved,
 		"isDirCreated", isDirCreated,
@@ -26,7 +29,7 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 			return
 		}
 
-		Log.Debugw("Add path to watcher recursively.",
+		h.log.Debugw("Add path to watcher recursively.",
 			"path", path,
 		)
 
@@ -35,7 +38,7 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 			fsevents.DirCreatedEvent|fsevents.DirRemovedEvent,
 		)
 
-		Log.Debugw("Finish add path to watcher recursively.",
+		h.log.Debugw("Finish add path to watcher recursively.",
 			"path", path,
 		)
 
@@ -44,11 +47,11 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 		}
 
 		if errors.Is(err, os.ErrNotExist) {
-			Log.Debugw("Try to add a non-exist path to watcher.",
+			h.log.Debugw("Try to add a non-exist path to watcher.",
 				"path", path,
 			)
 		} else {
-			Log.Errorw("Failed to add path to watcher.",
+			h.log.Errorw("Failed to add path to watcher.",
 				"path", path,
 				"error", err,
 			)
@@ -65,7 +68,7 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 			return
 		}
 
-		Log.Errorw("Failed to remove descriptor from watcher.",
+		h.log.Errorw("Failed to remove descriptor from watcher.",
 			"path", path,
 			"error", err,
 		)
