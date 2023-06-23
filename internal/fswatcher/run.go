@@ -2,12 +2,13 @@ package fswatcher
 
 import (
 	"context"
+
 	. "github.com/black-desk/lib/go/errwrap"
 	fsevents "github.com/tywkeene/go-fsevents"
 )
 
 func (w *Watcher) Run(ctx context.Context) (err error) {
-	defer Wrap(&err, "Error occurs while running the filesystem watcher.")
+	defer Wrap(&err, "running filesystem watcher.")
 
 	// FIXME(black_desk):
 	// This stupid inotify package

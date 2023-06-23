@@ -2,18 +2,19 @@ package nftman
 
 import (
 	"errors"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	. "github.com/black-desk/lib/go/errwrap"
-	"github.com/google/nftables"
-	"github.com/google/nftables/binaryutil"
-	"github.com/google/nftables/expr"
-	"golang.org/x/sys/unix"
 	"net"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"syscall"
+
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	. "github.com/black-desk/lib/go/errwrap"
+	"github.com/google/nftables"
+	"github.com/google/nftables/binaryutil"
+	"github.com/google/nftables/expr"
+	"golang.org/x/sys/unix"
 )
 
 type TargetOp uint32
@@ -31,7 +32,7 @@ type Target struct {
 }
 
 func (t *Table) AddCgroup(path string, target *Target) (err error) {
-	defer Wrap(&err, "Failed to add cgroup (%s) to nftable.", path)
+	defer Wrap(&err, "add cgroup (%s) to nftable", path)
 
 	t.log.Infow("Adding new cgroup to nft.",
 		"cgroup", path,
@@ -528,7 +529,7 @@ func (t *Table) addDNSChainForTproxy(
 }
 
 func (t *Table) Clear() (err error) {
-	defer Wrap(&err, "Error occurs while removing nftable.")
+	defer Wrap(&err, "remove nftable.")
 
 	var conn *nftables.Conn
 	conn, err = nftables.New()

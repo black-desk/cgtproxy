@@ -14,7 +14,7 @@ type Watcher struct {
 }
 
 func New(opts ...Opt) (ret *Watcher, err error) {
-	defer Wrap(&err, "Failed to create a filesystem watcher.")
+	defer Wrap(&err, "create filesystem watcher")
 
 	w := &Watcher{}
 

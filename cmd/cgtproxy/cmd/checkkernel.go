@@ -36,7 +36,7 @@ var checkKernelCmd = &cobra.Command{
 }
 
 func checkKernelCmdRun() (err error) {
-	defer Wrap(&err, "Failed to check kernel config.")
+	defer Wrap(&err)
 
 	{ // check kernel config
 		var configFile *os.File

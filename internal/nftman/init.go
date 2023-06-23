@@ -2,14 +2,15 @@ package nftman
 
 import (
 	"errors"
+	"net"
+	"syscall"
+
 	"github.com/black-desk/cgtproxy/internal/consts"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
-	"net"
-	"syscall"
 )
 
 func (t *Table) ignoreNoBufferSpaceAvailable(perr *error) {
@@ -22,7 +23,7 @@ func (t *Table) ignoreNoBufferSpaceAvailable(perr *error) {
 }
 
 func (t *Table) initStructure() (err error) {
-	defer Wrap(&err, "Failed to flush initial content of nft table.")
+	defer Wrap(&err, "flush initial content of nft table")
 
 	t.log.Debug("Initialing nft table structure.")
 

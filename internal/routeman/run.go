@@ -2,18 +2,19 @@ package routeman
 
 import (
 	"errors"
+	"net"
+	"os"
+
 	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
-	"net"
-	"os"
 )
 
 func (m *RouteManager) Run() (err error) {
-	defer Wrap(&err, "Error occurs while running the nftable rules manager.")
+	defer Wrap(&err, "running route manager.")
 
 	defer m.removeRoute()
 	err = m.addRoute()
@@ -39,7 +40,7 @@ func (m *RouteManager) Run() (err error) {
 }
 
 func (m *RouteManager) initializeNftableRuels() (err error) {
-	defer Wrap(&err, "Failed to initialize nftable ruels.")
+	defer Wrap(&err, "initializing nftable rules")
 
 	for _, tp := range m.cfg.TProxies {
 		err = m.nft.AddChainAndRulesForTProxy(tp)
@@ -79,7 +80,7 @@ func (m *RouteManager) removeNftableRules() {
 }
 
 func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
-	defer Wrap(&err, "Failed to add route rule.")
+	defer Wrap(&err, "add route rule")
 
 	m.log.Infow("Adding route rule.",
 		"mark", mark,
@@ -108,7 +109,7 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 }
 
 func (m *RouteManager) addRoute() (err error) {
-	defer Wrap(&err, "Failed to add route.")
+	defer Wrap(&err, "add route")
 
 	m.log.Infow("Adding route.",
 		"table", m.cfg.RouteTable,

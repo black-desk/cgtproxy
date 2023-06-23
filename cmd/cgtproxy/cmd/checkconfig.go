@@ -33,7 +33,7 @@ var checkConfigCmd = &cobra.Command{
 }
 
 func checkConfigCmdRun() (err error) {
-	defer Wrap(&err, "Failed to validate configuration.")
+	defer Wrap(&err)
 
 	log := logger.Get("cgtproxy")
 

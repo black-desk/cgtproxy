@@ -7,7 +7,7 @@ import (
 )
 
 func Load(content []byte, log *zap.SugaredLogger) (ret *Config, err error) {
-	defer Wrap(&err, "Failed to load configuration")
+	defer Wrap(&err, "load configuration")
 
 	cfg := &Config{}
 	cfg.log = log
@@ -17,7 +17,7 @@ func Load(content []byte, log *zap.SugaredLogger) (ret *Config, err error) {
 
 	err = yaml.Unmarshal(content, cfg)
 	if err != nil {
-		Wrap(&err, "Failed to unmarshal configuration.")
+		Wrap(&err, "unmarshal configuration")
 		return
 	}
 

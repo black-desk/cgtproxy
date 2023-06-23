@@ -2,14 +2,15 @@ package core
 
 import (
 	"context"
-	. "github.com/black-desk/lib/go/errwrap"
 	"os"
 	"os/signal"
 	"syscall"
+
+	. "github.com/black-desk/lib/go/errwrap"
 )
 
 func (c *Core) Run() (err error) {
-	defer Wrap(&err, "Error occurs while running the core.")
+	defer Wrap(&err, "running cgtproxy core")
 
 	c.components, err = injectedComponents(c.cfg, c.log)
 	if err != nil {

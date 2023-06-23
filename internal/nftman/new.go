@@ -39,7 +39,7 @@ type Table struct {
 type Opt = (func(*Table) (*Table, error))
 
 func New(opts ...Opt) (ret *Table, err error) {
-	defer Wrap(&err, "Failed to create nft table.")
+	defer Wrap(&err, "create nft table mananger")
 
 	t := &Table{}
 

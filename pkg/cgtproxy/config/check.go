@@ -10,12 +10,12 @@ import (
 )
 
 func (c *Config) check() (err error) {
-	defer Wrap(&err, "Invalid configuration.")
+	defer Wrap(&err, "check configuration")
 
 	var validator = validator.New()
 	err = validator.Struct(c)
 	if err != nil {
-		err = fmt.Errorf("Failed on validation:\n%w", err)
+		err = fmt.Errorf("validator: %w", err)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (c *Config) check() (err error) {
 }
 
 func getCgroupRoot() (cgroupRoot CgroupRoot, err error) {
-	defer Wrap(&err, "Failed to get cgroupv2 mount point.")
+	defer Wrap(&err, "get cgroupv2 mount point")
 
 	var mounts fstab.Mounts
 	mounts, err = fstab.ParseProc()

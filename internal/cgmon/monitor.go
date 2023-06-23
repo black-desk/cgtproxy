@@ -16,7 +16,7 @@ type Monitor struct {
 }
 
 func New(opts ...Opt) (ret *Monitor, err error) {
-	defer Wrap(&err, "Failed to create the cgroup monitor.")
+	defer Wrap(&err, "create cgroup monitor")
 
 	m := &Monitor{}
 	for i := range opts {

@@ -30,7 +30,7 @@ type components struct {
 type Opt = (func(*Core) (*Core, error))
 
 func New(opts ...Opt) (ret *Core, err error) {
-	defer Wrap(&err, "Failed to create new cgtproxy core.")
+	defer Wrap(&err, "create new cgtproxy core")
 
 	c := &Core{}
 	for i := range opts {

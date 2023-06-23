@@ -3,11 +3,12 @@ package cgmon
 import (
 	"context"
 	"errors"
-	"github.com/black-desk/cgtproxy/internal/types"
-	. "github.com/black-desk/lib/go/errwrap"
 	"io/fs"
 	"path/filepath"
 	"strings"
+
+	"github.com/black-desk/cgtproxy/internal/types"
+	. "github.com/black-desk/lib/go/errwrap"
 )
 
 func (m *Monitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, err error) error {
@@ -61,7 +62,7 @@ func (m *Monitor) doWalk(ctx context.Context, path string) (err error) {
 
 func (m *Monitor) Run(ctx context.Context) (err error) {
 	defer close(m.output)
-	defer Wrap(&err, "Error occurs while running the cgroup monitor.")
+	defer Wrap(&err, "running cgroup monitor.")
 
 	m.log.Debugw("Initializing cgroup monitor...")
 

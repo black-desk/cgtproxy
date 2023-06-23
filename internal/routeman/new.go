@@ -28,7 +28,7 @@ type RouteManager struct {
 }
 
 func New(opts ...Opt) (ret *RouteManager, err error) {
-	defer Wrap(&err, "Failed to create the nftable rule manager.")
+	defer Wrap(&err, "create the nftable rule manager")
 
 	m := &RouteManager{}
 	for i := range opts {
