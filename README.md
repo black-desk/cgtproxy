@@ -8,6 +8,29 @@ inspired by [cgproxy].
 It will automatically update your nft ruleset according to your configuration,
 make it easier to archive per-app transparent proxy settings.
 
+## The way how cgtproxy works.
+
+Netfliter can be configured to filter network traffic [by cgroup],
+as well as redirect some traffic to a [TPROXY] server.
+
+[by cgroup]: https://www.spinics.net/lists/netfilter/msg60360.html
+[TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
+
+Systemd has a work-in-progress XDG integration [documentation] suggest that
+XDG applications should be launched in a systemd managed unit.
+
+[documentation]: https://systemd.io/DESKTOP_ENVIRONMENTS
+
+For example, telegram might be launched at some cgroup like
+`/user.slice/user-1000.slice/user@1000.service/app.slice/app-flatpak-org.telegram.desktop@12345.service`
+
+That means the cgroup path for the application has a pattern,
+which we can match by a regex expression.
+
+This program will listening cgroupfs change with inotify.
+And update the nftable rules when new cgroup hierarchy created,
+according to your configuration.
+
 ## Why you might need such program?
 
 On a linux desktop environment,
@@ -95,34 +118,11 @@ There are some differences between cgproxy and cgtproxy:
 
   Check the [systemd service file] for details.
 
-[systemd service file]: ./misc/systemd/cgtproxy.service
+  [systemd service file]: ./misc/systemd/cgtproxy.service
 
 ## Configuration
 
 [example](./misc/config/example.yaml)
-
-## How cgtproxy works
-
-Netfliter can be configured to filter network traffic [by cgroup],
-as well as redirect some traffic to a [TPROXY] server.
-
-[TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
-[by cgroup]: https://www.spinics.net/lists/netfilter/msg60360.html
-
-Systemd has a work-in-progress XDG integration [documentation] suggest that
-XDG applications should be launched in a systemd managed unit.
-
-[documentation]: https://systemd.io/DESKTOP_ENVIRONMENTS
-
-For example, telegram might be launched at some cgroup like
-`/user.slice/user-1000.slice/user@1000.service/app.slice/app-flatpak-org.telegram.desktop@12345.service`
-
-That means the cgroup path for the application has a pattern,
-which we can match by a regex expression.
-
-This program will listening cgroupfs change with inotify.
-And update the nftable rules when new cgroup hierarchy created,
-according to your configuration.
 
 ## TODO
 

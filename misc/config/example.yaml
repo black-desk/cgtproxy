@@ -5,7 +5,8 @@ version: 1
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
 route-table: 300
 
-# This means any traffic send to 127.0.0.1 will be directly send.
+# This means any traffic send to 127.0.0.1 and ::1 will be directly send
+# without influenced by the tproxy configuration.
 bypass:
   - 127.0.0.1/8
   - ::1
@@ -32,6 +33,7 @@ tproxies:
 # `tproxy` means the traffic will be redirect to that TPROXY server.
 #
 # NOTE: You can use systemd-cgls to check the cgroup layout on your system.
+#
 # NOTE: Any web service will provide their service directly.
 #       Traffics in connection created by remote host
 #       will never redirect to TPROXY server or drop.
@@ -46,8 +48,8 @@ rules:
     direct: true
 
   # Same as above,
-  # lets configure the user-level cgtproxy-direct.slice and cgtproxy-drop.slice
-  # cgroup.
+  # let's configure the user-level cgtproxy-direct.slice and
+  # cgtproxy-drop.slice cgroup.
   #
   # Using this setup, you can start a non-proxy shell
   # by run
