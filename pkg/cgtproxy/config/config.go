@@ -3,7 +3,7 @@ package config
 import "go.uber.org/zap"
 
 type Config struct {
-	Version uint8 `yaml:"version" validate:"required,eq=1"`
+	Version string `yaml:"version" validate:"required,eq=1"`
 
 	CgroupRoot CgroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
 	// Bypass describes the bypass rules apply to all the TPROXY servers.
@@ -16,6 +16,7 @@ type Config struct {
 	RouteTable int `yaml:"route-table" validate:"required"`
 
 	log *zap.SugaredLogger `yaml:"-"`
+	raw []byte
 }
 
 type Bypass []string

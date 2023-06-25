@@ -2,12 +2,11 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core"
+	"github.com/black-desk/cgtproxy/pkg/gtproxier/config"
+	"github.com/black-desk/cgtproxy/pkg/gtproxier/core"
 	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
 )
@@ -17,30 +16,19 @@ var flags struct {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "cgtproxy",
-	Short: "A transparent network proxy manager for deepin",
+	Use:   "gtproxier",
+	Short: "A simple golang program forwarding TPROXY traffics to http/socks proxy server.",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		defer func() {
-			if err == nil {
-				return
-			}
-
-			err = fmt.Errorf(
-				"\n\n%w\n"+consts.CheckDocumentString,
-				err,
-			)
-
-			return
-		}()
 		err = rootCmdRun()
 		return
 	},
 }
 
 func rootCmdRun() (err error) {
-	log := logger.Get("cgtproxy")
+	log := logger.Get("gtproxier")
 
-	content, err := os.ReadFile(flags.CfgPath)
+	var content []byte
+	content, err = os.ReadFile(flags.CfgPath)
 	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == consts.CgtproxyCfgPath {
 		log.Errorw("Configuration file missing fallback to default config.")
 
@@ -55,7 +43,6 @@ func rootCmdRun() (err error) {
 	}
 
 	var cfg *config.Config
-
 	cfg, err = config.New(
 		config.WithContent(content),
 		config.WithLogger(log),
@@ -64,36 +51,10 @@ func rootCmdRun() (err error) {
 		return
 	}
 
-	c, err := core.New(
-		core.WithConfig(cfg),
-		core.WithLogger(log),
-	)
-	if err != nil {
-		return
-	}
-
-	err = c.Run()
-	if err == nil {
-		return
-	}
-
-	log.Debugw(
-		"Core exited with error.",
-		"error", err,
-	)
-
-	{
-		var cancelBySignal *core.ErrCancelBySignal
-		if errors.As(err, &cancelBySignal) {
-			log.Infow("Signal received, exiting...",
-				"signal", cancelBySignal.Signal,
-			)
-			err = nil
-			return
-		}
-	}
+	_, err = core.New(core.WithConfig(cfg), core.WithLogger(log))
 
 	return
+
 }
 
 func Execute() {
