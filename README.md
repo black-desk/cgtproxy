@@ -88,7 +88,8 @@ there are only few ways to configure network proxy settings at app level.
       [single-writer rule]: https://systemd.io/CGROUP_DELEGATION#two-key-design-rules
 
 By using cgtproxy,
-you can have flexible user-level per-app transparent network proxy settings.
+you can have flexible user-level per-app transparent network proxy settings
+without any problems above.
 
 ## Differences between cgproxy
 
