@@ -3,20 +3,43 @@
 	test \
 	install
 
+GO ?= go
+GOTAGS ?=
+
+all:
+	# https://github.com/google/wire/pull/353
+	$(GO) get github.com/google/wire/cmd/wire@v0.5.0
+	$(GO) generate ./...
+	$(GO) mod tidy
+	$(GO) build --tags=$(GOTAGS) ./cmd/cgtproxy
+
+# We will create new cgroup dir in our tests,
+# while current cgroup might not be owned by the user running test.
+# That means by default, we should create new cgroup by systemd-run
+# and run test in that cgroup.
+SYSTEMD_RUN ?= systemd-run --user -d -P -q
+
+# The tests code is written assuming that
+# cgroup2 is mounted at /sys/fs/cgroup.
+# So we have to unshare mount namespace to make sure that.
+UNSHARE ?= unshare -U -C -m -n --map-user=0 --
+
+SHELL ?= sh
+
+test:
+	$(SYSTEMD_RUN) \
+	$(UNSHARE) \
+	$(SHELL) -c "\
+		mount --make-rprivate / && \
+		mount -t cgroup2 none /sys/fs/cgroup && \
+		TEST_ALL=1 $(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv \
+	"
+
 PREFIX ?= /usr/local
 DESTDIR ?= /
 
-all:
-	go generate ./...
-	go build ./cmd/cgtproxy
-
-test:
-	unshare -U -C -m -n --map-user=0 -- bash -c "\
-		mount --make-rprivate / && \
-		mount -t cgroup2 none /sys/fs/cgroup && \
-		go test ./... -v --ginkgo.vv \
-	"
-
 install:
-	install -m755 -D cgtproxy $(DESTDIR)$(PREFIX)/bin/cgtproxy
-	install -m644 -D misc/systemd/cgtproxy.service $(DESTDIR)$(PREFIX)/lib/systemd/system/cgtproxy.service
+	install -m755 -D cgtproxy \
+		$(DESTDIR)$(PREFIX)/bin/cgtproxy
+	install -m644 -D misc/systemd/cgtproxy.service \
+		$(DESTDIR)$(PREFIX)/lib/systemd/system/cgtproxy.service

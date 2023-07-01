@@ -28,8 +28,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 		Skip("" +
 			"Skip tests of core/table as it requires some capabilities. " +
 			"If you really want to run tests of this package, " +
-			"try run `TEST_ALL=1 make test` or `TEST_ALL=1 make test-debug` " +
-			"at the root directory of this repository.",
+			"try run `make test` at the root directory of this repository.",
 		)
 	})
 
