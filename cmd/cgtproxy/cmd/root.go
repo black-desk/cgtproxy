@@ -1,21 +1,27 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime/pprof"
+	"strings"
 	"syscall"
+	"text/template"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core"
 	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 )
 
 var flags struct {
-	CfgPath string
+	CfgPath    string
+	CPUProfile string
 }
 
 var rootCmd = &cobra.Command{
@@ -39,8 +45,50 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+func generateCPUProfileName(tmplStr string) (name string, err error) {
+	var tmpl *template.Template
+	tmpl = template.New("cpu profile name")
+	tmpl, err = tmpl.Parse(flags.CPUProfile)
+	if err != nil {
+		return
+	}
+
+	buf := new(bytes.Buffer)
+	err = tmpl.Execute(buf, map[string]int{"PID": os.Getpid()})
+	if err != nil {
+		return
+	}
+
+	name = buf.String()
+	return
+}
+
 func rootCmdRun() (err error) {
 	log := logger.Get("cgtproxy")
+
+	if slices.Contains(
+		strings.Split(os.Getenv("CGTPROXY_PROFILE"), ","),
+		"cpu",
+	) {
+		var path string
+		path, err = generateCPUProfileName(flags.CPUProfile)
+		if err != nil {
+			return
+		}
+
+		var cpuProfile *os.File
+		cpuProfile, err = os.Create(path)
+		defer cpuProfile.Close()
+		if err != nil {
+			return
+		}
+
+		err = pprof.StartCPUProfile(cpuProfile)
+		defer pprof.StopCPUProfile()
+		if err != nil {
+			return
+		}
+	}
 
 	content, err := os.ReadFile(flags.CfgPath)
 	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == consts.CgtproxyCfgPath {
@@ -123,5 +171,14 @@ func init() {
 		&flags.CfgPath,
 		"config", "c", cfgPath,
 		"the configure file to use",
+	)
+
+	rootCmd.PersistentFlags().StringVarP(
+		&flags.CPUProfile,
+		"cpu-profile", "", "/tmp/cgtproxy.{{.PID}}.cpuprofile",
+		""+
+			"the template string use to create the cpu profile "+
+			"NOTE: this option only takes effect "+
+			"when $CGTPROXY_PROFILE=cpu",
 	)
 }

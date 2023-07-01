@@ -14,23 +14,17 @@ require (
 	github.com/tywkeene/go-fsevents v0.2.1-0.20210417193827-d7e9fb3063aa
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.24.0
+	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	golang.org/x/sys v0.10.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
-	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b // indirect
-	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/google/subcommands v1.0.1 // indirect
-	github.com/jondot/goweight v1.0.5 // indirect
-	github.com/mattn/go-zglob v0.0.0-20180803001819-2ea3427bfa53 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/thoas/go-funk v0.0.0-20180716193722-1060394a7713 // indirect
-	golang.org/x/mod v0.10.0 // indirect
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
+	golang.org/x/mod v0.11.0 // indirect
 )
 
 require (
@@ -39,7 +33,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/pprof v0.0.0-20230510103437-eeec1cb781c3 // indirect
+	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
 	github.com/google/wire v0.5.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/native v1.1.0 // indirect
