@@ -29,12 +29,28 @@ func (m *RouteManager) Run() (err error) {
 	}
 
 	for event := range m.cgroupEventChan {
+		var eventErr error
+
 		switch event.EventType {
 		case types.CgroupEventTypeNew:
-			m.handleNewCgroup(event.Path)
+			eventErr = m.handleNewCgroup(event.Path)
 		case types.CgroupEventTypeDelete:
-			m.handleDeleteCgroup(event.Path)
+			eventErr = m.handleDeleteCgroup(event.Path)
 		}
+
+		if eventErr == nil {
+			continue
+		}
+
+		if event.Result != nil {
+			event.Result <- eventErr
+			continue
+		}
+
+		m.log.Errorw("Failed to handle cgroup event.",
+			"event", event,
+			"error", eventErr,
+		)
 	}
 	return
 }
@@ -173,7 +189,9 @@ func (m *RouteManager) removeRoute() {
 	return
 }
 
-func (m *RouteManager) handleNewCgroup(path string) {
+func (m *RouteManager) handleNewCgroup(path string) (err error) {
+	defer Wrap(&err, "handle new cgroup")
+
 	m.log.Debugw("Handling new cgroup.",
 		"path", path,
 	)
@@ -201,22 +219,25 @@ func (m *RouteManager) handleNewCgroup(path string) {
 		return
 	}
 
-	err := m.nft.AddCgroup(path, &target)
+	err = m.nft.AddCgroup(path, &target)
 	if err != nil {
-		m.log.Errorw("Failed to update nft for new cgroup",
-			"cgroup", path,
-			"error", err,
-		)
+		return
 	}
+
+	return
 }
 
-func (m *RouteManager) handleDeleteCgroup(path string) {
+func (m *RouteManager) handleDeleteCgroup(path string) (err error) {
+	defer Wrap(&err, "handle delete cgroup")
+
 	m.log.Debugw("Handling delete cgroup.",
 		"path", path,
 	)
 
-	err := m.nft.RemoveCgroup(path)
+	err = m.nft.RemoveCgroup(path)
 	if err != nil {
-		m.log.Errorw("Failed to update nft for removed cgroup", "error", err)
+		return
 	}
+
+	return
 }
