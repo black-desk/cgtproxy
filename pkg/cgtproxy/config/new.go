@@ -6,26 +6,50 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Load(content []byte, log *zap.SugaredLogger) (ret *Config, err error) {
+type Opt func(c *Config) (ret *Config, err error)
+
+func New(opts ...Opt) (ret *Config, err error) {
 	defer Wrap(&err, "load configuration")
 
-	cfg := &Config{}
-	cfg.log = log
-	if cfg.log == nil {
-		cfg.log = zap.NewNop().Sugar()
+	c := &Config{}
+	for i := range opts {
+		c, err = opts[i](c)
+		if err != nil {
+			return
+		}
 	}
 
-	err = yaml.Unmarshal(content, cfg)
+	if c.log == nil {
+		c.log = zap.NewNop().Sugar()
+	}
+
+	err = yaml.Unmarshal(c.raw, c)
 	if err != nil {
 		Wrap(&err, "unmarshal configuration")
 		return
 	}
 
-	err = cfg.check()
+	err = c.check()
 	if err != nil {
 		return
 	}
 
-	ret = cfg
+	ret = c
 	return
+}
+
+func WithContent(raw []byte) Opt {
+	return func(c *Config) (ret *Config, err error) {
+		c.raw = raw
+		ret = c
+		return
+	}
+}
+
+func WithLogger(log *zap.SugaredLogger) Opt {
+	return func(c *Config) (ret *Config, err error) {
+		c.log = log
+		ret = c
+		return
+	}
 }

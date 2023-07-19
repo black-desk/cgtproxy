@@ -43,7 +43,7 @@ func rootCmdRun() (err error) {
 	log := logger.Get("cgtproxy")
 
 	content, err := os.ReadFile(flags.CfgPath)
-	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == consts.CfgPath {
+	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == consts.CgtproxyCfgPath {
 		log.Errorw("Configuration file missing fallback to default config.")
 
 		content = []byte(config.DefaultConfig)
@@ -58,7 +58,10 @@ func rootCmdRun() (err error) {
 
 	var cfg *config.Config
 
-	cfg, err = config.Load(content, log)
+	cfg, err = config.New(
+		config.WithContent(content),
+		config.WithLogger(log),
+	)
 	if err != nil {
 		return
 	}
@@ -111,7 +114,7 @@ func Execute() {
 func init() {
 	cfgPath := os.Getenv("CONFIGURATION_DIRECTORY")
 	if cfgPath == "" {
-		cfgPath = consts.CfgPath
+		cfgPath = consts.CgtproxyCfgPath
 	} else {
 		cfgPath += "/config.yaml"
 	}

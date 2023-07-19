@@ -48,7 +48,10 @@ func checkConfigCmdRun() (err error) {
 		return
 	}
 
-	_, err = config.Load(content, log)
+	_, err = config.New(
+		config.WithContent(content),
+		config.WithLogger(log),
+	)
 	if err != nil {
 		return
 	}

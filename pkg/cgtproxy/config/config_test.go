@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/black-desk/lib/go/gomega-helper"
 	"github.com/go-playground/validator/v10"
@@ -34,7 +34,7 @@ var _ = Describe("Configuration", func() {
 				Fail(fmt.Sprintf("Failed to read configuration %s: %s", path, err.Error()))
 			}
 
-			_, err = Load(content, nil)
+			_, err = config.New(config.WithContent(content))
 		})
 		AfterEach(func() {
 			file.Close()
@@ -64,7 +64,7 @@ var _ = Describe("Configuration", func() {
 				Fail(fmt.Sprintf("Failed to read configuration %s: %s", path, err.Error()))
 			}
 
-			_, err = Load(content, nil)
+			_, err = config.New(config.WithContent(content))
 		})
 		AfterEach(func() {
 			file.Close()
