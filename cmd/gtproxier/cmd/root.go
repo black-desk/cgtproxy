@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
+	"github.com/black-desk/cgtproxy/pkg/gtproxier"
 	"github.com/black-desk/cgtproxy/pkg/gtproxier/config"
-	"github.com/black-desk/cgtproxy/pkg/gtproxier/core"
 	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
 )
@@ -51,7 +51,7 @@ func rootCmdRun() (err error) {
 		return
 	}
 
-	_, err = core.New(core.WithConfig(cfg), core.WithLogger(log))
+	_, err = gtproxier.New(gtproxier.WithConfig(cfg), gtproxier.WithLogger(log))
 
 	return
 

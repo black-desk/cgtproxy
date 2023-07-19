@@ -1,7 +1,7 @@
 //go:build wireinject
 // +build wireinject
 
-package core
+package cgtproxy
 
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"

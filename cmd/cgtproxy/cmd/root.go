@@ -12,8 +12,8 @@ import (
 	"text/template"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/core"
 	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
@@ -114,9 +114,9 @@ func rootCmdRun() (err error) {
 		return
 	}
 
-	c, err := core.New(
-		core.WithConfig(cfg),
-		core.WithLogger(log),
+	c, err := cgtproxy.New(
+		cgtproxy.WithConfig(cfg),
+		cgtproxy.WithLogger(log),
 	)
 	if err != nil {
 		return

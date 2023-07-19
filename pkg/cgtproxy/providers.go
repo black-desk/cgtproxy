@@ -1,4 +1,4 @@
-package core
+package cgtproxy
 
 import (
 	"github.com/black-desk/cgtproxy/internal/cgmon"

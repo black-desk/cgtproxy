@@ -1,21 +1,37 @@
-package core
+package cgtproxy
 
 import (
-	"github.com/black-desk/cgtproxy/pkg/gtproxier/config"
+	"context"
+
+	"github.com/black-desk/cgtproxy/internal/cgmon"
+	"github.com/black-desk/cgtproxy/internal/fswatcher"
+	"github.com/black-desk/cgtproxy/internal/routeman"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
+	"github.com/sourcegraph/conc/pool"
 	"go.uber.org/zap"
 )
 
 type Core struct {
 	cfg *config.Config
 
-	log *zap.SugaredLogger
+	pool   *pool.ContextPool
+	log    *zap.SugaredLogger
+	stopCh chan error
+
+	components *components
+}
+
+type components struct {
+	w *fswatcher.Watcher
+	m *cgmon.Monitor
+	r *routeman.RouteManager
 }
 
 type Opt = (func(*Core) (*Core, error))
 
 func New(opts ...Opt) (ret *Core, err error) {
-	defer Wrap(&err, "create new gtproxier core")
+	defer Wrap(&err, "create new cgtproxy core")
 
 	c := &Core{}
 	for i := range opts {
@@ -35,6 +51,12 @@ func New(opts ...Opt) (ret *Core, err error) {
 		return
 	}
 
+	c.pool = pool.New().
+		WithContext(context.Background()).
+		WithCancelOnError()
+
+	c.stopCh = make(chan error, 1)
+
 	ret = c
 
 	c.log.Debugw("Create a new core.",
@@ -48,6 +70,7 @@ func WithConfig(cfg *config.Config) Opt {
 	return func(core *Core) (ret *Core, err error) {
 		core.cfg = cfg
 		ret = core
+
 		return
 	}
 }

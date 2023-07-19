@@ -4,7 +4,7 @@
 //go:build !wireinject
 // +build !wireinject
 
-package core
+package cgtproxy
 
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
@@ -19,8 +19,8 @@ func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredL
 	if err != nil {
 		return nil, err
 	}
-	coreChans := provideChans()
-	v := provideOutputChan(coreChans)
+	cgtproxyChans := provideChans()
+	v := provideOutputChan(cgtproxyChans)
 	monitor, err := provideMonitor(v, watcher, cgroupRoot, sugaredLogger)
 	if err != nil {
 		return nil, err
@@ -30,11 +30,11 @@ func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredL
 	if err != nil {
 		return nil, err
 	}
-	v2 := provideInputChan(coreChans)
+	v2 := provideInputChan(cgtproxyChans)
 	routeManager, err := provideRuleManager(table, configConfig, v2, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
-	coreComponents := provideComponents(watcher, monitor, routeManager)
-	return coreComponents, nil
+	cgtproxyComponents := provideComponents(watcher, monitor, routeManager)
+	return cgtproxyComponents, nil
 }
