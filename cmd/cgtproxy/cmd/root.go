@@ -76,10 +76,7 @@ func rootCmdRun() (err error) {
 		signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
 
 		sig := <-sigCh
-		log.Info("STOP")
 		c.Stop(&ErrCancelBySignal{Signal: sig})
-		log.Info("STOP")
-
 	}()
 
 	err = c.Run()
