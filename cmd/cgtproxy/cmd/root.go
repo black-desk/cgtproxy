@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
@@ -69,6 +71,17 @@ func rootCmdRun() (err error) {
 		return
 	}
 
+	go func() {
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
+
+		sig := <-sigCh
+		log.Info("STOP")
+		c.Stop(&ErrCancelBySignal{Signal: sig})
+		log.Info("STOP")
+
+	}()
+
 	err = c.Run()
 	if err == nil {
 		return
@@ -79,15 +92,13 @@ func rootCmdRun() (err error) {
 		"error", err,
 	)
 
-	{
-		var cancelBySignal *core.ErrCancelBySignal
-		if errors.As(err, &cancelBySignal) {
-			log.Infow("Signal received, exiting...",
-				"signal", cancelBySignal.Signal,
-			)
-			err = nil
-			return
-		}
+	var cancelBySignal *ErrCancelBySignal
+	if errors.As(err, &cancelBySignal) {
+		log.Infow("Signal received, exiting...",
+			"signal", cancelBySignal.Signal,
+		)
+		err = nil
+		return
 	}
 
 	return

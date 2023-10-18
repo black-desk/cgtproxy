@@ -15,8 +15,9 @@ import (
 type Core struct {
 	cfg *config.Config
 
-	pool *pool.ContextPool
-	log  *zap.SugaredLogger
+	pool   *pool.ContextPool
+	log    *zap.SugaredLogger
+	stopCh chan error
 
 	components *components
 }
@@ -53,6 +54,8 @@ func New(opts ...Opt) (ret *Core, err error) {
 	c.pool = pool.New().
 		WithContext(context.Background()).
 		WithCancelOnError()
+
+	c.stopCh = make(chan error, 1)
 
 	ret = c
 

@@ -2,9 +2,6 @@ package core
 
 import (
 	"context"
-	"os"
-	"os/signal"
-	"syscall"
 
 	. "github.com/black-desk/lib/go/errwrap"
 )
@@ -17,7 +14,7 @@ func (c *Core) Run() (err error) {
 		return
 	}
 
-	c.pool.Go(c.waitSig)
+	c.pool.Go(c.waitStop)
 	c.pool.Go(c.runWatcher)
 	c.pool.Go(c.runMonitor)
 	c.pool.Go(c.runRuleManager)
@@ -25,22 +22,19 @@ func (c *Core) Run() (err error) {
 	return c.pool.Wait()
 }
 
-func (c *Core) waitSig(ctx context.Context) (err error) {
+func (c *Core) Stop(err error) {
+	c.stopCh <- err
+}
+
+func (c *Core) waitStop(ctx context.Context) (err error) {
 	defer Wrap(&err)
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
-
-	var sig os.Signal
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case sig = <-sigChan:
-		c.log.Debugw(
-			"Receive signal.",
-			"signal", sig,
-		)
-		return &ErrCancelBySignal{sig}
+	case err = <-c.stopCh:
+		c.log.Debug("Stopped.")
+		return err
 	}
 }
 
