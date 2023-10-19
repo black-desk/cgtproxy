@@ -33,7 +33,9 @@ test:
 		mkdir -p $(CGROUPFS) && \
 		mount --make-rprivate / && \
 		mount -t cgroup2 none $(CGROUPFS) && \
-		CGTPROXY_TEST_CGROUP_ROOT=$(CGROUPFS) TEST_ALL=1 $(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv \
+		export CGTPROXY_TEST_CGROUP_ROOT=$(CGROUPFS) && \
+		export CGTPROXY_TEST_NFTMAN=1 && \
+		$(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv\
 	"
 
 PREFIX ?= /usr/local

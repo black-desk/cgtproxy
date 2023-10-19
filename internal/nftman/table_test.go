@@ -20,7 +20,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 	)
 
 	BeforeAll(func() {
-		testAll := os.Getenv("TEST_ALL")
+		testAll := os.Getenv("CGTPROXY_TEST_NFTMAN")
 		if os.Geteuid() == 0 && testAll == "1" {
 			return
 		}
