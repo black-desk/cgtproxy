@@ -1,11 +1,8 @@
-.PHONY: \
-	all \
-	test \
-	install
 
 GO ?= go
 GOTAGS ?=
 
+.PHONY: all
 all:
 	# https://github.com/google/wire/pull/353
 	$(GO) get github.com/google/wire/cmd/wire@v0.5.0
@@ -28,6 +25,7 @@ SHELL ?= sh
 
 CGROUPFS ?= /tmp/io.github.black-desk.cgtproxy-test/cgroupfs
 
+.PHONY: test
 test:
 	$(SYSTEMD_RUN) \
 	$(UNSHARE) \
@@ -41,6 +39,7 @@ test:
 PREFIX ?= /usr/local
 DESTDIR ?= /
 
+.PHONY: install
 install:
 	install -m755 -D cgtproxy \
 		$(DESTDIR)$(PREFIX)/bin/cgtproxy
