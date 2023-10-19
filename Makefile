@@ -26,13 +26,16 @@ UNSHARE ?= unshare -U -C -m -n --map-user=0 --
 
 SHELL ?= sh
 
+CGROUPFS ?= /tmp/io.github.black-desk.cgtproxy-test/cgroupfs
+
 test:
 	$(SYSTEMD_RUN) \
 	$(UNSHARE) \
 	$(SHELL) -c "\
+		mkdir -p $(CGROUPFS) && \
 		mount --make-rprivate / && \
-		mount -t cgroup2 none /sys/fs/cgroup && \
-		TEST_ALL=1 $(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv \
+		mount -t cgroup2 none $(CGROUPFS) && \
+		CGTPROXY_TEST_CGROUP_ROOT=$(CGROUPFS) TEST_ALL=1 $(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv \
 	"
 
 PREFIX ?= /usr/local

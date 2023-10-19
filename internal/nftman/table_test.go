@@ -36,13 +36,14 @@ var _ = Describe("Netfliter table", Ordered, func() {
 		var (
 			t *nftman.Table
 
-			result string
+			result     string
+			cgroupRoot = os.Getenv("CGTPROXY_TEST_CGROUP_ROOT")
 		)
 
 		BeforeEach(func() {
 			By("Create a Table object.", func() {
 				t, err = nftman.New(
-					nftman.WithCgroupRoot(config.CgroupRoot("/sys/fs/cgroup")),
+					nftman.WithCgroupRoot(config.CgroupRoot(cgroupRoot)),
 				)
 				Expect(err).To(Succeed())
 			})
@@ -101,47 +102,47 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 			Context("then add some cgroups", func() {
 				BeforeEach(func() {
-					err = os.MkdirAll("/sys/fs/cgroup/test/a", 0755)
+					err = os.MkdirAll(cgroupRoot+"/test/a", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
-					err = t.AddCgroup("/sys/fs/cgroup/test/a",
+					err = t.AddCgroup(cgroupRoot+"/test/a",
 						&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
-					err = os.MkdirAll("/sys/fs/cgroup/test/b", 0755)
+					err = os.MkdirAll(cgroupRoot+"/test/b", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
-					err = t.AddCgroup("/sys/fs/cgroup/test/b",
+					err = t.AddCgroup(cgroupRoot+"/test/b",
 						&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
-					err = os.MkdirAll("/sys/fs/cgroup/test/c", 0755)
+					err = os.MkdirAll(cgroupRoot+"/test/c", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
-					err = t.AddCgroup("/sys/fs/cgroup/test/c",
+					err = t.AddCgroup(cgroupRoot+"/test/c",
 						&nftman.Target{Op: nftman.TargetDrop},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 
-					err = os.MkdirAll("/sys/fs/cgroup/test/d/d", 0755)
+					err = os.MkdirAll(cgroupRoot+"/test/d/d", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
-					err = t.AddCgroup("/sys/fs/cgroup/test/d/d",
+					err = t.AddCgroup(cgroupRoot+"/test/d/d",
 						&nftman.Target{Op: nftman.TargetDirect},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
 				})
 
 				AfterEach(func() {
-					err = syscall.Rmdir("/sys/fs/cgroup/test/d/d")
+					err = syscall.Rmdir(cgroupRoot + "/test/d/d")
 					Expect(err).To(Succeed())
-					err = syscall.Rmdir("/sys/fs/cgroup/test/d")
+					err = syscall.Rmdir(cgroupRoot + "/test/d")
 					Expect(err).To(Succeed())
-					err = syscall.Rmdir("/sys/fs/cgroup/test/c")
+					err = syscall.Rmdir(cgroupRoot + "/test/c")
 					Expect(err).To(Succeed())
-					err = syscall.Rmdir("/sys/fs/cgroup/test/b")
+					err = syscall.Rmdir(cgroupRoot + "/test/b")
 					Expect(err).To(Succeed())
-					err = syscall.Rmdir("/sys/fs/cgroup/test/a")
+					err = syscall.Rmdir(cgroupRoot + "/test/a")
 					Expect(err).To(Succeed())
-					err = syscall.Rmdir("/sys/fs/cgroup/test")
+					err = syscall.Rmdir(cgroupRoot + "/test")
 					Expect(err).To(Succeed())
 				})
 
@@ -164,29 +165,29 @@ var _ = Describe("Netfliter table", Ordered, func() {
 						)
 
 						Expect(result).To(
-							ContainSubstring(`"test/a" : goto tproxy`),
+							ContainSubstring(`test/a" : goto tproxy`),
 						)
 
 						Expect(result).To(
-							ContainSubstring(`"test/b" : goto tproxy`),
+							ContainSubstring(`test/b" : goto tproxy`),
 						)
 
 						Expect(result).To(
-							ContainSubstring(`"test/c" : drop`),
+							ContainSubstring(`test/c" : drop`),
 						)
 
 						Expect(result).To(
-							ContainSubstring(`"test/d/d"`),
+							ContainSubstring(`test/d/d"`),
 						)
 					}
 				})
 
 				Context("and remove them later", func() {
 					BeforeEach(func() {
-						t.RemoveCgroup("/sys/fs/cgroup/test/a")
-						t.RemoveCgroup("/sys/fs/cgroup/test/b")
-						t.RemoveCgroup("/sys/fs/cgroup/test/c")
-						t.RemoveCgroup("/sys/fs/cgroup/test/d/d")
+						t.RemoveCgroup(cgroupRoot + "/test/a")
+						t.RemoveCgroup(cgroupRoot + "/test/b")
+						t.RemoveCgroup(cgroupRoot + "/test/c")
+						t.RemoveCgroup(cgroupRoot + "/test/d/d")
 					})
 
 					It("should produce expected nftable rules", func() {
@@ -196,7 +197,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 					Context("then add some of them back", func() {
 						BeforeEach(func() {
-							err = t.AddCgroup("/sys/fs/cgroup/test/a",
+							err = t.AddCgroup(cgroupRoot+"/test/a",
 								&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 							)
 							Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
