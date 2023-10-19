@@ -25,6 +25,8 @@ SHELL ?= sh
 
 CGROUPFS ?= /tmp/io.github.black-desk.cgtproxy-test/cgroupfs
 
+COVERAGE ?= /tmp/io.github.black-desk.cgtproxy-test/coverage.out
+
 .PHONY: test
 test:
 	$(SYSTEMD_RUN) \
@@ -35,7 +37,7 @@ test:
 		mount -t cgroup2 none $(CGROUPFS) && \
 		export CGTPROXY_TEST_CGROUP_ROOT=$(CGROUPFS) && \
 		export CGTPROXY_TEST_NFTMAN=1 && \
-		$(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv\
+		$(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv -coverprofile=$(COVERAGE) \
 	"
 
 PREFIX ?= /usr/local
@@ -47,3 +49,9 @@ install:
 		$(DESTDIR)$(PREFIX)/bin/cgtproxy
 	install -m644 -D misc/systemd/cgtproxy.service \
 		$(DESTDIR)$(PREFIX)/lib/systemd/system/cgtproxy.service
+
+COVERAGE_REPORT ?= /tmp/io.github.black-desk.cgtproxy-test/coverage.txt
+
+.PHONY: test-coverage
+test-coverage:
+	go tool cover -func=$(COVERAGE) -o=$(COVERAGE_REPORT)
