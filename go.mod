@@ -1,6 +1,6 @@
 module github.com/black-desk/cgtproxy
 
-go 1.20
+go 1.21
 
 require (
 	github.com/black-desk/lib/go v0.0.0-20231012014411-374671fbfbdc
