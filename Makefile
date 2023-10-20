@@ -6,9 +6,9 @@ GOTAGS ?=
 all:
 	# https://github.com/google/wire/pull/353
 	$(GO) get github.com/google/wire/cmd/wire@v0.5.0
-	$(GO) generate ./...
+	$(GO) generate -v -x ./...
 	$(GO) mod tidy
-	$(GO) build --tags=$(GOTAGS) ./cmd/cgtproxy
+	$(GO) build -v --tags=$(GOTAGS) ./cmd/cgtproxy
 
 # We will create new cgroup dir in our tests,
 # while current cgroup might not be owned by the user running test.
