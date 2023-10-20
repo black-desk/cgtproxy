@@ -12,21 +12,21 @@ import (
 )
 
 type chans struct {
-	in  <-chan types.CgroupEvent
-	out chan<- types.CgroupEvent
+	in  <-chan types.CGroupEvent
+	out chan<- types.CGroupEvent
 }
 
 func provideChans() chans {
-	ch := make(chan types.CgroupEvent)
+	ch := make(chan types.CGroupEvent)
 
 	return chans{ch, ch}
 }
 
-func provideInputChan(chs chans) <-chan types.CgroupEvent {
+func provideInputChan(chs chans) <-chan types.CGroupEvent {
 	return chs.in
 }
 
-func provideOutputChan(chs chans) chan<- types.CgroupEvent {
+func provideOutputChan(chs chans) chan<- types.CGroupEvent {
 	return chs.out
 }
 
@@ -47,10 +47,10 @@ func provideTable(
 	bypass config.Bypass,
 	logger *zap.SugaredLogger,
 ) (
-	ret *nftman.Table,
+	ret *nftman.NFTMan,
 	err error,
 ) {
-	var t *nftman.Table
+	var t *nftman.NFTMan
 	t, err = nftman.New(
 		nftman.WithCgroupRoot(root),
 		nftman.WithBypass(bypass),
@@ -66,18 +66,18 @@ func provideTable(
 }
 
 func provideRuleManager(
-	t *nftman.Table,
+	t *nftman.NFTMan,
 	cfg *config.Config,
-	ch <-chan types.CgroupEvent,
+	ch <-chan types.CGroupEvent,
 	logger *zap.SugaredLogger,
 ) (
 	ret *routeman.RouteManager, err error,
 ) {
 	var r *routeman.RouteManager
 	r, err = routeman.New(
-		routeman.WithTable(t),
+		routeman.WithNFTMan(t),
 		routeman.WithConfig(cfg),
-		routeman.WithCgroupEventChan(ch),
+		routeman.WithCGroupEventChan(ch),
 		routeman.WithLogger(logger),
 	)
 

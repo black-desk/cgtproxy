@@ -12,9 +12,9 @@ import (
 )
 
 type RouteManager struct {
-	cgroupEventChan <-chan types.CgroupEvent
+	cgroupEventChan <-chan types.CGroupEvent
 
-	nft *nftman.Table
+	nft *nftman.NFTMan
 	cfg *config.Config
 	log *zap.SugaredLogger
 
@@ -81,7 +81,7 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 
 type Opt func(m *RouteManager) (ret *RouteManager, err error)
 
-func WithTable(t *nftman.Table) Opt {
+func WithNFTMan(t *nftman.NFTMan) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if t == nil {
 			err = ErrTableMissing
@@ -107,7 +107,7 @@ func WithConfig(c *config.Config) Opt {
 	}
 }
 
-func WithCgroupEventChan(ch <-chan types.CgroupEvent) Opt {
+func WithCGroupEventChan(ch <-chan types.CGroupEvent) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if ch == nil {
 			err = ErrCgroupEventChanMissing

@@ -28,15 +28,15 @@ type Target struct {
 	Chain string
 }
 
-func (t *Table) AddCgroup(path string, target *Target) (err error) {
+func (nft *NFTMan) AddCgroup(path string, target *Target) (err error) {
 	defer Wrap(&err, "add cgroup (%s) to nftable", path)
 
-	t.log.Infow("Adding new cgroup to nft.",
+	nft.log.Infow("Adding new cgroup to nft.",
 		"cgroup", path,
 		"target", target,
 	)
 
-	if _, ok := t.cgroupMapElement[path]; ok {
+	if _, ok := nft.cgroupMapElement[path]; ok {
 		return os.ErrExist
 	}
 
@@ -48,9 +48,9 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 
 	inode := fileInfo.Sys().(*syscall.Stat_t).Ino
 
-	path = t.removeCgroupRoot(path)
+	path = nft.removeCgroupRoot(path)
 
-	t.log.Debugw("Get inode of cgroup file using stat(2).",
+	nft.log.Debugw("Get inode of cgroup file using stat(2).",
 		"path", path,
 		"inode", inode,
 	)
@@ -85,18 +85,18 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 	}
 
 	err = conn.SetAddElements(
-		t.cgroupMap,
+		nft.cgroupMap,
 		[]nftables.SetElement{setElement},
 	)
 	if err != nil {
 		return
 	}
 
-	t.cgroupMapElement[path] = setElement
+	nft.cgroupMapElement[path] = setElement
 
 	tmp := map[int]struct{}{}
 
-	for path := range t.cgroupMapElement {
+	for path := range nft.cgroupMapElement {
 		level := strings.Count(path, "/")
 		tmp[level] = struct{}{}
 	}
@@ -107,53 +107,53 @@ func (t *Table) AddCgroup(path string, target *Target) (err error) {
 	}
 	sort.Ints(levels)
 
-	t.log.Debugw("Existing levels.",
+	nft.log.Debugw("Existing levels.",
 		"levels", levels,
 	)
 
-	conn.FlushChain(t.outputMangleChain)
+	conn.FlushChain(nft.outputMangleChain)
 
-	err = t.fillOutputMangleChain(conn, t.outputMangleChain)
+	err = nft.fillOutputMangleChain(conn, nft.outputMangleChain)
 	if err != nil {
 		return
 	}
 
-	t.log.Debugw("Output chain refilled.")
-	t.DumpNFTableRules()
+	nft.log.Debugw("Output chain refilled.")
+	nft.DumpNFTableRules()
 
 	for i := len(levels) - 1; i >= 0; i-- {
-		err = t.addCgroupRuleForLevel(conn, levels[i])
+		err = nft.addCgroupRuleForLevel(conn, levels[i])
 		if err != nil {
 			return
 		}
 	}
 
 	err = conn.Flush()
-	t.ignoreNoBufferSpaceAvailable(&err)
+	nft.ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
 
-	t.log.Infow("New cgroup added to nft.",
+	nft.log.Infow("New cgroup added to nft.",
 		"cgroup", path,
 	)
 
-	t.DumpNFTableRules()
+	nft.DumpNFTableRules()
 
 	return
 }
 
-func (t *Table) RemoveCgroup(path string) (err error) {
+func (nft *NFTMan) RemoveCgroup(path string) (err error) {
 	defer Wrap(
 		&err,
 		"Failed to remove cgroup (%s) from nftable.",
 		path,
 	)
 
-	path = t.removeCgroupRoot(path)
+	path = nft.removeCgroupRoot(path)
 
-	if _, ok := t.cgroupMapElement[path]; ok {
-		t.log.Infow("Removing rule from nft for this cgroup.",
+	if _, ok := nft.cgroupMapElement[path]; ok {
+		nft.log.Infow("Removing rule from nft for this cgroup.",
 			"cgroup", path,
 		)
 
@@ -164,9 +164,9 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 		}
 
 		conn.SetDeleteElements(
-			t.cgroupMap,
+			nft.cgroupMap,
 			[]nftables.SetElement{
-				t.cgroupMapElement[path],
+				nft.cgroupMapElement[path],
 			},
 		)
 		if err != nil {
@@ -174,16 +174,16 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 		}
 
 		err = conn.Flush()
-		t.ignoreNoBufferSpaceAvailable(&err)
+		nft.ignoreNoBufferSpaceAvailable(&err)
 		if err != nil {
 			return
 		}
 
-		delete(t.cgroupMapElement, path)
+		delete(nft.cgroupMapElement, path)
 
-		t.DumpNFTableRules()
+		nft.DumpNFTableRules()
 	} else {
-		t.log.Debugw("Nothing to do with this cgroup",
+		nft.log.Debugw("Nothing to do with this cgroup",
 			"cgroup", path,
 		)
 	}
@@ -191,14 +191,14 @@ func (t *Table) RemoveCgroup(path string) (err error) {
 	return
 }
 
-func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
+func (nft *NFTMan) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 	defer Wrap(
 		&err,
 		"Failed to add chain and rules to nft table for tproxy: %#v",
 		tp,
 	)
 
-	t.log.Debugw("Adding chain and rules for tproxy.",
+	nft.log.Debugw("Adding chain and rules for tproxy.",
 		"tproxy", tp,
 	)
 
@@ -208,30 +208,30 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 		return
 	}
 
-	_, err = t.addMarkChainForTProxy(conn, tp)
+	_, err = nft.addMarkChainForTProxy(conn, tp)
 	if err != nil {
 		return
 	}
 
 	var chain *nftables.Chain
 
-	chain, err = t.addTproxyChainForTProxy(conn, tp)
+	chain, err = nft.addTproxyChainForTProxy(conn, tp)
 	if err != nil {
 		return
 	}
 
-	err = t.updateMarkTproxyMap(conn, tp.Mark, chain.Name)
+	err = nft.updateMarkTproxyMap(conn, tp.Mark, chain.Name)
 	if err != nil {
 		return
 	}
 
 	if tp.DNSHijack != nil {
-		chain, err = t.addDNSChainForTproxy(conn, tp)
+		chain, err = nft.addDNSChainForTproxy(conn, tp)
 		if err != nil {
 			return
 		}
 
-		err = t.updateMarkDNSMap(conn, tp.Mark, chain.Name)
+		err = nft.updateMarkDNSMap(conn, tp.Mark, chain.Name)
 		if err != nil {
 			return
 		}
@@ -242,16 +242,16 @@ func (t *Table) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 		return
 	}
 
-	t.log.Debug("Nftable chain added for this tproxy.",
+	nft.log.Debug("Nftable chain added for this tproxy.",
 		"tproxy", tp,
 	)
 
-	t.DumpNFTableRules()
+	nft.DumpNFTableRules()
 
 	return
 }
 
-func (t *Table) Clear() (err error) {
+func (nft *NFTMan) Clear() (err error) {
 	defer Wrap(&err, "remove nftable.")
 
 	var conn *nftables.Conn
@@ -260,19 +260,19 @@ func (t *Table) Clear() (err error) {
 		return
 	}
 
-	conn.DelTable(t.table)
+	conn.DelTable(nft.table)
 	err = conn.Flush()
-	t.ignoreNoBufferSpaceAvailable(&err)
+	nft.ignoreNoBufferSpaceAvailable(&err)
 	if errors.Is(err, os.ErrNotExist) {
-		t.log.Debugw("Table not exist, nothing to remove.",
-			"table", t.table.Name,
+		nft.log.Debugw("Table not exist, nothing to remove.",
+			"table", nft.table.Name,
 		)
 		err = nil
 	} else if err != nil {
 		return
 	}
 
-	t.DumpNFTableRules()
+	nft.DumpNFTableRules()
 	return
 }
 

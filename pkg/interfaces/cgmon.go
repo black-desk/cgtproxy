@@ -9,6 +9,6 @@ import (
 
 // CGroupMonitor is an interface generated for "github.com/black-desk/cgtproxy/pkg/cgfsmon.CGroupFSMonitor".
 type CGroupMonitor interface {
-	Events() <-chan types.CgroupEvent
+	Events() <-chan types.CGroupEvent
 	Run(context.Context) error
 }

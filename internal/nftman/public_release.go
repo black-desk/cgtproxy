@@ -3,6 +3,6 @@
 
 package nftman
 
-func (t *Table) DumpNFTableRules() {
+func (nft *NFTMan) DumpNFTableRules() {
 	return
 }

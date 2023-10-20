@@ -32,7 +32,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 	Context("created", func() {
 		var (
-			t *Table
+			nft *NFTMan
 
 			result     string
 			cgroupRoot = os.Getenv("CGTPROXY_TEST_CGROUP_ROOT")
@@ -40,7 +40,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 		BeforeEach(func() {
 			By("Create a Table object.", func() {
-				t, err = New(
+				nft, err = New(
 					WithCgroupRoot(config.CgroupRoot(cgroupRoot)),
 				)
 				Expect(err).To(Succeed())
@@ -49,17 +49,17 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 		AfterEach(func() {
 			By("Clear nftable content.", func() {
-				if t == nil {
+				if nft == nil {
 					return
 				}
-				err = t.Clear()
+				err = nft.Clear()
 				Expect(err).To(Succeed())
 			})
 		})
 
 		Context("then call Table.Clear()", func() {
 			BeforeEach(func() {
-				err = t.Clear()
+				err = nft.Clear()
 			})
 
 			It("should clear the nft table with no error", func() {
@@ -80,7 +80,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 			BeforeEach(func() {
 				By("Initialize table with tproxies.", func() {
 					for _, tp := range tps {
-						err = t.AddChainAndRulesForTProxy(tp.t)
+						err = nft.AddChainAndRulesForTProxy(tp.t)
 						Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 					}
 				})
@@ -102,28 +102,28 @@ var _ = Describe("Netfliter table", Ordered, func() {
 				BeforeEach(func() {
 					err = os.MkdirAll(cgroupRoot+"/test/a", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
-					err = t.AddCgroup(cgroupRoot+"/test/a",
+					err = nft.AddCgroup(cgroupRoot+"/test/a",
 						&Target{Op: TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 
 					err = os.MkdirAll(cgroupRoot+"/test/b", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
-					err = t.AddCgroup(cgroupRoot+"/test/b",
+					err = nft.AddCgroup(cgroupRoot+"/test/b",
 						&Target{Op: TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 
 					err = os.MkdirAll(cgroupRoot+"/test/c", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
-					err = t.AddCgroup(cgroupRoot+"/test/c",
+					err = nft.AddCgroup(cgroupRoot+"/test/c",
 						&Target{Op: TargetDrop},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 
 					err = os.MkdirAll(cgroupRoot+"/test/d/d", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
-					err = t.AddCgroup(cgroupRoot+"/test/d/d",
+					err = nft.AddCgroup(cgroupRoot+"/test/d/d",
 						&Target{Op: TargetDirect},
 					)
 					Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
@@ -182,10 +182,10 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 				Context("and remove them later", func() {
 					BeforeEach(func() {
-						t.RemoveCgroup(cgroupRoot + "/test/a")
-						t.RemoveCgroup(cgroupRoot + "/test/b")
-						t.RemoveCgroup(cgroupRoot + "/test/c")
-						t.RemoveCgroup(cgroupRoot + "/test/d/d")
+						nft.RemoveCgroup(cgroupRoot + "/test/a")
+						nft.RemoveCgroup(cgroupRoot + "/test/b")
+						nft.RemoveCgroup(cgroupRoot + "/test/c")
+						nft.RemoveCgroup(cgroupRoot + "/test/d/d")
 					})
 
 					It("should produce expected nftable rules", func() {
@@ -195,7 +195,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 					Context("then add some of them back", func() {
 						BeforeEach(func() {
-							err = t.AddCgroup(cgroupRoot+"/test/a",
+							err = nft.AddCgroup(cgroupRoot+"/test/a",
 								&Target{Op: TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 							)
 							Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())

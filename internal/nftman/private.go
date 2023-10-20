@@ -1,10 +1,12 @@
 package nftman
 
 import (
+	"errors"
 	"net"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -14,7 +16,49 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func (t *Table) addMarkChainForTProxy(
+func (nft *NFTMan) ignoreNoBufferSpaceAvailable(perr *error) {
+	var errno syscall.Errno
+	if errors.As(*perr, &errno) && errno == syscall.ENOBUFS {
+		*perr = nil
+		nft.log.Errorw("ENOBUFS occurred.")
+		//FIXME: https://github.com/google/nftables/issues/103
+	}
+}
+
+func (nft *NFTMan) nextIP(ip net.IP) (ret net.IP) {
+	next := make(net.IP, len(ip))
+	copy(next, ip)
+
+	for i := range next {
+		i = len(next) - i - 1
+		old := next[i]
+		next[i] += 1
+		if next[i] >= old {
+			break
+		}
+	}
+
+	nft.log.Debugf("Next IP of %s is %s", ip.String(), next.String())
+
+	ret = next
+	return
+}
+
+func (nft *NFTMan) lastIP(ipnet *net.IPNet) (ret net.IP) {
+	ip := make(net.IP, len(ipnet.IP))
+	copy(ip, ipnet.IP)
+
+	for i := range ip {
+		ip[i] |= ^ipnet.Mask[i]
+	}
+
+	nft.log.Debugf("Last IP in net %s is %s", ipnet.String(), ip.String())
+
+	ret = ip
+	return
+}
+
+func (t *NFTMan) addMarkChainForTProxy(
 	conn *nftables.Conn, tp *config.TProxy,
 ) (
 	ret *nftables.Chain, err error,
@@ -55,7 +99,7 @@ func (t *Table) addMarkChainForTProxy(
 	return
 }
 
-func (t *Table) addTproxyChainForTProxy(
+func (t *NFTMan) addTproxyChainForTProxy(
 	conn *nftables.Conn, tp *config.TProxy,
 ) (
 	ret *nftables.Chain, err error,
@@ -124,7 +168,7 @@ func (t *Table) addTproxyChainForTProxy(
 	return
 }
 
-func (t *Table) updateMarkTproxyMap(
+func (t *NFTMan) updateMarkTproxyMap(
 	conn *nftables.Conn, mark config.FireWallMark, chain string,
 ) (
 	err error,
@@ -147,7 +191,7 @@ func (t *Table) updateMarkTproxyMap(
 	return
 }
 
-func (t *Table) updateMarkDNSMap(
+func (t *NFTMan) updateMarkDNSMap(
 	conn *nftables.Conn, mark config.FireWallMark, chain string,
 ) (
 	err error,
@@ -170,7 +214,7 @@ func (t *Table) updateMarkDNSMap(
 	return
 }
 
-func (t *Table) addDNSChainForTproxy(
+func (t *NFTMan) addDNSChainForTproxy(
 	conn *nftables.Conn, tp *config.TProxy,
 ) (
 	ret *nftables.Chain, err error,
@@ -288,7 +332,7 @@ func (t *Table) addDNSChainForTproxy(
 	return
 }
 
-func (t *Table) removeCgroupRoot(path string) string {
+func (t *NFTMan) removeCgroupRoot(path string) string {
 	path = filepath.Clean(path)
 	if strings.HasPrefix(path, string(t.cgroupRoot)) {
 		path = path[len(t.cgroupRoot):]
@@ -301,7 +345,7 @@ func (t *Table) removeCgroupRoot(path string) string {
 	return path
 }
 
-func (t *Table) addCgroupRuleForLevel(
+func (t *NFTMan) addCgroupRuleForLevel(
 	conn *nftables.Conn, level int,
 ) (
 	err error,

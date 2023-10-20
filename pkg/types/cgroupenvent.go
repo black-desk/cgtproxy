@@ -9,7 +9,7 @@ const (
 
 //go:generate go run golang.org/x/tools/cmd/stringer -type=CgroupEventType -linecomment
 
-type CgroupEvent struct {
+type CGroupEvent struct {
 	Path      string
 	EventType CgroupEventType
 	Result    chan<- error

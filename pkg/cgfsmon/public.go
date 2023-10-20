@@ -8,7 +8,7 @@ import (
 	fsevents "github.com/tywkeene/go-fsevents"
 )
 
-func (w *CGroupFSMonitor) Events() <-chan types.CgroupEvent {
+func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvent {
 	return w.events
 }
 

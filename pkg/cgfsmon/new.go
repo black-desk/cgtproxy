@@ -9,7 +9,7 @@ import (
 )
 
 type CGroupFSMonitor struct {
-	events  chan types.CgroupEvent
+	events  chan types.CGroupEvent
 	watcher *fsevents.Watcher
 	root    config.CgroupRoot
 	log     *zap.SugaredLogger
@@ -28,7 +28,7 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 		return
 	}
 
-	w.events = make(chan types.CgroupEvent)
+	w.events = make(chan types.CGroupEvent)
 
 	w.watcher = watcherImpl
 

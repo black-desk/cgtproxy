@@ -1,9 +1,7 @@
 package nftman
 
 import (
-	"errors"
 	"net"
-	"syscall"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
@@ -15,7 +13,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-type Table struct {
+type NFTMan struct {
 	cgroupRoot config.CgroupRoot
 	bypassIPv4 []string
 	bypassIPv6 []string
@@ -42,12 +40,12 @@ type Table struct {
 	preroutingChain   *nftables.Chain
 }
 
-type Opt = (func(*Table) (*Table, error))
+type Opt = (func(*NFTMan) (*NFTMan, error))
 
-func New(opts ...Opt) (ret *Table, err error) {
+func New(opts ...Opt) (ret *NFTMan, err error) {
 	defer Wrap(&err, "create nft table mananger")
 
-	t := &Table{}
+	t := &NFTMan{}
 
 	for i := range opts {
 		t, err = opts[i](t)
@@ -73,7 +71,7 @@ func New(opts ...Opt) (ret *Table, err error) {
 }
 
 func WithBypass(bypass config.Bypass) Opt {
-	return func(table *Table) (ret *Table, err error) {
+	return func(table *NFTMan) (ret *NFTMan, err error) {
 		if bypass == nil {
 			ret = table
 			return
@@ -103,32 +101,23 @@ func WithBypass(bypass config.Bypass) Opt {
 }
 
 func WithCgroupRoot(root config.CgroupRoot) Opt {
-	return func(table *Table) (*Table, error) {
+	return func(table *NFTMan) (*NFTMan, error) {
 		table.cgroupRoot = root
 		return table, nil
 	}
 }
 
 func WithLogger(log *zap.SugaredLogger) Opt {
-	return func(table *Table) (*Table, error) {
+	return func(table *NFTMan) (*NFTMan, error) {
 		table.log = log
 		return table, nil
 	}
 }
 
-func (t *Table) ignoreNoBufferSpaceAvailable(perr *error) {
-	var errno syscall.Errno
-	if errors.As(*perr, &errno) && errno == syscall.ENOBUFS {
-		*perr = nil
-		t.log.Errorw("ENOBUFS occurred.")
-		//FIXME: https://github.com/google/nftables/issues/103
-	}
-}
-
-func (t *Table) initStructure() (err error) {
+func (nft *NFTMan) initStructure() (err error) {
 	defer Wrap(&err, "flush initial content of nft table")
 
-	t.log.Debug("Initialing nft table structure.")
+	nft.log.Debug("Initialing nft table structure.")
 
 	var conn *nftables.Conn
 	conn, err = nftables.New()
@@ -136,71 +125,71 @@ func (t *Table) initStructure() (err error) {
 		return
 	}
 
-	t.table = conn.AddTable(&nftables.Table{
+	nft.table = conn.AddTable(&nftables.Table{
 		Name:   consts.NftTableName,
 		Family: nftables.TableFamilyINet,
 	})
 
-	err = t.initIPV4BypassSet(conn)
+	err = nft.initIPV4BypassSet(conn)
 	if err != nil {
 		return
 	}
 
-	err = t.initIPV6BypassSet(conn)
+	err = nft.initIPV6BypassSet(conn)
 	if err != nil {
 		return
 	}
 
-	t.initProtoSet()
+	nft.initProtoSet()
 
-	err = t.initCgroupMap(conn)
+	err = nft.initCgroupMap(conn)
 	if err != nil {
 		return
 	}
 
-	err = t.initMarkMap(conn)
+	err = nft.initMarkMap(conn)
 	if err != nil {
 		return
 	}
 
-	err = t.initMarkDNSMap(conn)
+	err = nft.initMarkDNSMap(conn)
 	if err != nil {
 		return
 	}
 
-	t.policy = nftables.ChainPolicyAccept
+	nft.policy = nftables.ChainPolicyAccept
 
-	err = t.initOutputMangleChain(conn)
+	err = nft.initOutputMangleChain(conn)
 	if err != nil {
 		return
 	}
 
-	err = t.initOutputNATChain(conn)
+	err = nft.initOutputNATChain(conn)
 	if err != nil {
 		return
 	}
 
-	err = t.initPreroutingChain(conn)
+	err = nft.initPreroutingChain(conn)
 	if err != nil {
 		return
 	}
 
 	err = conn.Flush()
-	t.ignoreNoBufferSpaceAvailable(&err)
+	nft.ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
 
-	t.log.Debug("nft table structure initialized.")
+	nft.log.Debug("nft table structure initialized.")
 
-	t.DumpNFTableRules()
+	nft.DumpNFTableRules()
 
 	return
 }
 
-func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
-	t.ipv4BypassSet = &nftables.Set{
-		Table:        t.table,
+func (nft *NFTMan) initIPV4BypassSet(conn *nftables.Conn) (err error) {
+	nft.ipv4BypassSet = &nftables.Set{
+		Table:        nft.table,
 		Name:         "bypass",
 		KeyType:      nftables.TypeIPAddr,
 		KeyByteOrder: binaryutil.BigEndian,
@@ -212,8 +201,8 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 		IntervalEnd: true,
 	}}
 
-	for i := range t.bypassIPv4 {
-		bypass := t.bypassIPv4[i]
+	for i := range nft.bypassIPv4 {
+		bypass := nft.bypassIPv4[i]
 		ip := net.ParseIP(bypass)
 
 		if ip != nil {
@@ -222,7 +211,7 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 					Key: ip.To4(),
 				},
 				nftables.SetElement{
-					Key:         t.nextIP(ip).To4(),
+					Key:         nft.nextIP(ip).To4(),
 					IntervalEnd: true,
 				},
 			)
@@ -241,13 +230,13 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 				Key: cidr.IP.To4(),
 			},
 			nftables.SetElement{
-				Key:         t.nextIP(t.lastIP(cidr).To4()),
+				Key:         nft.nextIP(nft.lastIP(cidr).To4()),
 				IntervalEnd: true,
 			},
 		)
 	}
 
-	err = conn.AddSet(t.ipv4BypassSet, elements)
+	err = conn.AddSet(nft.ipv4BypassSet, elements)
 	if err != nil {
 		return
 	}
@@ -255,42 +244,9 @@ func (t *Table) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (t *Table) nextIP(ip net.IP) (ret net.IP) {
-	next := make(net.IP, len(ip))
-	copy(next, ip)
-
-	for i := range next {
-		i = len(next) - i - 1
-		old := next[i]
-		next[i] += 1
-		if next[i] >= old {
-			break
-		}
-	}
-
-	t.log.Debugf("Next IP of %s is %s", ip.String(), next.String())
-
-	ret = next
-	return
-}
-
-func (t *Table) lastIP(ipnet *net.IPNet) (ret net.IP) {
-	ip := make(net.IP, len(ipnet.IP))
-	copy(ip, ipnet.IP)
-
-	for i := range ip {
-		ip[i] |= ^ipnet.Mask[i]
-	}
-
-	t.log.Debugf("Last IP in net %s is %s", ipnet.String(), ip.String())
-
-	ret = ip
-	return
-}
-
-func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
-	t.ipv6BypassSet = &nftables.Set{
-		Table:        t.table,
+func (nft *NFTMan) initIPV6BypassSet(conn *nftables.Conn) (err error) {
+	nft.ipv6BypassSet = &nftables.Set{
+		Table:        nft.table,
 		Name:         "bypass6",
 		KeyType:      nftables.TypeIP6Addr,
 		KeyByteOrder: binaryutil.BigEndian,
@@ -302,8 +258,8 @@ func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 		IntervalEnd: true,
 	}}
 
-	for i := range t.bypassIPv6 {
-		bypass := t.bypassIPv6[i]
+	for i := range nft.bypassIPv6 {
+		bypass := nft.bypassIPv6[i]
 		ip := net.ParseIP(bypass)
 		if ip != nil {
 			elements = append(elements,
@@ -311,7 +267,7 @@ func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 					Key: ip.To16(),
 				},
 				nftables.SetElement{
-					Key:         t.nextIP(ip.To16()),
+					Key:         nft.nextIP(ip.To16()),
 					IntervalEnd: true,
 				},
 			)
@@ -330,13 +286,13 @@ func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 				Key: cidr.IP.To16(),
 			},
 			nftables.SetElement{
-				Key:         t.nextIP(t.lastIP(cidr).To16()),
+				Key:         nft.nextIP(nft.lastIP(cidr).To16()),
 				IntervalEnd: true,
 			},
 		)
 	}
 
-	err = conn.AddSet(t.ipv6BypassSet, elements)
+	err = conn.AddSet(nft.ipv6BypassSet, elements)
 	if err != nil {
 		return
 	}
@@ -344,23 +300,23 @@ func (t *Table) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (t *Table) initProtoSet() {
-	t.protoSet = &nftables.Set{
-		Table:     t.table,
+func (nft *NFTMan) initProtoSet() {
+	nft.protoSet = &nftables.Set{
+		Table:     nft.table,
 		Anonymous: true,
 		Constant:  true,
 		KeyType:   nftables.TypeInetProto,
 	}
 
-	t.protoSetElement = []nftables.SetElement{
+	nft.protoSetElement = []nftables.SetElement{
 		{Key: []byte{unix.IPPROTO_TCP}},
 		{Key: []byte{unix.IPPROTO_UDP}},
 	}
 }
 
-func (t *Table) initCgroupMap(conn *nftables.Conn) (err error) {
-	t.cgroupMap = &nftables.Set{
-		Table:        t.table,
+func (nft *NFTMan) initCgroupMap(conn *nftables.Conn) (err error) {
+	nft.cgroupMap = &nftables.Set{
+		Table:        nft.table,
 		Name:         "cgroup-vmap",
 		KeyType:      nftables.TypeCGroupV2,
 		DataType:     nftables.TypeVerdict,
@@ -368,9 +324,9 @@ func (t *Table) initCgroupMap(conn *nftables.Conn) (err error) {
 		KeyByteOrder: binaryutil.NativeEndian,
 	}
 
-	t.cgroupMapElement = make(map[string]nftables.SetElement)
+	nft.cgroupMapElement = make(map[string]nftables.SetElement)
 
-	err = conn.AddSet(t.cgroupMap, []nftables.SetElement{})
+	err = conn.AddSet(nft.cgroupMap, []nftables.SetElement{})
 	if err != nil {
 		return
 	}
@@ -378,9 +334,9 @@ func (t *Table) initCgroupMap(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (t *Table) initMarkMap(conn *nftables.Conn) (err error) {
-	t.markTproxyMap = &nftables.Set{
-		Table:        t.table,
+func (nft *NFTMan) initMarkMap(conn *nftables.Conn) (err error) {
+	nft.markTproxyMap = &nftables.Set{
+		Table:        nft.table,
 		Name:         "mark-vmap",
 		KeyType:      nftables.TypeMark,
 		DataType:     nftables.TypeVerdict,
@@ -388,7 +344,7 @@ func (t *Table) initMarkMap(conn *nftables.Conn) (err error) {
 		KeyByteOrder: binaryutil.NativeEndian,
 	}
 
-	err = conn.AddSet(t.markTproxyMap, []nftables.SetElement{})
+	err = conn.AddSet(nft.markTproxyMap, []nftables.SetElement{})
 	if err != nil {
 		return
 	}
@@ -396,9 +352,9 @@ func (t *Table) initMarkMap(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (t *Table) initMarkDNSMap(conn *nftables.Conn) (err error) {
-	t.markDNSMap = &nftables.Set{
-		Table:        t.table,
+func (nft *NFTMan) initMarkDNSMap(conn *nftables.Conn) (err error) {
+	nft.markDNSMap = &nftables.Set{
+		Table:        nft.table,
 		Name:         "mark-dns-vmap",
 		KeyType:      nftables.TypeMark,
 		DataType:     nftables.TypeVerdict,
@@ -406,7 +362,7 @@ func (t *Table) initMarkDNSMap(conn *nftables.Conn) (err error) {
 		KeyByteOrder: binaryutil.NativeEndian,
 	}
 
-	err = conn.AddSet(t.markDNSMap, []nftables.SetElement{})
+	err = conn.AddSet(nft.markDNSMap, []nftables.SetElement{})
 	if err != nil {
 		return
 	}
@@ -414,18 +370,18 @@ func (t *Table) initMarkDNSMap(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (t *Table) initOutputMangleChain(conn *nftables.Conn) (err error) {
+func (nft *NFTMan) initOutputMangleChain(conn *nftables.Conn) (err error) {
 	// type filter hook prerouting priority mangle; policy accept;
-	t.outputMangleChain = conn.AddChain(&nftables.Chain{
-		Table:    t.table,
+	nft.outputMangleChain = conn.AddChain(&nftables.Chain{
+		Table:    nft.table,
 		Name:     "output-mangle",
 		Type:     nftables.ChainTypeRoute,
 		Hooknum:  nftables.ChainHookOutput,
 		Priority: nftables.ChainPriorityMangle,
-		Policy:   &t.policy,
+		Policy:   &nft.policy,
 	})
 
-	err = t.fillOutputMangleChain(conn, t.outputMangleChain)
+	err = nft.fillOutputMangleChain(conn, nft.outputMangleChain)
 	if err != nil {
 		return
 	}
@@ -433,7 +389,7 @@ func (t *Table) initOutputMangleChain(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (t *Table) fillOutputMangleChain(
+func (nft *NFTMan) fillOutputMangleChain(
 	conn *nftables.Conn, chain *nftables.Chain,
 ) (
 	err error,
@@ -456,7 +412,7 @@ func (t *Table) fillOutputMangleChain(
 	exprs = addDebugCounter(exprs)
 
 	conn.AddRule(&nftables.Rule{
-		Table: t.table,
+		Table: nft.table,
 		Chain: chain,
 		Exprs: exprs,
 	})
@@ -481,8 +437,8 @@ func (t *Table) fillOutputMangleChain(
 		},
 		&expr.Lookup{ // lookup reg 1 set bypass
 			SourceRegister: 1,
-			SetID:          t.ipv4BypassSet.ID,
-			SetName:        t.ipv4BypassSet.Name,
+			SetID:          nft.ipv4BypassSet.ID,
+			SetName:        nft.ipv4BypassSet.Name,
 		},
 		&expr.Verdict{ // immediate reg 0 return
 			Kind: expr.VerdictReturn,
@@ -492,7 +448,7 @@ func (t *Table) fillOutputMangleChain(
 	exprs = addDebugCounter(exprs)
 
 	conn.AddRule(&nftables.Rule{
-		Table: t.table,
+		Table: nft.table,
 		Chain: chain,
 		Exprs: exprs,
 	})
@@ -518,8 +474,8 @@ func (t *Table) fillOutputMangleChain(
 		},
 		&expr.Lookup{ // lookup reg 1 set bypass
 			SourceRegister: 1,
-			SetID:          t.ipv6BypassSet.ID,
-			SetName:        t.ipv6BypassSet.Name,
+			SetID:          nft.ipv6BypassSet.ID,
+			SetName:        nft.ipv6BypassSet.Name,
 		},
 		&expr.Verdict{ // immediate reg 0 return
 			Kind: expr.VerdictReturn,
@@ -529,14 +485,14 @@ func (t *Table) fillOutputMangleChain(
 	exprs = addDebugCounter(exprs)
 
 	conn.AddRule(&nftables.Rule{
-		Table: t.table,
+		Table: nft.table,
 		Chain: chain,
 		Exprs: exprs,
 	})
 
 	// meta l4proto != { tcp, udp } return
 
-	err = conn.AddSet(t.protoSet, t.protoSetElement)
+	err = conn.AddSet(nft.protoSet, nft.protoSetElement)
 	if err != nil {
 		return
 	}
@@ -548,8 +504,8 @@ func (t *Table) fillOutputMangleChain(
 		},
 		&expr.Lookup{ // lookup reg 1 set __set%d
 			SourceRegister: 1,
-			SetID:          t.protoSet.ID,
-			SetName:        t.protoSet.Name,
+			SetID:          nft.protoSet.ID,
+			SetName:        nft.protoSet.Name,
 			Invert:         true,
 		},
 		&expr.Verdict{ // immediate reg 0 return
@@ -560,7 +516,7 @@ func (t *Table) fillOutputMangleChain(
 	exprs = addDebugCounter(exprs)
 
 	conn.AddRule(&nftables.Rule{
-		Table: t.table,
+		Table: nft.table,
 		Chain: chain,
 		Exprs: exprs,
 	})
@@ -568,15 +524,15 @@ func (t *Table) fillOutputMangleChain(
 	return
 }
 
-func (t *Table) initOutputNATChain(conn *nftables.Conn) (err error) {
+func (nft *NFTMan) initOutputNATChain(conn *nftables.Conn) (err error) {
 	// type nat hook prerouting priority -100; policy accept;
-	t.outputNATChain = conn.AddChain(&nftables.Chain{
-		Table:    t.table,
+	nft.outputNATChain = conn.AddChain(&nftables.Chain{
+		Table:    nft.table,
 		Name:     "output-nat",
 		Type:     nftables.ChainTypeNAT,
 		Hooknum:  nftables.ChainHookOutput,
 		Priority: nftables.ChainPriorityNATDest,
-		Policy:   &t.policy,
+		Policy:   &nft.policy,
 	})
 
 	// meta mark vmap @
@@ -588,30 +544,30 @@ func (t *Table) initOutputNATChain(conn *nftables.Conn) (err error) {
 		&expr.Lookup{ // lookup reg 1 set mark-vmap dreg 0
 			SourceRegister: 1,
 			IsDestRegSet:   true,
-			SetName:        t.markDNSMap.Name,
-			SetID:          t.markDNSMap.ID,
+			SetName:        nft.markDNSMap.Name,
+			SetID:          nft.markDNSMap.ID,
 		},
 	}
 	exprs = addDebugCounter(exprs)
 
 	conn.AddRule(&nftables.Rule{
-		Table: t.table,
-		Chain: t.outputNATChain,
+		Table: nft.table,
+		Chain: nft.outputNATChain,
 		Exprs: exprs,
 	})
 
 	return
 }
 
-func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
+func (nft *NFTMan) initPreroutingChain(conn *nftables.Conn) (err error) {
 	// type route hook output priority mangle; policy accept;
-	t.preroutingChain = conn.AddChain(&nftables.Chain{
-		Table:    t.table,
+	nft.preroutingChain = conn.AddChain(&nftables.Chain{
+		Table:    nft.table,
 		Name:     "prerouting",
 		Type:     nftables.ChainTypeFilter,
 		Hooknum:  nftables.ChainHookPrerouting,
 		Priority: nftables.ChainPriorityMangle,
-		Policy:   &t.policy,
+		Policy:   &nft.policy,
 	})
 
 	// ip daddr @bypass return
@@ -634,8 +590,8 @@ func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
 		},
 		&expr.Lookup{ // lookup reg 1 set bypass
 			SourceRegister: 1,
-			SetID:          t.ipv4BypassSet.ID,
-			SetName:        t.ipv4BypassSet.Name,
+			SetID:          nft.ipv4BypassSet.ID,
+			SetName:        nft.ipv4BypassSet.Name,
 		},
 		&expr.Verdict{ // immediate reg 0 return
 			Kind: expr.VerdictReturn,
@@ -645,8 +601,8 @@ func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
 	exprs = addDebugCounter(exprs)
 
 	conn.AddRule(&nftables.Rule{
-		Table: t.table,
-		Chain: t.preroutingChain,
+		Table: nft.table,
+		Chain: nft.preroutingChain,
 		Exprs: exprs,
 	})
 
@@ -670,8 +626,8 @@ func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
 		},
 		&expr.Lookup{ // lookup reg 1 set bypass
 			SourceRegister: 1,
-			SetID:          t.ipv6BypassSet.ID,
-			SetName:        t.ipv6BypassSet.Name,
+			SetID:          nft.ipv6BypassSet.ID,
+			SetName:        nft.ipv6BypassSet.Name,
 		},
 		&expr.Verdict{ // immediate reg 0 return
 			Kind: expr.VerdictReturn,
@@ -681,8 +637,8 @@ func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
 	exprs = addDebugCounter(exprs)
 
 	conn.AddRule(&nftables.Rule{
-		Table: t.table,
-		Chain: t.preroutingChain,
+		Table: nft.table,
+		Chain: nft.preroutingChain,
 		Exprs: exprs,
 	})
 
@@ -695,15 +651,15 @@ func (t *Table) initPreroutingChain(conn *nftables.Conn) (err error) {
 		&expr.Lookup{ // lookup reg 1 set mark-vmap dreg 0
 			SourceRegister: 1,
 			IsDestRegSet:   true,
-			SetName:        t.markTproxyMap.Name,
-			SetID:          t.markTproxyMap.ID,
+			SetName:        nft.markTproxyMap.Name,
+			SetID:          nft.markTproxyMap.ID,
 		},
 	}
 	exprs = addDebugCounter(exprs)
 
 	conn.AddRule(&nftables.Rule{
-		Table: t.table,
-		Chain: t.preroutingChain,
+		Table: nft.table,
+		Chain: nft.preroutingChain,
 		Exprs: exprs,
 	})
 

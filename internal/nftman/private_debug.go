@@ -4,14 +4,9 @@
 package nftman
 
 import (
-	"go.uber.org/zap"
+	"github.com/google/nftables/expr"
 )
 
-func (t *Table) DumpNFTableRules() {
-	t.log.WithOptions(zap.AddStacktrace(zap.DebugLevel)).Debugw(
-		"Dump nft ruleset.",
-		"content", getNFTableRules(),
-	)
-
-	return
+func addDebugCounter(exprs []expr.Any) []expr.Any {
+	return append([]expr.Any{&expr.Counter{}}, exprs...)
 }

@@ -6,7 +6,7 @@ You might want check documentation and wiki on github for some help.
 https://github.com/black-desk/cgtproxy
 `
 
-	CgtproxyCfgPath  = "/etc/cgtproxy/config.yaml"
+	CGTProxyCfgPath  = "/etc/cgtproxy/config.yaml"
 	GtproxierCfgPath = "/etc/gtproxier/config.yaml"
 
 	PortsPattern = `^\[(\d+),(\d+)\)$`

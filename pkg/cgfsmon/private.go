@@ -11,7 +11,7 @@ import (
 
 type handle struct {
 	log    *zap.SugaredLogger
-	events chan<- types.CgroupEvent
+	events chan<- types.CGroupEvent
 }
 
 func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
@@ -88,7 +88,7 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 			eventType = types.CgroupEventTypeDelete
 		}
 
-		h.events <- types.CgroupEvent{
+		h.events <- types.CGroupEvent{
 			Path:      path,
 			EventType: eventType,
 		}
