@@ -312,11 +312,6 @@ func (t *Table) addTproxyChainForTProxy(
 		RegPort: 1,
 	}
 
-	err = conn.AddSet(t.protoSet, t.protoSetElement)
-	if err != nil {
-		return
-	}
-
 	exprs := []expr.Any{
 		&expr.Meta{ // meta load l4proto => reg 1
 			Key:      expr.MetaKeyL4PROTO,
@@ -341,6 +336,11 @@ func (t *Table) addTproxyChainForTProxy(
 			Op:       expr.CmpOpEq,
 			Register: 1,
 			Data:     []byte{unix.IPPROTO_TCP},
+		}
+	} else {
+		err = conn.AddSet(t.protoSet, t.protoSetElement)
+		if err != nil {
+			return
 		}
 	}
 
