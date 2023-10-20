@@ -4,15 +4,15 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
-	fsevents "github.com/tywkeene/go-fsevents"
+	"github.com/rjeczalik/notify"
 	"go.uber.org/zap"
 )
 
 type CGroupFSMonitor struct {
-	events  chan types.CGroupEvent
-	watcher *fsevents.Watcher
-	root    config.CGroupRoot
-	log     *zap.SugaredLogger
+	eventsOut chan types.CGroupEvent
+	eventsIn  chan notify.EventInfo
+	root      config.CGroupRoot
+	log       *zap.SugaredLogger
 }
 
 //go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/pkg/cgfsmon.CGroupFSMonitor -as interfaces.CGroupMonitor -o ../interfaces/cgmon.go
@@ -22,15 +22,8 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 
 	w := &CGroupFSMonitor{}
 
-	var watcherImpl *fsevents.Watcher
-	watcherImpl, err = fsevents.NewWatcher()
-	if err != nil {
-		return
-	}
-
-	w.events = make(chan types.CGroupEvent)
-
-	w.watcher = watcherImpl
+	w.eventsOut = make(chan types.CGroupEvent)
+	w.eventsIn = make(chan notify.EventInfo)
 
 	for i := range opts {
 		w, err = opts[i](w)

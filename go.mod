@@ -11,7 +11,6 @@ require (
 	github.com/onsi/gomega v1.28.0
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.7.0
-	github.com/tywkeene/go-fsevents v0.2.1-0.20210417193827-d7e9fb3063aa
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
@@ -37,6 +36,7 @@ require (
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mdlayher/netlink v1.7.2 // indirect
 	github.com/mdlayher/socket v0.5.0 // indirect
+	github.com/rjeczalik/notify v0.9.3
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
