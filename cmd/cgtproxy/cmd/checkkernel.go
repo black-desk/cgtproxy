@@ -143,7 +143,9 @@ func checkKernelCmdRun() (err error) {
 			line := scanner.Text()
 
 			components := strings.Split(line, " ")
-			if len(components) != 6 {
+
+			// https://stackoverflow.com/questions/39435927/what-is-oe-in-linux
+			if len(components) < 6 {
 				err = fmt.Errorf("Unexpected format of /proc/modules. (line: %s)", line)
 				Wrap(&err)
 				return
