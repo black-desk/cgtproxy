@@ -4,17 +4,17 @@
 //go:build !wireinject
 // +build !wireinject
 
-package cgtproxy
+package cmd
 
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/google/wire"
+	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	"go.uber.org/zap"
 )
 
 // Injectors from wire.go:
 
-func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredLogger) (*components, error) {
+func injectedCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLogger) (interfaces.CGTProxy, error) {
 	cgroupRoot := provideCgroupRoot(configConfig)
 	cGroupMonitor, err := provideCgrougMontior(cgroupRoot, sugaredLogger)
 	if err != nil {
@@ -25,26 +25,15 @@ func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredL
 	if err != nil {
 		return nil, err
 	}
-	cgtproxyChans := provideChans()
-	v := provideInputChan(cgtproxyChans)
+	cmdChans := provideChans()
+	v := provideInputChan(cmdChans)
 	routeManager, err := provideRuleManager(nftManager, configConfig, v, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
-	cgtproxyComponents := provideComponents(cGroupMonitor, routeManager)
-	return cgtproxyComponents, nil
+	cgtProxy, err := provideCGTProxy(cGroupMonitor, routeManager, sugaredLogger, configConfig)
+	if err != nil {
+		return nil, err
+	}
+	return cgtProxy, nil
 }
-
-// wire.go:
-
-var set = wire.NewSet(
-	provideBypass,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideChans,
-	provideComponents,
-	provideInputChan,
-	provideOutputChan,
-	provideRuleManager,
-	provideNFTManager,
-)

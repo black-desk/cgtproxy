@@ -14,15 +14,13 @@ type CGTProxy struct {
 	pool *pool.ContextPool
 	log  *zap.SugaredLogger
 
-	components *components
-}
-
-type components struct {
-	m interfaces.CGroupMonitor
-	r interfaces.RouteManager
+	cgMonitor interfaces.CGroupMonitor
+	rtManager interfaces.RouteManager
 }
 
 type Opt = (func(*CGTProxy) (*CGTProxy, error))
+
+//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@latest -for github.com/black-desk/cgtproxy/pkg/cgtproxy.CGTProxy -as interfaces.CGTProxy -o ../interfaces/cgtproxy.go
 
 func New(opts ...Opt) (ret *CGTProxy, err error) {
 	defer Wrap(&err, "create new cgtproxy core")
@@ -66,6 +64,22 @@ func WithConfig(cfg *config.Config) Opt {
 func WithLogger(log *zap.SugaredLogger) Opt {
 	return func(core *CGTProxy) (ret *CGTProxy, err error) {
 		core.log = log
+		ret = core
+		return
+	}
+}
+
+func WithCGroupMonitor(mon interfaces.CGroupMonitor) Opt {
+	return func(core *CGTProxy) (ret *CGTProxy, err error) {
+		core.cgMonitor = mon
+		ret = core
+		return
+	}
+}
+
+func WithRouteManager(rman interfaces.RouteManager) Opt {
+	return func(core *CGTProxy) (ret *CGTProxy, err error) {
+		core.rtManager = rman
 		ret = core
 		return
 	}

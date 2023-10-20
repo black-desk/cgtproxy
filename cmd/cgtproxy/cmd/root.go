@@ -13,7 +13,6 @@ import (
 	"text/template"
 
 	"github.com/black-desk/cgtproxy/internal/consts"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
@@ -115,10 +114,7 @@ func rootCmdRun() (err error) {
 		return
 	}
 
-	c, err := cgtproxy.New(
-		cgtproxy.WithConfig(cfg),
-		cgtproxy.WithLogger(log),
-	)
+	c, err := injectedCGTProxy(cfg, log)
 	if err != nil {
 		return
 	}

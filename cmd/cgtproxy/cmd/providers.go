@@ -1,13 +1,15 @@
-package cgtproxy
+package cmd
 
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgfsmon"
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	"github.com/black-desk/cgtproxy/pkg/nftman"
 	"github.com/black-desk/cgtproxy/pkg/routeman"
 	"github.com/black-desk/cgtproxy/pkg/types"
 	"github.com/google/nftables"
+	"github.com/google/wire"
 	"go.uber.org/zap"
 )
 
@@ -108,9 +110,30 @@ func provideBypass(cfg *config.Config) config.Bypass {
 	return cfg.Bypass
 }
 
-func provideComponents(
-	m interfaces.CGroupMonitor,
-	r interfaces.RouteManager,
-) *components {
-	return &components{m: m, r: r}
+func provideCGTProxy(
+	mon interfaces.CGroupMonitor,
+	man interfaces.RouteManager,
+	logger *zap.SugaredLogger,
+	cfg *config.Config,
+) (
+	interfaces.CGTProxy, error,
+) {
+	return cgtproxy.New(
+		cgtproxy.WithConfig(cfg),
+		cgtproxy.WithLogger(logger),
+		cgtproxy.WithCGroupMonitor(mon),
+		cgtproxy.WithRouteManager(man),
+	)
 }
+
+var set = wire.NewSet(
+	provideBypass,
+	provideCgrougMontior,
+	provideCgroupRoot,
+	provideChans,
+	provideCGTProxy,
+	provideInputChan,
+	provideOutputChan,
+	provideRuleManager,
+	provideNFTManager,
+)
