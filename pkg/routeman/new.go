@@ -28,7 +28,7 @@ type RouteManager struct {
 	route []*netlink.Route
 }
 
-//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@latest -for github.com/black-desk/cgtproxy/pkg/routeman.RouteManager -as interfaces.RouteManager -o ../interfaces/routeman.go
+//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/pkg/routeman.RouteManager -as interfaces.RouteManager -o ../interfaces/routeman.go
 
 func New(opts ...Opt) (ret *RouteManager, err error) {
 	defer Wrap(&err, "create the nftable rule manager")
