@@ -3,8 +3,9 @@ package routeman
 import (
 	"regexp"
 
-	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/interfaces"
+	"github.com/black-desk/cgtproxy/pkg/nftman"
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
@@ -14,7 +15,7 @@ import (
 type RouteManager struct {
 	cgroupEventChan <-chan types.CGroupEvent
 
-	nft *nftman.NFTMan
+	nft interfaces.NFTMan
 	cfg *config.Config
 	log *zap.SugaredLogger
 
@@ -81,7 +82,7 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 
 type Opt func(m *RouteManager) (ret *RouteManager, err error)
 
-func WithNFTMan(t *nftman.NFTMan) Opt {
+func WithNFTMan(t interfaces.NFTMan) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if t == nil {
 			err = ErrTableMissing

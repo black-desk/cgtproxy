@@ -44,7 +44,7 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 	}
 
 	if w.root == "" {
-		err = ErrCgroupRootMissing
+		err = ErrCGroupRootMissing
 		return
 	}
 

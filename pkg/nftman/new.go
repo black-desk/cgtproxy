@@ -42,6 +42,8 @@ type NFTMan struct {
 
 type Opt = (func(*NFTMan) (*NFTMan, error))
 
+//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@latest -for github.com/black-desk/cgtproxy/pkg/nftman.NFTMan -as interfaces.NFTMan -o ../interfaces/nftman.go
+
 func New(opts ...Opt) (ret *NFTMan, err error) {
 	defer Wrap(&err, "create nft table mananger")
 
@@ -182,7 +184,7 @@ func (nft *NFTMan) initStructure() (err error) {
 
 	nft.log.Debug("nft table structure initialized.")
 
-	nft.DumpNFTableRules()
+	nft.dumpNFTableRules()
 
 	return
 }

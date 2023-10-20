@@ -18,7 +18,7 @@ var set = wire.NewSet(
 	provideInputChan,
 	provideOutputChan,
 	provideRuleManager,
-	provideTable,
+	provideNFTMan,
 )
 
 func injectedComponents(

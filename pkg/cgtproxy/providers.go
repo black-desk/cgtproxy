@@ -1,11 +1,11 @@
 package cgtproxy
 
 import (
-	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/pkg/cgfsmon"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
+	"github.com/black-desk/cgtproxy/pkg/nftman"
 	"github.com/black-desk/cgtproxy/pkg/types"
 	"github.com/google/nftables"
 	"go.uber.org/zap"
@@ -42,12 +42,12 @@ func provideNftConn() (ret *nftables.Conn, err error) {
 	return
 }
 
-func provideTable(
+func provideNFTMan(
 	root config.CgroupRoot,
 	bypass config.Bypass,
 	logger *zap.SugaredLogger,
 ) (
-	ret *nftman.NFTMan,
+	ret interfaces.NFTMan,
 	err error,
 ) {
 	var t *nftman.NFTMan
@@ -66,7 +66,7 @@ func provideTable(
 }
 
 func provideRuleManager(
-	t *nftman.NFTMan,
+	t interfaces.NFTMan,
 	cfg *config.Config,
 	ch <-chan types.CGroupEvent,
 	logger *zap.SugaredLogger,
@@ -114,4 +114,3 @@ func provideComponents(
 ) *components {
 	return &components{m: m, r: r}
 }
-

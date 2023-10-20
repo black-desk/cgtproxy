@@ -21,13 +21,13 @@ func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredL
 		return nil, err
 	}
 	bypass := provideBypass(configConfig)
-	table, err := provideTable(cgroupRoot, bypass, sugaredLogger)
+	nftMan, err := provideNFTMan(cgroupRoot, bypass, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
 	cgtproxyChans := provideChans()
 	v := provideInputChan(cgtproxyChans)
-	routeManager, err := provideRuleManager(table, configConfig, v, sugaredLogger)
+	routeManager, err := provideRuleManager(nftMan, configConfig, v, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -46,5 +46,5 @@ var set = wire.NewSet(
 	provideInputChan,
 	provideOutputChan,
 	provideRuleManager,
-	provideTable,
+	provideNFTMan,
 )

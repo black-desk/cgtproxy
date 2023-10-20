@@ -5,7 +5,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/black-desk/cgtproxy/internal/nftman"
+	"github.com/black-desk/cgtproxy/pkg/nftman"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"

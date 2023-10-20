@@ -4,5 +4,5 @@ import "errors"
 
 var (
 	ErrContextMissing    = errors.New("Context is missing")
-	ErrCgroupRootMissing = errors.New("Cgroup root is missing")
+	ErrCGroupRootMissing = errors.New("CGroup root is missing")
 )

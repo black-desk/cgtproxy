@@ -119,7 +119,7 @@ func (nft *NFTMan) AddCgroup(path string, target *Target) (err error) {
 	}
 
 	nft.log.Debugw("Output chain refilled.")
-	nft.DumpNFTableRules()
+	nft.dumpNFTableRules()
 
 	for i := len(levels) - 1; i >= 0; i-- {
 		err = nft.addCgroupRuleForLevel(conn, levels[i])
@@ -138,7 +138,7 @@ func (nft *NFTMan) AddCgroup(path string, target *Target) (err error) {
 		"cgroup", path,
 	)
 
-	nft.DumpNFTableRules()
+	nft.dumpNFTableRules()
 
 	return
 }
@@ -181,7 +181,7 @@ func (nft *NFTMan) RemoveCgroup(path string) (err error) {
 
 		delete(nft.cgroupMapElement, path)
 
-		nft.DumpNFTableRules()
+		nft.dumpNFTableRules()
 	} else {
 		nft.log.Debugw("Nothing to do with this cgroup",
 			"cgroup", path,
@@ -246,7 +246,7 @@ func (nft *NFTMan) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 		"tproxy", tp,
 	)
 
-	nft.DumpNFTableRules()
+	nft.dumpNFTableRules()
 
 	return
 }
@@ -272,7 +272,7 @@ func (nft *NFTMan) Clear() (err error) {
 		return
 	}
 
-	nft.DumpNFTableRules()
+	nft.dumpNFTableRules()
 	return
 }
 
