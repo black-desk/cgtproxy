@@ -37,8 +37,7 @@ func New(opts ...Opt) (ret *FSMonitor, err error) {
 	}
 
 	if m.output == nil {
-		err = ErrOutputMissing
-		return
+		m.output = make(chan<- types.CgroupEvent)
 	}
 
 	if m.root == "" {

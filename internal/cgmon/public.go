@@ -7,6 +7,10 @@ import (
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
+func (m *FSMonitor) Output() chan<- types.CgroupEvent {
+	return m.output
+}
+
 func (m *FSMonitor) Run(ctx context.Context) (err error) {
 	defer close(m.output)
 	defer Wrap(&err, "running cgroup monitor.")

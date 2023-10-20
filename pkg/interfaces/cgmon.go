@@ -4,9 +4,11 @@ package interfaces
 
 import (
 	"context"
+	"github.com/black-desk/cgtproxy/pkg/types"
 )
 
 // CgroupMonitor is an interface generated for "github.com/black-desk/cgtproxy/internal/cgmon.FSMonitor".
 type CgroupMonitor interface {
+	Output() chan<- types.CgroupEvent
 	Run(context.Context) error
 }
