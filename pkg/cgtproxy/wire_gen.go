@@ -8,6 +8,7 @@ package cgtproxy
 
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/google/wire"
 	"go.uber.org/zap"
 )
 
@@ -15,13 +16,7 @@ import (
 
 func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredLogger) (*components, error) {
 	cgroupRoot := provideCgroupRoot(configConfig)
-	watcher, err := provideWatcher(cgroupRoot, sugaredLogger)
-	if err != nil {
-		return nil, err
-	}
-	cgtproxyChans := provideChans()
-	v := provideOutputChan(cgtproxyChans)
-	cgroupMonitor, err := provideMonitor(v, watcher, cgroupRoot, sugaredLogger)
+	cGroupMonitor, err := provideCgrougMontior(cgroupRoot, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -30,11 +25,26 @@ func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredL
 	if err != nil {
 		return nil, err
 	}
-	v2 := provideInputChan(cgtproxyChans)
-	routeManager, err := provideRuleManager(table, configConfig, v2, sugaredLogger)
+	cgtproxyChans := provideChans()
+	v := provideInputChan(cgtproxyChans)
+	routeManager, err := provideRuleManager(table, configConfig, v, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
-	cgtproxyComponents := provideComponents(watcher, cgroupMonitor, routeManager)
+	cgtproxyComponents := provideComponents(cGroupMonitor, routeManager)
 	return cgtproxyComponents, nil
 }
+
+// wire.go:
+
+var set = wire.NewSet(
+	provideBypass,
+	provideCgrougMontior,
+	provideCgroupRoot,
+	provideChans,
+	provideComponents,
+	provideInputChan,
+	provideOutputChan,
+	provideRuleManager,
+	provideTable,
+)

@@ -7,8 +7,8 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/types"
 )
 
-// CgroupMonitor is an interface generated for "github.com/black-desk/cgtproxy/internal/cgmon.FSMonitor".
-type CgroupMonitor interface {
-	Output() chan<- types.CgroupEvent
+// CGroupMonitor is an interface generated for "github.com/black-desk/cgtproxy/pkg/cgfsmon.CGroupFSMonitor".
+type CGroupMonitor interface {
+	Events() <-chan types.CgroupEvent
 	Run(context.Context) error
 }

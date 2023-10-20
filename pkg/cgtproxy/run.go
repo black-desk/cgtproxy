@@ -16,7 +16,6 @@ func (c *CGTProxy) Run() (err error) {
 
 	c.pool.Go(c.waitStop)
 	c.pool.Go(c.runWatcher)
-	c.pool.Go(c.runMonitor)
 	c.pool.Go(c.runRuleManager)
 
 	return c.pool.Wait()
@@ -38,19 +37,6 @@ func (c *CGTProxy) waitStop(ctx context.Context) (err error) {
 	}
 }
 
-func (c *CGTProxy) runMonitor(ctx context.Context) (err error) {
-	defer c.log.Debugw("Cgroup monitor exited.")
-
-	c.log.Debugw("Start cgroup monitor.")
-
-	err = c.components.m.Run(ctx)
-	if err != nil {
-		return
-	}
-
-	return ctx.Err()
-}
-
 func (c *CGTProxy) runRuleManager(ctx context.Context) (err error) {
 	defer c.log.Debugw("Rule manager exited.")
 
@@ -69,7 +55,7 @@ func (c *CGTProxy) runWatcher(ctx context.Context) (err error) {
 
 	c.log.Debugw("Start filesystem watcher.")
 
-	err = c.components.w.Run(ctx)
+	err = c.components.m.Run(ctx)
 	if err != nil {
 		return
 	}

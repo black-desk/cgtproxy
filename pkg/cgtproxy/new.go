@@ -3,7 +3,6 @@ package cgtproxy
 import (
 	"context"
 
-	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
@@ -23,8 +22,7 @@ type CGTProxy struct {
 }
 
 type components struct {
-	w *fswatcher.Watcher
-	m interfaces.CgroupMonitor
+	m interfaces.CGroupMonitor
 	r *routeman.RouteManager
 }
 

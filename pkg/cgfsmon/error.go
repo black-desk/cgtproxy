@@ -1,4 +1,4 @@
-package fswatcher
+package cgfsmon
 
 import "errors"
 

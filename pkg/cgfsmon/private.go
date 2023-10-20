@@ -1,15 +1,17 @@
-package fswatcher
+package cgfsmon
 
 import (
 	"errors"
 	"os"
 
+	"github.com/black-desk/cgtproxy/pkg/types"
 	fsevents "github.com/tywkeene/go-fsevents"
 	"go.uber.org/zap"
 )
 
 type handle struct {
-	log *zap.SugaredLogger
+	log    *zap.SugaredLogger
+	events chan<- types.CgroupEvent
 }
 
 func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
@@ -77,14 +79,26 @@ func (h *handle) Handle(w *fsevents.Watcher, event *fsevents.FsEvent) error {
 	}()
 
 	func() {
-		w.Events <- event
+		if !isDirCreated && !isDirRemoved {
+			return
+		}
+
+		eventType := types.CgroupEventTypeNew
+		if isDirRemoved {
+			eventType = types.CgroupEventTypeDelete
+		}
+
+		h.events <- types.CgroupEvent{
+			Path:      path,
+			EventType: eventType,
+		}
 	}()
 
 	return nil
 }
 
 func (h *handle) GetMask() uint32 {
-	return fsevents.DirCreatedEvent | fsevents.DirRemovedEvent
+	return 1 // WHAT THE FUCK
 }
 
 func (h *handle) Check(event *fsevents.FsEvent) bool {

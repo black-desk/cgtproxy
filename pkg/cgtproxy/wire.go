@@ -9,6 +9,18 @@ import (
 	"go.uber.org/zap"
 )
 
+var set = wire.NewSet(
+	provideBypass,
+	provideCgrougMontior,
+	provideCgroupRoot,
+	provideChans,
+	provideComponents,
+	provideInputChan,
+	provideOutputChan,
+	provideRuleManager,
+	provideTable,
+)
+
 func injectedComponents(
 	*config.Config, *zap.SugaredLogger,
 ) (

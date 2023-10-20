@@ -1,13 +1,18 @@
-package fswatcher
+package cgfsmon
 
 import (
 	"context"
 
+	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	fsevents "github.com/tywkeene/go-fsevents"
 )
 
-func (w *Watcher) Run(ctx context.Context) (err error) {
+func (w *CGroupFSMonitor) Events() <-chan types.CgroupEvent {
+	return w.events
+}
+
+func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 	defer Wrap(&err, "running filesystem watcher.")
 
 	// FIXME(black_desk):
@@ -17,7 +22,7 @@ func (w *Watcher) Run(ctx context.Context) (err error) {
 	// after entries in that directory.
 	// To fix this.
 	// I think we should write an inotify library ourselves.
-	err = w.RecursiveAdd(
+	err = w.watcher.RecursiveAdd(
 		string(w.root),
 		fsevents.DirCreatedEvent|fsevents.DirRemovedEvent,
 	)
@@ -25,10 +30,10 @@ func (w *Watcher) Run(ctx context.Context) (err error) {
 		return
 	}
 
-	go w.WatchAndHandle()
+	go w.watcher.WatchAndHandle()
 
 	<-ctx.Done()
-	err = w.StopAll()
+	err = w.watcher.StopAll()
 	if err != nil {
 		return
 	}
