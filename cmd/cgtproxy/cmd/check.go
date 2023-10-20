@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/black-desk/cgtproxy/internal/consts"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +17,7 @@ var checkCmd = &cobra.Command{
 				return
 			}
 
-			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
+			err = fmt.Errorf("\n\n%w\n"+CheckDocumentString, err)
 
 			return
 		}()

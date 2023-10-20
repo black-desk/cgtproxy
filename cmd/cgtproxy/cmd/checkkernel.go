@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/black-desk/cgtproxy/internal/consts"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +24,7 @@ var checkKernelCmd = &cobra.Command{
 				return
 			}
 
-			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
+			err = fmt.Errorf("\n\n%w\n"+CheckDocumentString, err)
 
 			return
 		}()

@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 
-	"github.com/black-desk/cgtproxy/internal/consts"
 	. "github.com/black-desk/lib/go/errwrap"
 	fstab "github.com/deniswernert/go-fstab"
 	"github.com/go-playground/validator/v10"
@@ -48,7 +47,7 @@ func (c *Config) check() (err error) {
 			tp.Name = name
 		}
 		if tp.DNSHijack != nil && tp.DNSHijack.IP == nil {
-			addr := consts.IPv4LocalhostStr
+			addr := IPv4LocalhostStr
 			tp.DNSHijack.IP = &addr
 		}
 	}

@@ -12,7 +12,6 @@ import (
 	"syscall"
 	"text/template"
 
-	"github.com/black-desk/cgtproxy/internal/consts"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
@@ -34,7 +33,7 @@ var rootCmd = &cobra.Command{
 			}
 
 			err = fmt.Errorf(
-				"\n\n%w\n"+consts.CheckDocumentString,
+				"\n\n%w\n"+CheckDocumentString,
 				err,
 			)
 
@@ -91,7 +90,7 @@ func rootCmdRun() (err error) {
 	}
 
 	content, err := os.ReadFile(flags.CfgPath)
-	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == consts.CGTProxyCfgPath {
+	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == CGTProxyCfgPath {
 		log.Errorw("Configuration file missing fallback to default config.")
 
 		content = []byte(config.DefaultConfig)
@@ -161,7 +160,7 @@ func Execute() {
 func init() {
 	cfgPath := os.Getenv("CONFIGURATION_DIRECTORY")
 	if cfgPath == "" {
-		cfgPath = consts.CGTProxyCfgPath
+		cfgPath = CGTProxyCfgPath
 	} else {
 		cfgPath += "/config.yaml"
 	}

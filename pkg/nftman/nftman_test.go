@@ -1,15 +1,15 @@
 package nftman
 
 import (
-	"github.com/black-desk/cgtproxy/internal/consts"
-	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	. "github.com/black-desk/lib/go/ginkgo-helper"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"math/rand"
 	"os"
 	"syscall"
 	"testing"
+
+	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	. "github.com/black-desk/lib/go/ginkgo-helper"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Netfliter table", Ordered, func() {
@@ -89,7 +89,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 			It("should produce expected nftable rules", func() {
 				result = getNFTableRules()
 
-				Expect(result).To(ContainSubstring(consts.NftTableName))
+				Expect(result).To(ContainSubstring(NftTableName))
 				for _, tp := range tps {
 					for _, expect := range tp.expects {
 						Expect(result).To(ContainSubstring(expect))
@@ -147,7 +147,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 				It("should produce expected nftable rules", func() {
 					result = getNFTableRules()
 					{
-						Expect(result).To(ContainSubstring(consts.NftTableName))
+						Expect(result).To(ContainSubstring(NftTableName))
 						for _, tp := range tps {
 							Expect(result).To(ContainSubstring(tp.t.Name))
 						}

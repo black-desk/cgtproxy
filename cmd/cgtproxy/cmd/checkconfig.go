@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/black-desk/cgtproxy/internal/consts"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/black-desk/lib/go/logger"
@@ -22,7 +21,7 @@ var checkConfigCmd = &cobra.Command{
 				return
 			}
 
-			err = fmt.Errorf("\n\n%w\n"+consts.CheckDocumentString, err)
+			err = fmt.Errorf("\n\n%w\n"+CheckDocumentString, err)
 
 			return
 		}()

@@ -3,7 +3,6 @@ package nftman
 import (
 	"net"
 
-	"github.com/black-desk/cgtproxy/internal/consts"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
@@ -128,7 +127,7 @@ func (nft *NFTManager) initStructure() (err error) {
 	}
 
 	nft.table = conn.AddTable(&nftables.Table{
-		Name:   consts.NftTableName,
+		Name:   NftTableName,
 		Family: nftables.TableFamilyINet,
 	})
 
