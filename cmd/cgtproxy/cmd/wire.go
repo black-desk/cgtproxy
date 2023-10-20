@@ -17,3 +17,11 @@ func injectedCGTProxy(
 ) {
 	panic(wire.Build(set))
 }
+
+func injectedLastingCGTProxy(
+	*config.Config, *zap.SugaredLogger,
+) (
+	interfaces.CGTProxy, error,
+) {
+	panic(wire.Build(lastingConnectorSet))
+}

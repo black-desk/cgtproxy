@@ -5,9 +5,9 @@ import (
 )
 
 func (c *CGTProxy) runRouteManager(ctx context.Context) (err error) {
-	defer c.log.Debugw("Rule manager exited.")
+	defer c.log.Debugw("Route manager exited.")
 
-	c.log.Debugw("Start nft rule manager.")
+	c.log.Debugw("Start route manager.")
 
 	err = c.rtManager.Run()
 	if err != nil {
@@ -18,9 +18,9 @@ func (c *CGTProxy) runRouteManager(ctx context.Context) (err error) {
 }
 
 func (c *CGTProxy) runCGroupMonitor(ctx context.Context) (err error) {
-	defer c.log.Debugw("Watcher exited.")
+	defer c.log.Debug("Filesystem watcher exited.")
 
-	c.log.Debugw("Start filesystem watcher.")
+	c.log.Debug("Start filesystem watcher.")
 
 	err = c.cgMonitor.Run(ctx)
 	if err != nil {

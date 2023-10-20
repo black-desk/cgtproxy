@@ -10,7 +10,7 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/types"
 )
 
-func (m *CGroupFSMonitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, err error) error {
+func (m *CGroupFSMonitor) walkFn(events *[]types.CGroupEvent) func(path string, d fs.DirEntry, err error) error {
 	return func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
@@ -32,49 +32,52 @@ func (m *CGroupFSMonitor) walkFn(ctx context.Context) func(path string, d fs.Dir
 			return nil
 		}
 
-		cgEvent := &types.CGroupEvent{
-			Path:      path,
-			EventType: types.CgroupEventTypeNew,
+		path = strings.TrimRight(path, "/")
+
+		if path == string(m.root) {
+			return nil
 		}
 
-		err = m.send(ctx, cgEvent)
-		if err != nil {
-			return err
-		}
+		*events = append(*events, types.CGroupEvent{
+			Path:      path,
+			EventType: types.CgroupEventTypeNew,
+		})
 
 		return nil
 	}
 }
 
-func (m *CGroupFSMonitor) walk(ctx context.Context, path string) {
-	err := filepath.WalkDir(path, m.walkFn(ctx))
-	if err == nil {
+func (m *CGroupFSMonitor) walk(path string) (ret []types.CGroupEvent, err error) {
+	events := []types.CGroupEvent{}
+
+	err = filepath.WalkDir(path, m.walkFn(&events))
+	if err != nil {
 		return
 	}
 
+	ret = events
 	return
 }
 
-func (m *CGroupFSMonitor) send(ctx context.Context, cgEvent *types.CGroupEvent) (err error) {
-	path := strings.TrimRight(cgEvent.Path, "/")
-	cgEvent.Path = path
-
-	if cgEvent.Path == string(m.root) {
-		// NOTE: Ignore cgroup root.
-		return nil
+func (m *CGroupFSMonitor) send(ctx context.Context, cgEvents types.CGroupEvents) (err error) {
+	for i := range cgEvents.Events {
+		path := strings.TrimRight(cgEvents.Events[i].Path, "/")
+		cgEvents.Events[i].Path = path
 	}
 
-	m.log.Debugw("New cgroup envent.",
-		"event", cgEvent,
+	m.log.Debugw("New cgroup envents.",
+		"size", len(cgEvents.Events),
 	)
+
+	cnt := len(cgEvents.Events)
 
 	select {
 	case <-ctx.Done():
 		err = ctx.Err()
 		return
-	case m.eventsOut <- *cgEvent:
-		m.log.Debugw("Cgroup event sent.",
-			"path", path,
+	case m.eventsOut <- cgEvents:
+		m.log.Debugw("Cgroup events sent.",
+			"size", cnt,
 		)
 	}
 

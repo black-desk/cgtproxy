@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/nftman"
+	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
@@ -146,37 +146,49 @@ func (m *RouteManager) removeRoute() {
 	return
 }
 
-func (m *RouteManager) handleNewCgroup(path string) (err error) {
-	defer Wrap(&err, "handle new cgroup")
+func (m *RouteManager) handleNewCgroups(paths []string) (err error) {
+	defer Wrap(&err, "handle %d new cgroups", len(paths))
 
-	m.log.Debugw("Handling new cgroup.",
-		"path", path,
-	)
+	routes := []types.Route{}
 
-	var target nftman.Target
-	for i := range m.matchers {
-		if !m.matchers[i].reg.Match([]byte(path)) {
+	for i := range paths {
+		path := paths[i]
+
+		m.log.Debugw("Checking route for cgroup.",
+			"path", path,
+		)
+
+		var target types.Target
+		for i := range m.matchers {
+			if !m.matchers[i].reg.Match([]byte(path)) {
+				continue
+			}
+
+			m.log.Debugw("Rule found for this cgroup",
+				"cgroup", path,
+				"rule", m.cfg.Rules[i].String(),
+			)
+
+			target = m.matchers[i].target
+
+			break
+		}
+
+		if target.Op == types.TargetNoop {
+			m.log.Debugw("No rule match this cgroup",
+				"cgroup", path,
+			)
+
 			continue
 		}
 
-		m.log.Infow("Rule found for this cgroup",
-			"cgroup", path,
-			"rule", m.cfg.Rules[i].String(),
-		)
-
-		target = m.matchers[i].target
-
-		break
+		routes = append(routes, types.Route{
+			Path:   path,
+			Target: target,
+		})
 	}
 
-	if target.Op == nftman.TargetNoop {
-		m.log.Debugw("No rule match this cgroup",
-			"cgroup", path,
-		)
-		return
-	}
-
-	err = m.nft.AddCgroup(path, &target)
+	err = m.nft.AddRoutes(routes)
 	if err != nil {
 		return
 	}
@@ -184,14 +196,14 @@ func (m *RouteManager) handleNewCgroup(path string) (err error) {
 	return
 }
 
-func (m *RouteManager) handleDeleteCgroup(path string) (err error) {
+func (m *RouteManager) handleDeleteCgroups(paths []string) (err error) {
 	defer Wrap(&err, "handle delete cgroup")
 
-	m.log.Debugw("Handling delete cgroup.",
-		"path", path,
+	m.log.Debugw("Handling delete cgroups.",
+		"size", len(paths),
 	)
 
-	err = m.nft.RemoveCgroup(path)
+	err = m.nft.RemoveCgroups(paths)
 	if err != nil {
 		return
 	}

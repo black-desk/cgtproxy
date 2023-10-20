@@ -332,7 +332,7 @@ func (t *NFTManager) addDNSChainForTproxy(
 	return
 }
 
-func (t *NFTManager) removeCgroupRoot(path string) string {
+func (t *NFTManager) removeCgroupRootFromPath(path string) string {
 	path = filepath.Clean(path)
 	if strings.HasPrefix(path, string(t.cgroupRoot)) {
 		path = path[len(t.cgroupRoot):]
@@ -351,7 +351,7 @@ func (t *NFTManager) addCgroupRuleForLevel(
 	err error,
 ) {
 	defer Wrap(&err,
-		"Failed to update output chain for level %d cgroup.", level)
+		"update output chain for level %d cgroup", level)
 
 	exprs := []expr.Any{
 		&expr.Socket{ // socket load cgroupv2 => reg 1
@@ -376,7 +376,7 @@ func (t *NFTManager) addCgroupRuleForLevel(
 	}
 
 	conn.AddRule(rule)
-	err = conn.Flush()
+	// err = conn.Flush()
 	t.ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return

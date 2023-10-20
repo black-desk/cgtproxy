@@ -12,5 +12,4 @@ const (
 type CGroupEvent struct {
 	Path      string
 	EventType CgroupEventType
-	Result    chan<- error
 }

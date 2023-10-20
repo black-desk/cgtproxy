@@ -4,6 +4,8 @@ import (
 	"net"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/interfaces"
+	"github.com/black-desk/cgtproxy/pkg/nftman/connector"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
@@ -17,6 +19,8 @@ type NFTManager struct {
 	bypassIPv4 []string
 	bypassIPv6 []string
 	log        *zap.SugaredLogger
+
+	connector interfaces.NetlinkConnector
 
 	table *nftables.Table
 
@@ -54,6 +58,16 @@ func New(opts ...Opt) (ret *NFTManager, err error) {
 			t = nil
 			return
 		}
+	}
+
+	if t.connector == nil {
+		var ctr *connector.Connector
+		ctr, err = connector.New()
+		if err != nil {
+			return
+		}
+
+		t.connector = ctr
 	}
 
 	if t.log == nil {
@@ -125,13 +139,26 @@ func WithLogger(log *zap.SugaredLogger) Opt {
 	}
 }
 
+func WithConnFactory(f interfaces.NetlinkConnector) Opt {
+	return func(nft *NFTManager) (ret *NFTManager, err error) {
+		if f == nil {
+			err = ErrConnFactoryMissing
+			return
+		}
+
+		nft.connector = f
+		ret = nft
+		return
+	}
+}
+
 func (nft *NFTManager) initStructure() (err error) {
 	defer Wrap(&err, "flush initial content of nft table")
 
 	nft.log.Debug("Initialing nft table structure.")
 
 	var conn *nftables.Conn
-	conn, err = nftables.New()
+	conn, err = nft.connector.Connect()
 	if err != nil {
 		return
 	}
@@ -405,6 +432,8 @@ func (nft *NFTManager) fillOutputMangleChain(
 ) (
 	err error,
 ) {
+	nft.log.Debug("Refilling output chain.")
+
 	// ct direction == reply return
 	exprs := []expr.Any{
 		&expr.Ct{ // ct load direction => reg 1

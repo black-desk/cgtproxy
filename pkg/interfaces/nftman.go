@@ -4,13 +4,13 @@ package interfaces
 
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/nftman"
+	"github.com/black-desk/cgtproxy/pkg/types"
 )
 
 // NFTManager is an interface generated for "github.com/black-desk/cgtproxy/pkg/nftman.NFTManager".
 type NFTManager interface {
-	AddCgroup(string, *nftman.Target) error
 	AddChainAndRulesForTProxy(*config.TProxy) error
+	AddRoutes([]types.Route) error
 	Clear() error
-	RemoveCgroup(string) error
+	RemoveCgroups([]string) error
 }

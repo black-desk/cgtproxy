@@ -5,7 +5,6 @@ import (
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
-	"github.com/black-desk/cgtproxy/pkg/nftman"
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
@@ -13,7 +12,7 @@ import (
 )
 
 type RouteManager struct {
-	cgroupEventChan <-chan types.CGroupEvent
+	cgroupEventsChan <-chan types.CGroupEvents
 
 	nft interfaces.NFTManager
 	cfg *config.Config
@@ -21,7 +20,7 @@ type RouteManager struct {
 
 	matchers []*struct {
 		reg    *regexp.Regexp
-		target nftman.Target
+		target types.Target
 	}
 
 	rule  []*netlink.Rule
@@ -49,7 +48,7 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 		regex := m.cfg.Rules[i].Match
 		var matcher struct {
 			reg    *regexp.Regexp
-			target nftman.Target
+			target types.Target
 		}
 
 		matcher.reg, err = regexp.Compile(regex)
@@ -58,11 +57,11 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 		}
 
 		if m.cfg.Rules[i].Direct {
-			matcher.target.Op = nftman.TargetDirect
+			matcher.target.Op = types.TargetDirect
 		} else if m.cfg.Rules[i].Drop {
-			matcher.target.Op = nftman.TargetDrop
+			matcher.target.Op = types.TargetDrop
 		} else if m.cfg.Rules[i].TProxy != "" {
-			matcher.target.Op = nftman.TargetTProxy
+			matcher.target.Op = types.TargetTProxy
 			matcher.target.Chain =
 				m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
 		} else {
@@ -110,14 +109,14 @@ func WithConfig(c *config.Config) Opt {
 	}
 }
 
-func WithCGroupEventChan(ch <-chan types.CGroupEvent) Opt {
+func WithCGroupEventChan(ch <-chan types.CGroupEvents) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if ch == nil {
 			err = ErrCGroupEventChanMissing
 			return
 		}
 
-		m.cgroupEventChan = ch
+		m.cgroupEventsChan = ch
 		ret = m
 		return
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 type CGroupFSMonitor struct {
-	eventsOut chan types.CGroupEvent
+	eventsOut chan types.CGroupEvents
 	eventsIn  chan notify.EventInfo
 	root      config.CGroupRoot
 	log       *zap.SugaredLogger
@@ -22,8 +22,8 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 
 	w := &CGroupFSMonitor{}
 
-	w.eventsOut = make(chan types.CGroupEvent)
-	w.eventsIn = make(chan notify.EventInfo)
+	w.eventsOut = make(chan types.CGroupEvents, 1)
+	w.eventsIn = make(chan notify.EventInfo, 1)
 
 	for i := range opts {
 		w, err = opts[i](w)
@@ -43,7 +43,7 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 
 	ret = w
 
-	w.log.Debugw("Create a new filesystem watcher.")
+	w.log.Debugw("Create a cgroupv2 filesystem monitor.")
 
 	return
 }

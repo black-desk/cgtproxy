@@ -8,7 +8,7 @@ import (
 	"github.com/rjeczalik/notify"
 )
 
-func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvent {
+func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvents {
 	return w.eventsOut
 }
 
@@ -24,24 +24,38 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 	}
 
 	w.log.Info("Going through cgroupfs first time...")
-	w.walk(ctx, string(w.root))
+	var events types.CGroupEvents
+	events.Events, err = w.walk(string(w.root))
 	w.log.Info("Going through cgroupfs first time...Done.")
+	err = w.send(ctx, events)
+	if err != nil {
+		return
+	}
 
 LOOP:
 	for {
 		select {
 		case <-ctx.Done():
 			break LOOP
-		case event := <-w.eventsIn:
+		case eventInfo := <-w.eventsIn:
+
+			event := eventInfo.Event()
+			path := eventInfo.Path()
+
+			w.log.Debugw(
+				"New filesystem notify arrived.",
+				"event", event.String(),
+				"path", path,
+			)
 			eventType := types.CgroupEventTypeNew
-			if event.Event() == notify.InDelete {
+			if event == notify.Remove {
 				eventType = types.CgroupEventTypeDelete
 			}
 
-			err = w.send(ctx, &types.CGroupEvent{
-				Path:      event.Path(),
+			err = w.send(ctx, types.CGroupEvents{Events: []types.CGroupEvent{{
+				Path:      path,
 				EventType: eventType,
-			})
+			}}})
 		}
 	}
 

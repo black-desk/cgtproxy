@@ -1,6 +1,8 @@
 package routeman
 
 import (
+	"errors"
+
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 )
@@ -20,29 +22,32 @@ func (m *RouteManager) Run() (err error) {
 		return
 	}
 
-	for event := range m.cgroupEventChan {
-		var eventErr error
+	for events := range m.cgroupEventsChan {
+		newCGroups := []string{}
+		deleteCGroups := []string{}
 
-		switch event.EventType {
-		case types.CgroupEventTypeNew:
-			eventErr = m.handleNewCgroup(event.Path)
-		case types.CgroupEventTypeDelete:
-			eventErr = m.handleDeleteCgroup(event.Path)
+		for i := range events.Events {
+			event := &events.Events[i]
+
+			switch event.EventType {
+			case types.CgroupEventTypeNew:
+				newCGroups = append(newCGroups, event.Path)
+			case types.CgroupEventTypeDelete:
+				deleteCGroups = append(deleteCGroups, event.Path)
+			}
 		}
 
-		if eventErr == nil {
+		newErr := m.handleNewCgroups(newCGroups)
+		delErr := m.handleDeleteCgroups(deleteCGroups)
+		eventsErr := errors.Join(newErr, delErr)
+		if eventsErr == nil {
 			continue
 		}
 
-		if event.Result != nil {
-			event.Result <- eventErr
-			continue
+		if events.Result != nil {
+			events.Result <- eventsErr
 		}
-
-		m.log.Errorw("Failed to handle cgroup event.",
-			"event", event,
-			"error", eventErr,
-		)
 	}
+
 	return
 }

@@ -41,7 +41,7 @@ func checkConfigCmdRun() (err error) {
 	if err != nil {
 		Wrap(
 			&err,
-			"Failed to read configuration from %s.",
+			"read configuration from %s",
 			flags.CfgPath,
 		)
 		return

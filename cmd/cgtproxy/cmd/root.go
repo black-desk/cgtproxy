@@ -7,20 +7,24 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"runtime/pprof"
 	"strings"
 	"syscall"
 	"text/template"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 )
 
 var flags struct {
-	CfgPath    string
-	CPUProfile string
+	CfgPath            string
+	CPUProfile         string
+	BlockProfile       string
+	LastingNetlinkConn bool
 }
 
 var rootCmd = &cobra.Command{
@@ -44,10 +48,10 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func generateCPUProfileName(tmplStr string) (name string, err error) {
+func generateProfileName(tmplStr string) (name string, err error) {
 	var tmpl *template.Template
-	tmpl = template.New("cpu profile name")
-	tmpl, err = tmpl.Parse(flags.CPUProfile)
+	tmpl = template.New("profile name")
+	tmpl, err = tmpl.Parse(tmplStr)
 	if err != nil {
 		return
 	}
@@ -65,12 +69,11 @@ func generateCPUProfileName(tmplStr string) (name string, err error) {
 func rootCmdRun() (err error) {
 	log := logger.Get("cgtproxy")
 
-	if slices.Contains(
-		strings.Split(os.Getenv("CGTPROXY_PROFILE"), ","),
-		"cpu",
-	) {
+	profiles := strings.Split(os.Getenv("CGTPROXY_PROFILE"), ",")
+
+	if slices.Contains(profiles, "cpu") {
 		var path string
-		path, err = generateCPUProfileName(flags.CPUProfile)
+		path, err = generateProfileName(flags.CPUProfile)
 		if err != nil {
 			return
 		}
@@ -84,6 +87,27 @@ func rootCmdRun() (err error) {
 
 		err = pprof.StartCPUProfile(cpuProfile)
 		defer pprof.StopCPUProfile()
+		if err != nil {
+			return
+		}
+	}
+
+	if slices.Contains(profiles, "block") {
+		var path string
+		path, err = generateProfileName(flags.BlockProfile)
+		if err != nil {
+			return
+		}
+
+		var blockProfile *os.File
+		blockProfile, err = os.Create(path)
+		defer blockProfile.Close()
+		if err != nil {
+			return
+		}
+
+		runtime.SetBlockProfileRate(1)
+		defer pprof.Lookup("block").WriteTo(blockProfile, 0)
 		if err != nil {
 			return
 		}
@@ -113,7 +137,13 @@ func rootCmdRun() (err error) {
 		return
 	}
 
-	c, err := injectedCGTProxy(cfg, log)
+	var c interfaces.CGTProxy
+	if flags.LastingNetlinkConn {
+		c, err = injectedLastingCGTProxy(cfg, log)
+	} else {
+		c, err = injectedCGTProxy(cfg, log)
+	}
+
 	if err != nil {
 		return
 	}
@@ -171,12 +201,27 @@ func init() {
 		"the configure file to use",
 	)
 
-	rootCmd.PersistentFlags().StringVarP(
+	rootCmd.PersistentFlags().StringVar(
 		&flags.CPUProfile,
-		"cpu-profile", "", "/tmp/cgtproxy.{{.PID}}.cpuprofile",
+		"cpu-profile", "/tmp/cgtproxy.{{.PID}}.cpuprofile",
 		""+
 			"the template string use to create the cpu profile "+
 			"NOTE: this option only takes effect "+
 			"when $CGTPROXY_PROFILE=cpu",
+	)
+
+	rootCmd.PersistentFlags().StringVar(
+		&flags.BlockProfile,
+		"block-profile", "/tmp/cgtproxy.{{.PID}}.blockprofile",
+		""+
+			"the template string use to create the block profile "+
+			"NOTE: this option only takes effect "+
+			"when $CGTPROXY_PROFILE=block",
+	)
+
+	rootCmd.PersistentFlags().BoolVar(
+		&flags.LastingNetlinkConn,
+		"reuse-netlink-socket", false,
+		"the configure file to use",
 	)
 }

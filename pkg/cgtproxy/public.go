@@ -8,6 +8,8 @@ import (
 )
 
 func (c *CGTProxy) Run(ctx context.Context) (err error) {
+	c.log.Debug("CGTProxy starting.")
+	defer c.log.Debug("CGTProxy exiting.")
 	defer Wrap(&err, "running cgtproxy core")
 
 	pool := pool.New().

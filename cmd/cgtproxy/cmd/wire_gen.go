@@ -20,8 +20,39 @@ func injectedCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLog
 	if err != nil {
 		return nil, err
 	}
+	netlinkConnector, err := provideNetlinkConnector()
+	if err != nil {
+		return nil, err
+	}
 	bypass := provideBypass(configConfig)
-	nftManager, err := provideNFTManager(cGroupRoot, bypass, sugaredLogger)
+	nftManager, err := provideNFTManager(netlinkConnector, cGroupRoot, bypass, sugaredLogger)
+	if err != nil {
+		return nil, err
+	}
+	v := provideCGroupEventChan(cGroupMonitor)
+	routeManager, err := provideRuleManager(nftManager, configConfig, v, sugaredLogger)
+	if err != nil {
+		return nil, err
+	}
+	cgtProxy, err := provideCGTProxy(cGroupMonitor, routeManager, sugaredLogger, configConfig)
+	if err != nil {
+		return nil, err
+	}
+	return cgtProxy, nil
+}
+
+func injectedLastingCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLogger) (interfaces.CGTProxy, error) {
+	cGroupRoot := provideCgroupRoot(configConfig)
+	cGroupMonitor, err := provideCgrougMontior(cGroupRoot, sugaredLogger)
+	if err != nil {
+		return nil, err
+	}
+	netlinkConnector, err := provideLastringNetlinkConnector()
+	if err != nil {
+		return nil, err
+	}
+	bypass := provideBypass(configConfig)
+	nftManager, err := provideNFTManager(netlinkConnector, cGroupRoot, bypass, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}

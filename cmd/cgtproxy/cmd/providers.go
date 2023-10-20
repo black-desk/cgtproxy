@@ -6,9 +6,10 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	"github.com/black-desk/cgtproxy/pkg/nftman"
+	"github.com/black-desk/cgtproxy/pkg/nftman/connector"
+	"github.com/black-desk/cgtproxy/pkg/nftman/lastingconnector"
 	"github.com/black-desk/cgtproxy/pkg/routeman"
 	"github.com/black-desk/cgtproxy/pkg/types"
-	"github.com/google/nftables"
 	"github.com/google/wire"
 	"go.uber.org/zap"
 )
@@ -18,23 +19,20 @@ type chans struct {
 	out chan<- types.CGroupEvent
 }
 
-func provideCGroupEventChan(mon interfaces.CGroupMonitor) <-chan types.CGroupEvent {
+func provideCGroupEventChan(mon interfaces.CGroupMonitor) <-chan types.CGroupEvents {
 	return mon.Events()
 }
 
-func provideNftConn() (ret *nftables.Conn, err error) {
-	var nftConn *nftables.Conn
+func provideNetlinkConnector() (ret interfaces.NetlinkConnector, err error) {
+	return connector.New()
+}
 
-	nftConn, err = nftables.New(nftables.AsLasting())
-	if err != nil {
-		return
-	}
-
-	ret = nftConn
-	return
+func provideLastringNetlinkConnector() (ret interfaces.NetlinkConnector, err error) {
+	return lastingconnector.New()
 }
 
 func provideNFTManager(
+	connector interfaces.NetlinkConnector,
 	root config.CGroupRoot,
 	bypass config.Bypass,
 	logger *zap.SugaredLogger,
@@ -42,43 +40,28 @@ func provideNFTManager(
 	ret interfaces.NFTManager,
 	err error,
 ) {
-	var t *nftman.NFTManager
-	t, err = nftman.New(
+	return nftman.New(
 		nftman.WithCgroupRoot(root),
 		nftman.WithBypass(bypass),
 		nftman.WithLogger(logger),
+		nftman.WithConnFactory(connector),
 	)
-
-	if err != nil {
-		return
-	}
-
-	ret = t
-	return
 }
 
 func provideRuleManager(
 	t interfaces.NFTManager,
 	cfg *config.Config,
-	ch <-chan types.CGroupEvent,
+	ch <-chan types.CGroupEvents,
 	logger *zap.SugaredLogger,
 ) (
 	ret interfaces.RouteManager, err error,
 ) {
-	var r *routeman.RouteManager
-	r, err = routeman.New(
+	return routeman.New(
 		routeman.WithNFTMan(t),
 		routeman.WithConfig(cfg),
 		routeman.WithCGroupEventChan(ch),
 		routeman.WithLogger(logger),
 	)
-
-	if err != nil {
-		return
-	}
-
-	ret = r
-	return
 }
 
 func provideCgrougMontior(
@@ -118,10 +101,22 @@ func provideCGTProxy(
 
 var set = wire.NewSet(
 	provideBypass,
-	provideCgrougMontior,
-	provideCgroupRoot,
 	provideCGTProxy,
 	provideCGroupEventChan,
-	provideRuleManager,
+	provideCgrougMontior,
+	provideCgroupRoot,
 	provideNFTManager,
+	provideNetlinkConnector,
+	provideRuleManager,
+)
+
+var lastingConnectorSet = wire.NewSet(
+	provideBypass,
+	provideCGTProxy,
+	provideCGroupEventChan,
+	provideCgrougMontior,
+	provideCgroupRoot,
+	provideLastringNetlinkConnector,
+	provideNFTManager,
+	provideRuleManager,
 )
