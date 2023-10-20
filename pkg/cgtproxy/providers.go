@@ -34,21 +34,21 @@ func provideWatcher(
 }
 
 type chans struct {
-	in  <-chan *types.CgroupEvent
-	out chan<- *types.CgroupEvent
+	in  <-chan types.CgroupEvent
+	out chan<- types.CgroupEvent
 }
 
 func provideChans() chans {
-	ch := make(chan *types.CgroupEvent)
+	ch := make(chan types.CgroupEvent)
 
 	return chans{ch, ch}
 }
 
-func provideInputChan(chs chans) <-chan *types.CgroupEvent {
+func provideInputChan(chs chans) <-chan types.CgroupEvent {
 	return chs.in
 }
 
-func provideOutputChan(chs chans) chan<- *types.CgroupEvent {
+func provideOutputChan(chs chans) chan<- types.CgroupEvent {
 	return chs.out
 }
 
@@ -90,7 +90,7 @@ func provideTable(
 func provideRuleManager(
 	t *nftman.Table,
 	cfg *config.Config,
-	ch <-chan *types.CgroupEvent,
+	ch <-chan types.CgroupEvent,
 	logger *zap.SugaredLogger,
 ) (
 	ret *routeman.RouteManager, err error,
@@ -112,7 +112,7 @@ func provideRuleManager(
 }
 
 func provideMonitor(
-	ch chan<- *types.CgroupEvent,
+	ch chan<- types.CgroupEvent,
 	w *fswatcher.Watcher,
 	root config.CgroupRoot,
 	logger *zap.SugaredLogger,

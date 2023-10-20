@@ -12,7 +12,7 @@ import (
 )
 
 type RouteManager struct {
-	cgroupEventChan <-chan *types.CgroupEvent
+	cgroupEventChan <-chan types.CgroupEvent
 
 	nft *nftman.Table
 	cfg *config.Config
@@ -107,7 +107,7 @@ func WithConfig(c *config.Config) Opt {
 	}
 }
 
-func WithCgroupEventChan(ch <-chan *types.CgroupEvent) Opt {
+func WithCgroupEventChan(ch <-chan types.CgroupEvent) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if ch == nil {
 			err = ErrCgroupEventChanMissing

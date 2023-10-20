@@ -12,7 +12,7 @@ import (
 
 type FSMonitor struct {
 	watcher *fswatcher.Watcher
-	output  chan<- *types.CgroupEvent
+	output  chan<- types.CgroupEvent
 	root    config.CgroupRoot
 	log     *zap.SugaredLogger
 }
@@ -71,7 +71,7 @@ func WithWatcher(w *fswatcher.Watcher) Opt {
 	}
 }
 
-func WithOutput(ch chan<- *types.CgroupEvent) Opt {
+func WithOutput(ch chan<- types.CgroupEvent) Opt {
 	return func(mon *FSMonitor) (ret *FSMonitor, err error) {
 		if ch == nil {
 			err = ErrOutputMissing

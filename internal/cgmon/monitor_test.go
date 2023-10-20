@@ -22,7 +22,7 @@ import (
 var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, func() {
 	var (
 		w               *fswatcher.Watcher
-		cgroupEventChan chan *types.CgroupEvent
+		cgroupEventChan chan types.CgroupEvent
 		monitor         *FSMonitor
 		tmpDir          string
 		err             error
@@ -36,9 +36,9 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 			},
 		}
 
-		cgroupEventChan = make(chan *types.CgroupEvent)
+		cgroupEventChan = make(chan types.CgroupEvent)
 
-		var cgroupEventChanIn chan<- *types.CgroupEvent
+		var cgroupEventChanIn chan<- types.CgroupEvent
 		cgroupEventChanIn = cgroupEventChan
 
 		tmpDir, err = os.MkdirTemp("/tmp", "*")
@@ -96,7 +96,7 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 		})
 
 		It(fmt.Sprintf("should %s", resultMsg), func() {
-			var cgroupEvents []*types.CgroupEvent
+			var cgroupEvents []types.CgroupEvent
 			for cgroupEvent := range cgroupEventChan {
 				cgroupEvents = append(cgroupEvents, cgroupEvent)
 			}
@@ -104,7 +104,7 @@ var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, fu
 			Expect(len(expectResult)).To(Equal(len(cgroupEvents)))
 
 			for i := range cgroupEvents {
-				Expect(*cgroupEvents[i]).To(Equal(*expectResult[i]))
+				Expect(cgroupEvents[i]).To(Equal(*expectResult[i]))
 			}
 
 			err = p.Wait()

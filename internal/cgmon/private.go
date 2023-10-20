@@ -76,7 +76,7 @@ func (m *FSMonitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err e
 	case <-ctx.Done():
 		err = ctx.Err()
 		return
-	case m.output <- cgEvent:
+	case m.output <- *cgEvent:
 		m.log.Debugw("Cgroup event sent.",
 			"path", path,
 		)
