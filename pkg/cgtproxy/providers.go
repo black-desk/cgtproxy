@@ -7,6 +7,7 @@ import (
 	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	"github.com/google/nftables"
 	"github.com/google/wire"
 	"go.uber.org/zap"
@@ -116,9 +117,9 @@ func provideMonitor(
 	root config.CgroupRoot,
 	logger *zap.SugaredLogger,
 ) (
-	ret *cgmon.Monitor, err error,
+	ret interfaces.CgroupMonitor, err error,
 ) {
-	var m *cgmon.Monitor
+	var m *cgmon.FSMonitor
 
 	m, err = cgmon.New(
 		cgmon.WithOutput(ch),
@@ -143,7 +144,7 @@ func provideBypass(cfg *config.Config) config.Bypass {
 }
 
 func provideComponents(
-	w *fswatcher.Watcher, m *cgmon.Monitor, r *routeman.RouteManager,
+	w *fswatcher.Watcher, m interfaces.CgroupMonitor, r *routeman.RouteManager,
 ) *components {
 	return &components{w: w, m: m, r: r}
 }

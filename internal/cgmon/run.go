@@ -11,7 +11,7 @@ import (
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
-func (m *Monitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, err error) error {
+func (m *FSMonitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, err error) error {
 	return func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -35,7 +35,7 @@ func (m *Monitor) walkFn(ctx context.Context) func(path string, d fs.DirEntry, e
 	}
 }
 
-func (m *Monitor) walk(ctx context.Context, path string) {
+func (m *FSMonitor) walk(ctx context.Context, path string) {
 	err := m.doWalk(ctx, path)
 	if err == nil {
 		return
@@ -55,12 +55,12 @@ func (m *Monitor) walk(ctx context.Context, path string) {
 	return
 }
 
-func (m *Monitor) doWalk(ctx context.Context, path string) (err error) {
+func (m *FSMonitor) doWalk(ctx context.Context, path string) (err error) {
 	err = filepath.WalkDir(path, m.walkFn(ctx))
 	return
 }
 
-func (m *Monitor) Run(ctx context.Context) (err error) {
+func (m *FSMonitor) Run(ctx context.Context) (err error) {
 	defer close(m.output)
 	defer Wrap(&err, "running cgroup monitor.")
 
@@ -120,7 +120,7 @@ func (m *Monitor) Run(ctx context.Context) (err error) {
 	}
 }
 
-func (m *Monitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err error) {
+func (m *FSMonitor) send(ctx context.Context, cgEvent *types.CgroupEvent) (err error) {
 	path := strings.TrimRight(cgEvent.Path, "/")
 	cgEvent.Path = path
 

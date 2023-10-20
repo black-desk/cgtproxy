@@ -3,10 +3,10 @@ package cgtproxy
 import (
 	"context"
 
-	"github.com/black-desk/cgtproxy/internal/cgmon"
 	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/sourcegraph/conc/pool"
 	"go.uber.org/zap"
@@ -24,7 +24,7 @@ type Core struct {
 
 type components struct {
 	w *fswatcher.Watcher
-	m *cgmon.Monitor
+	m interfaces.CgroupMonitor
 	r *routeman.RouteManager
 }
 

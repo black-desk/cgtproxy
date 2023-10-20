@@ -4,21 +4,26 @@ import (
 	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	. "github.com/black-desk/lib/go/errwrap"
+
 	"go.uber.org/zap"
 )
 
-type Monitor struct {
+type FSMonitor struct {
 	watcher *fswatcher.Watcher
 	output  chan<- *types.CgroupEvent
 	root    config.CgroupRoot
 	log     *zap.SugaredLogger
 }
 
-func New(opts ...Opt) (ret *Monitor, err error) {
+//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@latest -for github.com/black-desk/cgtproxy/internal/cgmon.FSMonitor -as interfaces.CgroupMonitor -o ../../pkg/interfaces/cgmon.go
+var _ interfaces.CgroupMonitor = &FSMonitor{}
+
+func New(opts ...Opt) (ret *FSMonitor, err error) {
 	defer Wrap(&err, "create cgroup monitor")
 
-	m := &Monitor{}
+	m := &FSMonitor{}
 	for i := range opts {
 		m, err = opts[i](m)
 		if err != nil {
@@ -54,10 +59,10 @@ func New(opts ...Opt) (ret *Monitor, err error) {
 	return
 }
 
-type Opt func(mon *Monitor) (ret *Monitor, err error)
+type Opt func(mon *FSMonitor) (ret *FSMonitor, err error)
 
 func WithWatcher(w *fswatcher.Watcher) Opt {
-	return func(mon *Monitor) (ret *Monitor, err error) {
+	return func(mon *FSMonitor) (ret *FSMonitor, err error) {
 		if w == nil {
 			err = ErrWatcherMissing
 			return
@@ -69,7 +74,7 @@ func WithWatcher(w *fswatcher.Watcher) Opt {
 }
 
 func WithOutput(ch chan<- *types.CgroupEvent) Opt {
-	return func(mon *Monitor) (ret *Monitor, err error) {
+	return func(mon *FSMonitor) (ret *FSMonitor, err error) {
 		if ch == nil {
 			err = ErrOutputMissing
 			return
@@ -81,7 +86,7 @@ func WithOutput(ch chan<- *types.CgroupEvent) Opt {
 }
 
 func WithCgroupRoot(root config.CgroupRoot) Opt {
-	return func(mon *Monitor) (ret *Monitor, err error) {
+	return func(mon *FSMonitor) (ret *FSMonitor, err error) {
 		if root == "" {
 			err = ErrCgroupRootMissing
 			return
@@ -93,7 +98,7 @@ func WithCgroupRoot(root config.CgroupRoot) Opt {
 }
 
 func WithLogger(logger *zap.SugaredLogger) Opt {
-	return func(mon *Monitor) (ret *Monitor, err error) {
+	return func(mon *FSMonitor) (ret *FSMonitor, err error) {
 		mon.log = logger
 		ret = mon
 		return

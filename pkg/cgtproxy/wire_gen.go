@@ -21,7 +21,7 @@ func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredL
 	}
 	cgtproxyChans := provideChans()
 	v := provideOutputChan(cgtproxyChans)
-	monitor, err := provideMonitor(v, watcher, cgroupRoot, sugaredLogger)
+	cgroupMonitor, err := provideMonitor(v, watcher, cgroupRoot, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +35,6 @@ func injectedComponents(configConfig *config.Config, sugaredLogger *zap.SugaredL
 	if err != nil {
 		return nil, err
 	}
-	cgtproxyComponents := provideComponents(watcher, monitor, routeManager)
+	cgtproxyComponents := provideComponents(watcher, cgroupMonitor, routeManager)
 	return cgtproxyComponents, nil
 }

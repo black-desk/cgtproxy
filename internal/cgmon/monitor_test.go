@@ -3,6 +3,9 @@ package cgmon_test
 import (
 	"context"
 	"fmt"
+	"os"
+	"testing"
+
 	. "github.com/black-desk/cgtproxy/internal/cgmon"
 	"github.com/black-desk/cgtproxy/internal/fswatcher"
 	"github.com/black-desk/cgtproxy/internal/types"
@@ -14,15 +17,13 @@ import (
 	"github.com/sourcegraph/conc/pool"
 	"github.com/tywkeene/go-fsevents"
 	"golang.org/x/sys/unix"
-	"os"
-	"testing"
 )
 
 var _ = Describe("Cgroup monitor create with fake fsevents.Watcher", Ordered, func() {
 	var (
 		w               *fswatcher.Watcher
 		cgroupEventChan chan *types.CgroupEvent
-		monitor         *Monitor
+		monitor         *FSMonitor
 		tmpDir          string
 		err             error
 	)
