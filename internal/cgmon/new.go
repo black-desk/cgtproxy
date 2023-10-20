@@ -31,25 +31,23 @@ func New(opts ...Opt) (ret *FSMonitor, err error) {
 		}
 	}
 
-	{
-		if m.watcher == nil {
-			err = ErrWatcherMissing
-			return
-		}
+	if m.watcher == nil {
+		err = ErrWatcherMissing
+		return
+	}
 
-		if m.output == nil {
-			err = ErrOutputMissing
-			return
-		}
+	if m.output == nil {
+		err = ErrOutputMissing
+		return
+	}
 
-		if m.root == "" {
-			err = ErrCgroupRootMissing
-			return
-		}
+	if m.root == "" {
+		err = ErrCgroupRootMissing
+		return
+	}
 
-		if m.log == nil {
-			m.log = zap.NewNop().Sugar()
-		}
+	if m.log == nil {
+		m.log = zap.NewNop().Sugar()
 	}
 
 	ret = m
