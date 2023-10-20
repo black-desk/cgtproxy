@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Core struct {
+type CGTProxy struct {
 	cfg *config.Config
 
 	pool   *pool.ContextPool
@@ -28,12 +28,12 @@ type components struct {
 	r *routeman.RouteManager
 }
 
-type Opt = (func(*Core) (*Core, error))
+type Opt = (func(*CGTProxy) (*CGTProxy, error))
 
-func New(opts ...Opt) (ret *Core, err error) {
+func New(opts ...Opt) (ret *CGTProxy, err error) {
 	defer Wrap(&err, "create new cgtproxy core")
 
-	c := &Core{}
+	c := &CGTProxy{}
 	for i := range opts {
 		c, err = opts[i](c)
 		if err != nil {
@@ -67,7 +67,7 @@ func New(opts ...Opt) (ret *Core, err error) {
 }
 
 func WithConfig(cfg *config.Config) Opt {
-	return func(core *Core) (ret *Core, err error) {
+	return func(core *CGTProxy) (ret *CGTProxy, err error) {
 		core.cfg = cfg
 		ret = core
 
@@ -76,7 +76,7 @@ func WithConfig(cfg *config.Config) Opt {
 }
 
 func WithLogger(log *zap.SugaredLogger) Opt {
-	return func(core *Core) (ret *Core, err error) {
+	return func(core *CGTProxy) (ret *CGTProxy, err error) {
 		core.log = log
 		ret = core
 		return

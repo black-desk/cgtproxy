@@ -6,7 +6,7 @@ import (
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
-func (c *Core) Run() (err error) {
+func (c *CGTProxy) Run() (err error) {
 	defer Wrap(&err, "running cgtproxy core")
 
 	c.components, err = injectedComponents(c.cfg, c.log)
@@ -22,11 +22,11 @@ func (c *Core) Run() (err error) {
 	return c.pool.Wait()
 }
 
-func (c *Core) Stop(err error) {
+func (c *CGTProxy) Stop(err error) {
 	c.stopCh <- err
 }
 
-func (c *Core) waitStop(ctx context.Context) (err error) {
+func (c *CGTProxy) waitStop(ctx context.Context) (err error) {
 	defer Wrap(&err)
 
 	select {
@@ -38,7 +38,7 @@ func (c *Core) waitStop(ctx context.Context) (err error) {
 	}
 }
 
-func (c *Core) runMonitor(ctx context.Context) (err error) {
+func (c *CGTProxy) runMonitor(ctx context.Context) (err error) {
 	defer c.log.Debugw("Cgroup monitor exited.")
 
 	c.log.Debugw("Start cgroup monitor.")
@@ -51,7 +51,7 @@ func (c *Core) runMonitor(ctx context.Context) (err error) {
 	return ctx.Err()
 }
 
-func (c *Core) runRuleManager(ctx context.Context) (err error) {
+func (c *CGTProxy) runRuleManager(ctx context.Context) (err error) {
 	defer c.log.Debugw("Rule manager exited.")
 
 	c.log.Debugw("Start nft rule manager.")
@@ -64,7 +64,7 @@ func (c *Core) runRuleManager(ctx context.Context) (err error) {
 	return ctx.Err()
 }
 
-func (c *Core) runWatcher(ctx context.Context) (err error) {
+func (c *CGTProxy) runWatcher(ctx context.Context) (err error) {
 	defer c.log.Debugw("Watcher exited.")
 
 	c.log.Debugw("Start filesystem watcher.")
