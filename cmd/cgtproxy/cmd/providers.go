@@ -18,18 +18,8 @@ type chans struct {
 	out chan<- types.CGroupEvent
 }
 
-func provideChans() chans {
-	ch := make(chan types.CGroupEvent)
-
-	return chans{ch, ch}
-}
-
-func provideInputChan(chs chans) <-chan types.CGroupEvent {
-	return chs.in
-}
-
-func provideOutputChan(chs chans) chan<- types.CGroupEvent {
-	return chs.out
+func provideCGroupEventChan(mon interfaces.CGroupMonitor) <-chan types.CGroupEvent {
+	return mon.Events()
 }
 
 func provideNftConn() (ret *nftables.Conn, err error) {
@@ -130,10 +120,8 @@ var set = wire.NewSet(
 	provideBypass,
 	provideCgrougMontior,
 	provideCgroupRoot,
-	provideChans,
 	provideCGTProxy,
-	provideInputChan,
-	provideOutputChan,
+	provideCGroupEventChan,
 	provideRuleManager,
 	provideNFTManager,
 )

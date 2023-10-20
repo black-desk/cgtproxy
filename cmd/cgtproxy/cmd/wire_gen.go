@@ -25,8 +25,7 @@ func injectedCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLog
 	if err != nil {
 		return nil, err
 	}
-	cmdChans := provideChans()
-	v := provideInputChan(cmdChans)
+	v := provideCGroupEventChan(cGroupMonitor)
 	routeManager, err := provideRuleManager(nftManager, configConfig, v, sugaredLogger)
 	if err != nil {
 		return nil, err

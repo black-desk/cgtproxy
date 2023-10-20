@@ -48,14 +48,6 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 		return
 	}
 
-	err = watcherImpl.RegisterEventHandler(&handle{
-		log:    w.log,
-		events: w.events,
-	})
-	if err != nil {
-		return
-	}
-
 	ret = w
 
 	w.log.Debugw("Create a new filesystem watcher.")

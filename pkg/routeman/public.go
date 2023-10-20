@@ -6,7 +6,7 @@ import (
 )
 
 func (m *RouteManager) Run() (err error) {
-	defer Wrap(&err, "running route manager.")
+	defer Wrap(&err, "running route manager")
 
 	defer m.removeRoute()
 	err = m.addRoute()
