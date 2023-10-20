@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func (nft *NFTMan) ignoreNoBufferSpaceAvailable(perr *error) {
+func (nft *NFTManager) ignoreNoBufferSpaceAvailable(perr *error) {
 	var errno syscall.Errno
 	if errors.As(*perr, &errno) && errno == syscall.ENOBUFS {
 		*perr = nil
@@ -25,7 +25,7 @@ func (nft *NFTMan) ignoreNoBufferSpaceAvailable(perr *error) {
 	}
 }
 
-func (nft *NFTMan) nextIP(ip net.IP) (ret net.IP) {
+func (nft *NFTManager) nextIP(ip net.IP) (ret net.IP) {
 	next := make(net.IP, len(ip))
 	copy(next, ip)
 
@@ -44,7 +44,7 @@ func (nft *NFTMan) nextIP(ip net.IP) (ret net.IP) {
 	return
 }
 
-func (nft *NFTMan) lastIP(ipnet *net.IPNet) (ret net.IP) {
+func (nft *NFTManager) lastIP(ipnet *net.IPNet) (ret net.IP) {
 	ip := make(net.IP, len(ipnet.IP))
 	copy(ip, ipnet.IP)
 
@@ -58,7 +58,7 @@ func (nft *NFTMan) lastIP(ipnet *net.IPNet) (ret net.IP) {
 	return
 }
 
-func (t *NFTMan) addMarkChainForTProxy(
+func (t *NFTManager) addMarkChainForTProxy(
 	conn *nftables.Conn, tp *config.TProxy,
 ) (
 	ret *nftables.Chain, err error,
@@ -99,7 +99,7 @@ func (t *NFTMan) addMarkChainForTProxy(
 	return
 }
 
-func (t *NFTMan) addTproxyChainForTProxy(
+func (t *NFTManager) addTproxyChainForTProxy(
 	conn *nftables.Conn, tp *config.TProxy,
 ) (
 	ret *nftables.Chain, err error,
@@ -168,7 +168,7 @@ func (t *NFTMan) addTproxyChainForTProxy(
 	return
 }
 
-func (t *NFTMan) updateMarkTproxyMap(
+func (t *NFTManager) updateMarkTproxyMap(
 	conn *nftables.Conn, mark config.FireWallMark, chain string,
 ) (
 	err error,
@@ -191,7 +191,7 @@ func (t *NFTMan) updateMarkTproxyMap(
 	return
 }
 
-func (t *NFTMan) updateMarkDNSMap(
+func (t *NFTManager) updateMarkDNSMap(
 	conn *nftables.Conn, mark config.FireWallMark, chain string,
 ) (
 	err error,
@@ -214,7 +214,7 @@ func (t *NFTMan) updateMarkDNSMap(
 	return
 }
 
-func (t *NFTMan) addDNSChainForTproxy(
+func (t *NFTManager) addDNSChainForTproxy(
 	conn *nftables.Conn, tp *config.TProxy,
 ) (
 	ret *nftables.Chain, err error,
@@ -332,7 +332,7 @@ func (t *NFTMan) addDNSChainForTproxy(
 	return
 }
 
-func (t *NFTMan) removeCgroupRoot(path string) string {
+func (t *NFTManager) removeCgroupRoot(path string) string {
 	path = filepath.Clean(path)
 	if strings.HasPrefix(path, string(t.cgroupRoot)) {
 		path = path[len(t.cgroupRoot):]
@@ -345,7 +345,7 @@ func (t *NFTMan) removeCgroupRoot(path string) string {
 	return path
 }
 
-func (t *NFTMan) addCgroupRuleForLevel(
+func (t *NFTManager) addCgroupRuleForLevel(
 	conn *nftables.Conn, level int,
 ) (
 	err error,

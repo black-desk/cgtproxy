@@ -1,11 +1,11 @@
 package cgtproxy
 
 import (
-	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/pkg/cgfsmon"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	"github.com/black-desk/cgtproxy/pkg/nftman"
+	"github.com/black-desk/cgtproxy/pkg/routeman"
 	"github.com/black-desk/cgtproxy/pkg/types"
 	"github.com/google/nftables"
 	"go.uber.org/zap"
@@ -42,15 +42,15 @@ func provideNftConn() (ret *nftables.Conn, err error) {
 	return
 }
 
-func provideNFTMan(
+func provideNFTManager(
 	root config.CgroupRoot,
 	bypass config.Bypass,
 	logger *zap.SugaredLogger,
 ) (
-	ret interfaces.NFTMan,
+	ret interfaces.NFTManager,
 	err error,
 ) {
-	var t *nftman.NFTMan
+	var t *nftman.NFTManager
 	t, err = nftman.New(
 		nftman.WithCgroupRoot(root),
 		nftman.WithBypass(bypass),
@@ -66,12 +66,12 @@ func provideNFTMan(
 }
 
 func provideRuleManager(
-	t interfaces.NFTMan,
+	t interfaces.NFTManager,
 	cfg *config.Config,
 	ch <-chan types.CGroupEvent,
 	logger *zap.SugaredLogger,
 ) (
-	ret *routeman.RouteManager, err error,
+	ret interfaces.RouteManager, err error,
 ) {
 	var r *routeman.RouteManager
 	r, err = routeman.New(
@@ -110,7 +110,7 @@ func provideBypass(cfg *config.Config) config.Bypass {
 
 func provideComponents(
 	m interfaces.CGroupMonitor,
-	r *routeman.RouteManager,
+	r interfaces.RouteManager,
 ) *components {
 	return &components{m: m, r: r}
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/nftman"
 )
 
-// NFTMan is an interface generated for "github.com/black-desk/cgtproxy/pkg/nftman.NFTMan".
-type NFTMan interface {
+// NFTManager is an interface generated for "github.com/black-desk/cgtproxy/pkg/nftman.NFTManager".
+type NFTManager interface {
 	AddCgroup(string, *nftman.Target) error
 	AddChainAndRulesForTProxy(*config.TProxy) error
 	Clear() error

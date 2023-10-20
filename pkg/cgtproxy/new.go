@@ -1,7 +1,6 @@
 package cgtproxy
 
 import (
-	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -20,7 +19,7 @@ type CGTProxy struct {
 
 type components struct {
 	m interfaces.CGroupMonitor
-	r *routeman.RouteManager
+	r interfaces.RouteManager
 }
 
 type Opt = (func(*CGTProxy) (*CGTProxy, error))

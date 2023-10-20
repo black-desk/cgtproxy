@@ -28,7 +28,7 @@ type Target struct {
 	Chain string
 }
 
-func (nft *NFTMan) AddCgroup(path string, target *Target) (err error) {
+func (nft *NFTManager) AddCgroup(path string, target *Target) (err error) {
 	defer Wrap(&err, "add cgroup (%s) to nftable", path)
 
 	nft.log.Infow("Adding new cgroup to nft.",
@@ -143,7 +143,7 @@ func (nft *NFTMan) AddCgroup(path string, target *Target) (err error) {
 	return
 }
 
-func (nft *NFTMan) RemoveCgroup(path string) (err error) {
+func (nft *NFTManager) RemoveCgroup(path string) (err error) {
 	defer Wrap(
 		&err,
 		"Failed to remove cgroup (%s) from nftable.",
@@ -191,7 +191,7 @@ func (nft *NFTMan) RemoveCgroup(path string) (err error) {
 	return
 }
 
-func (nft *NFTMan) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
+func (nft *NFTManager) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 	defer Wrap(
 		&err,
 		"Failed to add chain and rules to nft table for tproxy: %#v",
@@ -251,7 +251,7 @@ func (nft *NFTMan) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
 	return
 }
 
-func (nft *NFTMan) Clear() (err error) {
+func (nft *NFTManager) Clear() (err error) {
 	defer Wrap(&err, "remove nftable.")
 
 	var conn *nftables.Conn

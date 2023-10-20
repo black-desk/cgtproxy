@@ -15,7 +15,7 @@ import (
 type RouteManager struct {
 	cgroupEventChan <-chan types.CGroupEvent
 
-	nft interfaces.NFTMan
+	nft interfaces.NFTManager
 	cfg *config.Config
 	log *zap.SugaredLogger
 
@@ -27,6 +27,8 @@ type RouteManager struct {
 	rule  []*netlink.Rule
 	route []*netlink.Route
 }
+
+//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@latest -for github.com/black-desk/cgtproxy/pkg/routeman.RouteManager -as interfaces.RouteManager -o ../interfaces/routeman.go
 
 func New(opts ...Opt) (ret *RouteManager, err error) {
 	defer Wrap(&err, "create the nftable rule manager")
@@ -82,7 +84,7 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 
 type Opt func(m *RouteManager) (ret *RouteManager, err error)
 
-func WithNFTMan(t interfaces.NFTMan) Opt {
+func WithNFTMan(t interfaces.NFTManager) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if t == nil {
 			err = ErrTableMissing

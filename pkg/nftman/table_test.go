@@ -32,7 +32,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 	Context("created", func() {
 		var (
-			nft *NFTMan
+			nft *NFTManager
 
 			result     string
 			cgroupRoot = os.Getenv("CGTPROXY_TEST_CGROUP_ROOT")

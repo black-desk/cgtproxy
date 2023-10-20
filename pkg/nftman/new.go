@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-type NFTMan struct {
+type NFTManager struct {
 	cgroupRoot config.CgroupRoot
 	bypassIPv4 []string
 	bypassIPv6 []string
@@ -40,14 +40,14 @@ type NFTMan struct {
 	preroutingChain   *nftables.Chain
 }
 
-type Opt = (func(*NFTMan) (*NFTMan, error))
+type Opt = (func(*NFTManager) (*NFTManager, error))
 
-//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@latest -for github.com/black-desk/cgtproxy/pkg/nftman.NFTMan -as interfaces.NFTMan -o ../interfaces/nftman.go
+//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@latest -for github.com/black-desk/cgtproxy/pkg/nftman.NFTManager -as interfaces.NFTManager -o ../interfaces/nftman.go
 
-func New(opts ...Opt) (ret *NFTMan, err error) {
+func New(opts ...Opt) (ret *NFTManager, err error) {
 	defer Wrap(&err, "create nft table mananger")
 
-	t := &NFTMan{}
+	t := &NFTManager{}
 
 	for i := range opts {
 		t, err = opts[i](t)
@@ -73,7 +73,7 @@ func New(opts ...Opt) (ret *NFTMan, err error) {
 }
 
 func WithBypass(bypass config.Bypass) Opt {
-	return func(table *NFTMan) (ret *NFTMan, err error) {
+	return func(table *NFTManager) (ret *NFTManager, err error) {
 		if bypass == nil {
 			ret = table
 			return
@@ -103,20 +103,20 @@ func WithBypass(bypass config.Bypass) Opt {
 }
 
 func WithCgroupRoot(root config.CgroupRoot) Opt {
-	return func(table *NFTMan) (*NFTMan, error) {
+	return func(table *NFTManager) (*NFTManager, error) {
 		table.cgroupRoot = root
 		return table, nil
 	}
 }
 
 func WithLogger(log *zap.SugaredLogger) Opt {
-	return func(table *NFTMan) (*NFTMan, error) {
+	return func(table *NFTManager) (*NFTManager, error) {
 		table.log = log
 		return table, nil
 	}
 }
 
-func (nft *NFTMan) initStructure() (err error) {
+func (nft *NFTManager) initStructure() (err error) {
 	defer Wrap(&err, "flush initial content of nft table")
 
 	nft.log.Debug("Initialing nft table structure.")
@@ -189,7 +189,7 @@ func (nft *NFTMan) initStructure() (err error) {
 	return
 }
 
-func (nft *NFTMan) initIPV4BypassSet(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 	nft.ipv4BypassSet = &nftables.Set{
 		Table:        nft.table,
 		Name:         "bypass",
@@ -246,7 +246,7 @@ func (nft *NFTMan) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTMan) initIPV6BypassSet(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 	nft.ipv6BypassSet = &nftables.Set{
 		Table:        nft.table,
 		Name:         "bypass6",
@@ -302,7 +302,7 @@ func (nft *NFTMan) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTMan) initProtoSet() {
+func (nft *NFTManager) initProtoSet() {
 	nft.protoSet = &nftables.Set{
 		Table:     nft.table,
 		Anonymous: true,
@@ -316,7 +316,7 @@ func (nft *NFTMan) initProtoSet() {
 	}
 }
 
-func (nft *NFTMan) initCgroupMap(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initCgroupMap(conn *nftables.Conn) (err error) {
 	nft.cgroupMap = &nftables.Set{
 		Table:        nft.table,
 		Name:         "cgroup-vmap",
@@ -336,7 +336,7 @@ func (nft *NFTMan) initCgroupMap(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTMan) initMarkMap(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initMarkMap(conn *nftables.Conn) (err error) {
 	nft.markTproxyMap = &nftables.Set{
 		Table:        nft.table,
 		Name:         "mark-vmap",
@@ -354,7 +354,7 @@ func (nft *NFTMan) initMarkMap(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTMan) initMarkDNSMap(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initMarkDNSMap(conn *nftables.Conn) (err error) {
 	nft.markDNSMap = &nftables.Set{
 		Table:        nft.table,
 		Name:         "mark-dns-vmap",
@@ -372,7 +372,7 @@ func (nft *NFTMan) initMarkDNSMap(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTMan) initOutputMangleChain(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initOutputMangleChain(conn *nftables.Conn) (err error) {
 	// type filter hook prerouting priority mangle; policy accept;
 	nft.outputMangleChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
@@ -391,7 +391,7 @@ func (nft *NFTMan) initOutputMangleChain(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTMan) fillOutputMangleChain(
+func (nft *NFTManager) fillOutputMangleChain(
 	conn *nftables.Conn, chain *nftables.Chain,
 ) (
 	err error,
@@ -526,7 +526,7 @@ func (nft *NFTMan) fillOutputMangleChain(
 	return
 }
 
-func (nft *NFTMan) initOutputNATChain(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initOutputNATChain(conn *nftables.Conn) (err error) {
 	// type nat hook prerouting priority -100; policy accept;
 	nft.outputNATChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
@@ -561,7 +561,7 @@ func (nft *NFTMan) initOutputNATChain(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTMan) initPreroutingChain(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
 	// type route hook output priority mangle; policy accept;
 	nft.preroutingChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
