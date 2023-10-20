@@ -4,8 +4,8 @@ import (
 	"regexp"
 
 	"github.com/black-desk/cgtproxy/internal/nftman"
-	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
+	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"

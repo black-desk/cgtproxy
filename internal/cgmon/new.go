@@ -2,9 +2,9 @@ package cgmon
 
 import (
 	"github.com/black-desk/cgtproxy/internal/fswatcher"
-	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
+	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 
 	"go.uber.org/zap"
