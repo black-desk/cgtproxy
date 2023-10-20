@@ -1,8 +1,6 @@
 package cgtproxy
 
 import (
-	"context"
-
 	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
@@ -14,9 +12,8 @@ import (
 type CGTProxy struct {
 	cfg *config.Config
 
-	pool   *pool.ContextPool
-	log    *zap.SugaredLogger
-	stopCh chan error
+	pool *pool.ContextPool
+	log  *zap.SugaredLogger
 
 	components *components
 }
@@ -48,12 +45,6 @@ func New(opts ...Opt) (ret *CGTProxy, err error) {
 		err = ErrConfigMissing
 		return
 	}
-
-	c.pool = pool.New().
-		WithContext(context.Background()).
-		WithCancelOnError()
-
-	c.stopCh = make(chan error, 1)
 
 	ret = c
 

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -122,15 +123,17 @@ func rootCmdRun() (err error) {
 		return
 	}
 
+	ctx, cancel := context.WithCancelCause(context.Background())
+
 	go func() {
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
 
 		sig := <-sigCh
-		c.Stop(&ErrCancelBySignal{Signal: sig})
+		cancel(&ErrCancelBySignal{sig})
 	}()
 
-	err = c.Run()
+	err = c.Run(ctx)
 	if err == nil {
 		return
 	}
