@@ -43,6 +43,7 @@ var _ = Describe("Configuration", func() {
 			Expect(err).To(BeNil())
 		})
 	},
+		ContextTableEntry("../../../misc/config/example.yaml"),
 		ContextTableEntry("../../../test/data/example_config.yaml"),
 	)
 
