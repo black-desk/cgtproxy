@@ -19,7 +19,7 @@ func (c *Config) check() (err error) {
 	}
 
 	if c.CgroupRoot == "AUTO" {
-		var cgroupRoot CgroupRoot
+		var cgroupRoot CGroupRoot
 		cgroupRoot, err = getCgroupRoot()
 		if err != nil {
 			return
@@ -55,7 +55,7 @@ func (c *Config) check() (err error) {
 	return
 }
 
-func getCgroupRoot() (cgroupRoot CgroupRoot, err error) {
+func getCgroupRoot() (cgroupRoot CGroupRoot, err error) {
 	defer Wrap(&err, "get cgroupv2 mount point")
 
 	var mounts fstab.Mounts
@@ -66,7 +66,7 @@ func getCgroupRoot() (cgroupRoot CgroupRoot, err error) {
 
 	var (
 		mountFound bool
-		fsFile     CgroupRoot
+		fsFile     CGroupRoot
 	)
 	for i := range mounts {
 		mount := mounts[i]
@@ -76,7 +76,7 @@ func getCgroupRoot() (cgroupRoot CgroupRoot, err error) {
 			continue
 		}
 
-		fsFile = CgroupRoot(mount.File)
+		fsFile = CGroupRoot(mount.File)
 		mountFound = true
 	}
 

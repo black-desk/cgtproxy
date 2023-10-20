@@ -13,7 +13,7 @@ import (
 )
 
 type NFTManager struct {
-	cgroupRoot config.CgroupRoot
+	cgroupRoot config.CGroupRoot
 	bypassIPv4 []string
 	bypassIPv6 []string
 	log        *zap.SugaredLogger
@@ -93,7 +93,7 @@ func WithBypass(bypass config.Bypass) Opt {
 			} else if ip.To16() != nil {
 				table.bypassIPv6 = append(table.bypassIPv6, bypass[i])
 			} else {
-				panic("this should never happened")
+				panic("this should never happened, check validator.")
 			}
 		}
 
@@ -101,17 +101,27 @@ func WithBypass(bypass config.Bypass) Opt {
 	}
 }
 
-func WithCgroupRoot(root config.CgroupRoot) Opt {
-	return func(table *NFTManager) (*NFTManager, error) {
+func WithCgroupRoot(root config.CGroupRoot) Opt {
+	return func(table *NFTManager) (ret *NFTManager, err error) {
+		if root == "" {
+			err = ErrCGroupRootMissing
+			return
+		}
+
 		table.cgroupRoot = root
 		return table, nil
 	}
 }
 
 func WithLogger(log *zap.SugaredLogger) Opt {
-	return func(table *NFTManager) (*NFTManager, error) {
-		table.log = log
-		return table, nil
+	return func(nft *NFTManager) (ret *NFTManager, err error) {
+		if log == nil {
+			err = ErrLoggerMissing
+			return
+		}
+
+		nft.log = log
+		return nft, nil
 	}
 }
 

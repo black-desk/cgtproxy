@@ -45,7 +45,7 @@ func provideNftConn() (ret *nftables.Conn, err error) {
 }
 
 func provideNFTManager(
-	root config.CgroupRoot,
+	root config.CGroupRoot,
 	bypass config.Bypass,
 	logger *zap.SugaredLogger,
 ) (
@@ -92,7 +92,7 @@ func provideRuleManager(
 }
 
 func provideCgrougMontior(
-	cgroupRoot config.CgroupRoot, logger *zap.SugaredLogger,
+	cgroupRoot config.CGroupRoot, logger *zap.SugaredLogger,
 ) (
 	interfaces.CGroupMonitor, error,
 ) {
@@ -102,7 +102,7 @@ func provideCgrougMontior(
 	)
 }
 
-func provideCgroupRoot(cfg *config.Config) config.CgroupRoot {
+func provideCgroupRoot(cfg *config.Config) config.CGroupRoot {
 	return cfg.CgroupRoot
 }
 

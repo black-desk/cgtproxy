@@ -41,7 +41,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 		BeforeEach(func() {
 			By("Create a Table object.", func() {
 				nft, err = New(
-					WithCgroupRoot(config.CgroupRoot(cgroupRoot)),
+					WithCgroupRoot(config.CGroupRoot(cgroupRoot)),
 				)
 				Expect(err).To(Succeed())
 			})

@@ -11,7 +11,7 @@ import (
 type CGroupFSMonitor struct {
 	events  chan types.CGroupEvent
 	watcher *fsevents.Watcher
-	root    config.CgroupRoot
+	root    config.CGroupRoot
 	log     *zap.SugaredLogger
 }
 
@@ -44,7 +44,7 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 	}
 
 	if w.root == "" {
-		err = ErrCGroupRootMissing
+		err = ErrCGroupRootNotFound
 		return
 	}
 
@@ -65,8 +65,13 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 
 type Opt func(w *CGroupFSMonitor) (ret *CGroupFSMonitor, err error)
 
-func WithCgroupRoot(root config.CgroupRoot) Opt {
+func WithCgroupRoot(root config.CGroupRoot) Opt {
 	return func(w *CGroupFSMonitor) (ret *CGroupFSMonitor, err error) {
+		if root == "" {
+			err = ErrCGroupRootNotFound
+			return
+		}
+
 		w.root = root
 		ret = w
 		return
@@ -75,6 +80,11 @@ func WithCgroupRoot(root config.CgroupRoot) Opt {
 
 func WithLogger(log *zap.SugaredLogger) Opt {
 	return func(w *CGroupFSMonitor) (ret *CGroupFSMonitor, err error) {
+		if log == nil {
+			err = ErrLoggerMissing
+			return
+		}
+
 		w.log = log
 		ret = w
 		return

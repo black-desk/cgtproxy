@@ -15,13 +15,13 @@ import (
 // Injectors from wire.go:
 
 func injectedCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLogger) (interfaces.CGTProxy, error) {
-	cgroupRoot := provideCgroupRoot(configConfig)
-	cGroupMonitor, err := provideCgrougMontior(cgroupRoot, sugaredLogger)
+	cGroupRoot := provideCgroupRoot(configConfig)
+	cGroupMonitor, err := provideCgrougMontior(cGroupRoot, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
 	bypass := provideBypass(configConfig)
-	nftManager, err := provideNFTManager(cgroupRoot, bypass, sugaredLogger)
+	nftManager, err := provideNFTManager(cGroupRoot, bypass, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}

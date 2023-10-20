@@ -87,7 +87,7 @@ type Opt func(m *RouteManager) (ret *RouteManager, err error)
 func WithNFTMan(t interfaces.NFTManager) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if t == nil {
-			err = ErrTableMissing
+			err = ErrNFTManagerMissing
 			return
 		}
 
@@ -113,7 +113,7 @@ func WithConfig(c *config.Config) Opt {
 func WithCGroupEventChan(ch <-chan types.CGroupEvent) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if ch == nil {
-			err = ErrCgroupEventChanMissing
+			err = ErrCGroupEventChanMissing
 			return
 		}
 

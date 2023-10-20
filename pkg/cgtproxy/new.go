@@ -43,6 +43,16 @@ func New(opts ...Opt) (ret *CGTProxy, err error) {
 		return
 	}
 
+	if c.cgMonitor == nil {
+		err = ErrCGroupMonitorMissing
+		return
+	}
+
+	if c.rtManager == nil {
+		err = ErrRouteManagerMissing
+		return
+	}
+
 	ret = c
 
 	c.log.Debugw("Create a new core.",
@@ -54,15 +64,24 @@ func New(opts ...Opt) (ret *CGTProxy, err error) {
 
 func WithConfig(cfg *config.Config) Opt {
 	return func(core *CGTProxy) (ret *CGTProxy, err error) {
+		if cfg == nil {
+			err = ErrConfigMissing
+			return
+		}
+
 		core.cfg = cfg
 		ret = core
-
 		return
 	}
 }
 
 func WithLogger(log *zap.SugaredLogger) Opt {
 	return func(core *CGTProxy) (ret *CGTProxy, err error) {
+		if log == nil {
+			err = ErrLoggerMissing
+			return
+		}
+
 		core.log = log
 		ret = core
 		return
@@ -71,6 +90,11 @@ func WithLogger(log *zap.SugaredLogger) Opt {
 
 func WithCGroupMonitor(mon interfaces.CGroupMonitor) Opt {
 	return func(core *CGTProxy) (ret *CGTProxy, err error) {
+		if mon == nil {
+			err = ErrCGroupMonitorMissing
+			return
+		}
+
 		core.cgMonitor = mon
 		ret = core
 		return
@@ -79,6 +103,11 @@ func WithCGroupMonitor(mon interfaces.CGroupMonitor) Opt {
 
 func WithRouteManager(rman interfaces.RouteManager) Opt {
 	return func(core *CGTProxy) (ret *CGTProxy, err error) {
+		if rman == nil {
+			err = ErrRouteManagerMissing
+			return
+		}
+
 		core.rtManager = rman
 		ret = core
 		return

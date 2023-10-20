@@ -3,6 +3,8 @@ package nftman
 import "errors"
 
 var (
-	ErrMissingNftableConn = errors.New("`nftables.Conn` is required.")
-	ErrMissingRerouteMark = errors.New("Reroute mark is required.")
+	ErrNftableConnMissing = errors.New("`nftables.Conn` is missing.")
+	ErrRerouteMarkMissing = errors.New("reroute mark is missing.")
+	ErrLoggerMissing      = errors.New("logger is missing.")
+	ErrCGroupRootMissing  = errors.New("cgroupv2 file system mount point is missing.")
 )

@@ -5,7 +5,7 @@ import "go.uber.org/zap"
 type Config struct {
 	Version string `yaml:"version" validate:"required,eq=1"`
 
-	CgroupRoot CgroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
+	CgroupRoot CGroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
 	// Bypass describes the bypass rules apply to all the TPROXY servers.
 	// If the destination matched in Bypass, the traffic will not be touched.
 	Bypass   Bypass             `yaml:"bypass" validate:"dive,ipv4|cidrv4|ipv6|cidrv6"`
@@ -21,7 +21,7 @@ type Config struct {
 
 type Bypass []string
 
-type CgroupRoot string
+type CGroupRoot string
 
 // Rule describes a rule about how to handle traffic comes from a cgroup.
 type Rule struct {

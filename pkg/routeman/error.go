@@ -3,7 +3,7 @@ package routeman
 import "errors"
 
 var (
-	ErrTableMissing           = errors.New("Table is missing")
-	ErrConfigMissing          = errors.New("Config is missing")
-	ErrCgroupEventChanMissing = errors.New("CgroupEvent chan is missing")
+	ErrNFTManagerMissing      = errors.New("nft manager is missing.")
+	ErrConfigMissing          = errors.New("config is missing.")
+	ErrCGroupEventChanMissing = errors.New("cgroup event channel is missing.")
 )
