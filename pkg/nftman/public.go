@@ -275,4 +275,3 @@ func (nft *NFTManager) Clear() (err error) {
 	nft.dumpNFTableRules()
 	return
 }
-
