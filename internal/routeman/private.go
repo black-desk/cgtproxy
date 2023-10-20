@@ -7,53 +7,11 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 )
 
-func (m *RouteManager) Run() (err error) {
-	defer Wrap(&err, "running route manager.")
-
-	defer m.removeRoute()
-	err = m.addRoute()
-	if err != nil {
-		return
-	}
-
-	defer m.removeNftableRules()
-	err = m.initializeNftableRuels()
-	if err != nil {
-		return
-	}
-
-	for event := range m.cgroupEventChan {
-		var eventErr error
-
-		switch event.EventType {
-		case types.CgroupEventTypeNew:
-			eventErr = m.handleNewCgroup(event.Path)
-		case types.CgroupEventTypeDelete:
-			eventErr = m.handleDeleteCgroup(event.Path)
-		}
-
-		if eventErr == nil {
-			continue
-		}
-
-		if event.Result != nil {
-			event.Result <- eventErr
-			continue
-		}
-
-		m.log.Errorw("Failed to handle cgroup event.",
-			"event", event,
-			"error", eventErr,
-		)
-	}
-	return
-}
 
 func (m *RouteManager) initializeNftableRuels() (err error) {
 	defer Wrap(&err, "initializing nftable rules")

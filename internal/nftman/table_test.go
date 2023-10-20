@@ -1,9 +1,7 @@
-package nftman_test
+package nftman
 
 import (
 	"github.com/black-desk/cgtproxy/internal/consts"
-	"github.com/black-desk/cgtproxy/internal/nftman"
-	. "github.com/black-desk/cgtproxy/internal/nftman/internal"
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/onsi/ginkgo/v2"
@@ -34,7 +32,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 	Context("created", func() {
 		var (
-			t *nftman.Table
+			t *Table
 
 			result     string
 			cgroupRoot = os.Getenv("CGTPROXY_TEST_CGROUP_ROOT")
@@ -42,8 +40,8 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 		BeforeEach(func() {
 			By("Create a Table object.", func() {
-				t, err = nftman.New(
-					nftman.WithCgroupRoot(config.CgroupRoot(cgroupRoot)),
+				t, err = New(
+					WithCgroupRoot(config.CgroupRoot(cgroupRoot)),
 				)
 				Expect(err).To(Succeed())
 			})
@@ -67,7 +65,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 			It("should clear the nft table with no error", func() {
 				Expect(err).To(Succeed())
 
-				result = GetNFTableRules()
+				result = getNFTableRules()
 				Expect(result).To(BeEmpty())
 			})
 		})
@@ -83,13 +81,13 @@ var _ = Describe("Netfliter table", Ordered, func() {
 				By("Initialize table with tproxies.", func() {
 					for _, tp := range tps {
 						err = t.AddChainAndRulesForTProxy(tp.t)
-						Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
+						Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 					}
 				})
 			})
 
 			It("should produce expected nftable rules", func() {
-				result = GetNFTableRules()
+				result = getNFTableRules()
 
 				Expect(result).To(ContainSubstring(consts.NftTableName))
 				for _, tp := range tps {
@@ -105,30 +103,30 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					err = os.MkdirAll(cgroupRoot+"/test/a", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup(cgroupRoot+"/test/a",
-						&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
+						&Target{Op: TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 					)
-					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
+					Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 
 					err = os.MkdirAll(cgroupRoot+"/test/b", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup(cgroupRoot+"/test/b",
-						&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
+						&Target{Op: TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 					)
-					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
+					Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 
 					err = os.MkdirAll(cgroupRoot+"/test/c", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup(cgroupRoot+"/test/c",
-						&nftman.Target{Op: nftman.TargetDrop},
+						&Target{Op: TargetDrop},
 					)
-					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
+					Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 
 					err = os.MkdirAll(cgroupRoot+"/test/d/d", 0755)
 					Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
 					err = t.AddCgroup(cgroupRoot+"/test/d/d",
-						&nftman.Target{Op: nftman.TargetDirect},
+						&Target{Op: TargetDirect},
 					)
-					Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
+					Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 				})
 
 				AfterEach(func() {
@@ -147,7 +145,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 				})
 
 				It("should produce expected nftable rules", func() {
-					result = GetNFTableRules()
+					result = getNFTableRules()
 					{
 						Expect(result).To(ContainSubstring(consts.NftTableName))
 						for _, tp := range tps {
@@ -191,20 +189,20 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					})
 
 					It("should produce expected nftable rules", func() {
-						result = GetNFTableRules()
+						result = getNFTableRules()
 						Expect(result).ToNot(ContainSubstring("drop"))
 					})
 
 					Context("then add some of them back", func() {
 						BeforeEach(func() {
 							err = t.AddCgroup(cgroupRoot+"/test/a",
-								&nftman.Target{Op: nftman.TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
+								&Target{Op: TargetTProxy, Chain: tps[rand.Intn(len(tps))].t.Name + "-MARK"},
 							)
-							Expect(err).To(Succeed(), "nft:\n%s", GetNFTableRules())
+							Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 						})
 
 						It("should produce expected nftable rules", func() {
-							result = GetNFTableRules()
+							result = getNFTableRules()
 							Expect(result).To(ContainSubstring("goto"))
 							Expect(result).ToNot(ContainSubstring("drop"))
 						})
