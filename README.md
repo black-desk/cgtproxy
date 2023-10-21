@@ -147,9 +147,16 @@ systemctl restart cgtproxy.service
 
 ## TODO
 
-- [ ] optional cgroup monitor implementation listening on D-Bus
-      instead of filesystem;
+- [ ] ~~optional cgroup monitor implementation listening on D-Bus
+      instead of filesystem;~~
+      [notify](https://github.com/rjeczalik/notify)
+      makes the filesystem monitor much more stable,
+      there is no need to implement another monitor for my person usage.
 - [ ] DNS hijack for fake-ip;
   - [x] ipv4;
-  - [ ] ipv6;
+  - [ ] ~~ipv6;~~
+        I don't have any ipv6 only device, so I don't need this feature.
 - [ ] ~~builtin TPROXY server.~~
+      Clash is good enough for me.
+
+If you need any feature above, PR is welcome.
