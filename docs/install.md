@@ -7,5 +7,5 @@
 2. use the shell script
 
    ```bash
-   curl -sfL https://raw.githubusercontent.com/black-desk/cgtproxy/scripts/get_cgtproxy.sh | sh
+   curl -fL https://raw.githubusercontent.com/black-desk/cgtproxy/master/scripts/get_cgtproxy.sh | sh
    ```
