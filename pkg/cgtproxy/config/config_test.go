@@ -47,7 +47,7 @@ var _ = Describe("Configuration", func() {
 		ContextTableEntry("../../../test/data/example_config.yaml"),
 	)
 
-	ContextTable("load from invalid configuration (%s)", func(path string, expectErr error) {
+	ContextTable("load from invalid configuration (%s)", func(path string, expectErr error, errString string) {
 		var (
 			err     error
 			file    *os.File
@@ -67,17 +67,20 @@ var _ = Describe("Configuration", func() {
 
 			_, err = config.New(config.WithContent(content))
 		})
+
 		AfterEach(func() {
-			file.Close()
+			if file != nil {
+				file.Close()
+			}
 		})
 
-		It(fmt.Sprintf("should fail with error: %s", expectErr), func() {
+		It(fmt.Sprintf("should fail with error: %s", errString), func() {
 			Expect(err).To(MatchErr(expectErr))
 		})
 	},
-		ContextTableEntry("../../../test/data/wrong_type.yaml", new(yaml.TypeError)).
+		ContextTableEntry("../../../test/data/wrong_type.yaml", new(yaml.TypeError), "yaml.TypeError").
 			WithFmt("../../../test/data/wrong_type.yaml"),
-		ContextTableEntry("../../../test/data/validation_fail.yaml", validator.ValidationErrors{}).
+		ContextTableEntry("../../../test/data/validation_fail.yaml", validator.ValidationErrors{}, "validator.ValidationErrors").
 			WithFmt("../../../test/data/validation_fail.yaml"),
 	)
 })
