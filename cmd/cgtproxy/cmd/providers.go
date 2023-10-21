@@ -10,7 +10,6 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/nftman/lastingconnector"
 	"github.com/black-desk/cgtproxy/pkg/routeman"
 	"github.com/black-desk/cgtproxy/pkg/types"
-	"github.com/google/wire"
 	"go.uber.org/zap"
 )
 
@@ -98,25 +97,3 @@ func provideCGTProxy(
 		cgtproxy.WithRouteManager(man),
 	)
 }
-
-var set = wire.NewSet(
-	provideBypass,
-	provideCGTProxy,
-	provideCGroupEventChan,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideNFTManager,
-	provideNetlinkConnector,
-	provideRuleManager,
-)
-
-var lastingConnectorSet = wire.NewSet(
-	provideBypass,
-	provideCGTProxy,
-	provideCGroupEventChan,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideLastringNetlinkConnector,
-	provideNFTManager,
-	provideRuleManager,
-)

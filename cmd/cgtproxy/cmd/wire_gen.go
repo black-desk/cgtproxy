@@ -9,6 +9,7 @@ package cmd
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
+	"github.com/google/wire"
 	"go.uber.org/zap"
 )
 
@@ -67,3 +68,27 @@ func injectedLastingCGTProxy(configConfig *config.Config, sugaredLogger *zap.Sug
 	}
 	return cgtProxy, nil
 }
+
+// wire.go:
+
+var set = wire.NewSet(
+	provideBypass,
+	provideCGTProxy,
+	provideCGroupEventChan,
+	provideCgrougMontior,
+	provideCgroupRoot,
+	provideNFTManager,
+	provideNetlinkConnector,
+	provideRuleManager,
+)
+
+var lastingConnectorSet = wire.NewSet(
+	provideBypass,
+	provideCGTProxy,
+	provideCGroupEventChan,
+	provideCgrougMontior,
+	provideCgroupRoot,
+	provideLastringNetlinkConnector,
+	provideNFTManager,
+	provideRuleManager,
+)
