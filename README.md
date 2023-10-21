@@ -121,10 +121,6 @@ There are some differences between cgproxy and cgtproxy:
 
   [systemd service file]: ./misc/systemd/cgtproxy.service
 
-## Configuration
-
-[example](./misc/config/example.yaml)
-
 ## TODO
 
 - [ ] optional cgroup monitor implementation listening on D-Bus
@@ -132,8 +128,4 @@ There are some differences between cgproxy and cgtproxy:
 - [ ] DNS hijack for fake-ip;
   - [x] ipv4;
   - [ ] ipv6;
-- [ ] builtin TPROXY server.
-
-## Develop
-
-Check this documentation [here](docs/development.md).
+- [ ] ~~builtin TPROXY server.~~

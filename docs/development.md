@@ -2,23 +2,35 @@
 
 ## project structure
 
-    new underlying event (file system event from inoitfy for now)
+This project uses [wire] to practice [dependency injection].
+
+You need to check the [wire.go] file to figure out
+how this application is constructed.
+
+[wire]: https://github.com/google/wire
+[dependency injection]: https://en.wikipedia.org/wiki/Dependency_injection
+[wire.go]: ../cmd/cgtproxy/cmd/wire.go
+
+Dependency injection is also used in tests, check [this](../pkg/nftman/wire.go).
+
+All dependency of cgtproxy is exported as interface in [the interfaces package],
+you are welcome to replace them with your own implementation.
+
+[the interfaces package]: ../pkg/interfaces
+
+    new inoitfy event [github.com/rjeczalik/notify]
     |
     | received by
     v
-    cgroup monitor
+    cgroup monitor [github.com/black-desk/cgtproxy/pkg/cgfsmon]
     |
-    | produce
+    | cgroup event
     v
-    cgroup event
+    route manager [github.com/black-desk/cgtproxy/pkg/routeman]
     |
-    | send to
+    | update nft, use nftman [github.com/black-desk/cgtproxy/pkg/nftman]
     v
-    rulemanager
-    |
-    | write rules to
-    v
-    nftable
+    netfilter framework in kernel
 
 ## nftables rule development
 
