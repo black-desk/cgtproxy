@@ -18,9 +18,9 @@ you are welcome to replace them with your own implementation.
 
 [the interfaces package]: ../pkg/interfaces
 
-    new inoitfy event [github.com/rjeczalik/notify]
+    fs notifier [github.com/rjeczalik/notify]
     |
-    | received by
+    | new inoitfy event
     v
     cgroup monitor [github.com/black-desk/cgtproxy/pkg/cgfsmon]
     |
@@ -49,3 +49,23 @@ which helps you find out
 which structure in `github.com/google/nftables/expr` you should use.
 
 [comment]: https://github.com/google/nftables/issues/5#issuecomment-451373151
+
+## log
+
+When stderr is a terminal, log is write to stderr, else log is send to journald.
+
+Environment variable `LOG_LEVEL` can use to control log level,
+set it to `debug` or `trace` to enable more log.
+
+Use [fmtjournal] to view all log fields.
+
+[fmtjournal]: https://github.com/black-desk/fmtjournal
+
+## build tags
+
+Add go build tag `debug` by `make GOTAGS=debug` can
+produce debug build binary, which:
+
+1. make error carry more information like source position;
+2. call to `nft` to dump ruleset after we update it;
+3. add debug counter to nft ruleset.
