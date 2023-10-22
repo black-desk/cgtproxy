@@ -1,14 +1,23 @@
-# cgtproxy
+# `cgtproxy`
 
 `cgtproxy` is a transparent proxy **RULE** manager written in go
 inspired by [cgproxy].
 
 [cgproxy]: https://github.com/springzfx/cgproxy
 
+`cgtproxy` make it easier to set per-app transparent proxy dynamically.
 It will automatically update your nft ruleset according to your configuration,
-make it easier to archive per-app transparent proxy settings.
+redirect network traffic in each cgroup to a [target].
 
-## The way how cgtproxy works.
+[target]: https://www.frozentux.net/iptables-tutorial/iptables-tutorial.html#TARGETS
+
+Currently supported target are:
+
+- DIRECT
+- DROP
+- TPROXY
+
+## The way how `cgtproxy` works.
 
 Netfliter can be configured to filter network traffic [by cgroup],
 as well as redirect some traffic to a [TPROXY] server.
@@ -21,13 +30,20 @@ XDG applications should be launched in a systemd managed unit.
 
 [documentation]: https://systemd.io/DESKTOP_ENVIRONMENTS
 
-For example, telegram might be launched at some cgroup like
+For example, [telegram] comes from [flatpak]
+launched by desktop environment
+from the graph session of user whose uid is 1000
+should has all its processes running in a cgroup like:
+
 `/user.slice/user-1000.slice/user@1000.service/app.slice/app-flatpak-org.telegram.desktop@12345.service`
 
-That means the cgroup path for the application has a pattern,
-which we can match by a regex expression.
+[telegram]: https://github.com/telegramdesktop/tdesktop
+[flatpak]: https://github.com/flatpak/flatpak
 
-This program will listening cgroupfs change with inotify.
+That means the cgroup path of an application instance has a pattern,
+which can be match by a regex expression.
+
+`cgtproxy` will listening cgroupfs change with inotify.
 And update the nftable rules when new cgroup hierarchy created,
 according to your configuration.
 
@@ -87,22 +103,25 @@ there are only few ways to configure network proxy settings at app level.
 
       [single-writer rule]: https://systemd.io/CGROUP_DELEGATION#two-key-design-rules
 
-By using cgtproxy,
+By using `cgtproxy`,
 you can have flexible user-level per-app transparent network proxy settings
 without any problems above.
 
 ## Differences between cgproxy
 
-There are some differences between cgproxy and cgtproxy:
+There are some differences between cgproxy and `cgtproxy`:
 
-- cgproxy using iptables, but cgtproxy use nftables.
+- cgproxy using iptables, but `cgtproxy` use nftables.
 
-  <https://wiki.nftables.org/wiki-nftables/index.php/Main_differences_with_iptables>
+  Go check differences between iptables and nftables [here][differences].
+
+  [differences]: https://wiki.nftables.org/wiki-nftables/index.php/Main_differences_with_iptables
 
 - cgproxy can only working with exsiting cgroup,
-  but cgtproxy can update nftables rules dynamically for new cgroups.
+  but `cgtproxy` can update rules dynamically for newly created cgroups;
 
-- cgproxy use BPF, but cgtproxy not;
+- cgproxy use BPF to move your process from its original cgroup,
+  but `cgtproxy` not;
 
   cgproxy implement per-app proxy by using BPF to trace the execve syscall.
   If the new executable file of that process matched some pattern,
@@ -111,10 +130,13 @@ There are some differences between cgproxy and cgtproxy:
   This weird behavior make process escape from the user-level hierarchy,
   which means the systemd resource control settings will not take any effect.
 
-  But cgtproxy implement per-app proxy by update nftable rules.
-  It do not write anything to cgroupfs at all.
+  But `cgtproxy` implement per-app proxy
+  by update nftable rules to match newly created cgroups.
+  It do not write anything to cgroupv2 filesystem at all.
 
-- cgproxy require at least CAP_NETWORK_ADMIN and CAP_BPF,
+- cgproxy requires more capability (permission) than `cgtproxy`;
+
+  cgtproxy requires at least CAP_NETWORK_ADMIN and CAP_BPF,
   but cgtproxy require only CAP_NETWORK_ADMIN.
 
   Check the [systemd service file] for details.
@@ -149,14 +171,21 @@ systemctl restart cgtproxy.service
 
 - [ ] ~~optional cgroup monitor implementation listening on D-Bus
       instead of filesystem;~~
-      [notify](https://github.com/rjeczalik/notify)
-      makes the filesystem monitor much more stable,
-      there is no need to implement another monitor for my person usage.
+
+  [notify](https://github.com/rjeczalik/notify)
+  makes the filesystem monitor much more stable,
+  there is no need to implement another monitor for my person usage.
+
 - [ ] DNS hijack for fake-ip;
+
   - [x] ipv4;
+
   - [ ] ~~ipv6;~~
-        I don't have any ipv6 only device, so I don't need this feature.
+
+    I don't have any ipv6 only device, so I don't need this feature.
+
 - [ ] ~~builtin TPROXY server.~~
-      Clash is good enough for me.
+
+  Clash is good enough for me.
 
 If you need any feature above, PR is welcome.
