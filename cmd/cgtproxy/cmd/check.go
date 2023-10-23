@@ -42,6 +42,11 @@ func checkCmdRun() (err error) {
 		return
 	}
 
+	err = checkPermissionCmdRun()
+	if err != nil {
+		return
+	}
+
 	return
 }
 
