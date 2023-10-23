@@ -54,9 +54,9 @@ func getKernelConfigFromProcFS() (ret io.ReadCloser, err error) {
 	return
 }
 
-func int8sliceToStr(int8s []int8) string {
-	b := make([]byte, 0, len(int8s))
-	for _, v := range int8s {
+func sliceToStr[T int8 | uint8](ints []T) string {
+	b := make([]byte, 0, len(ints))
+	for _, v := range ints {
 		if v == 0 {
 			break
 		}
@@ -78,7 +78,7 @@ func getKernelConfigFromBoot() (ret io.ReadCloser, err error) {
 	var config io.ReadCloser
 	config, err = os.Open(fmt.Sprintf(
 		"/boot/config-%s",
-		int8sliceToStr(uname.Release[:]),
+		sliceToStr(uname.Release[:]),
 	))
 	if err != nil {
 		return
