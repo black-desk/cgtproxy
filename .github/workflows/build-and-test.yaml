@@ -12,7 +12,7 @@ jobs:
         with:
           go-version: stable
           cache: true
-          cache-dependency-path: go/go.sum
+          cache-dependency-path: ${{github.workspace}}/go.sum
 
       - name: Build & test (debug mode)
         run: |
