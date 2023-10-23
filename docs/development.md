@@ -57,7 +57,7 @@ When stderr is a terminal, log is write to stderr, else log is send to journald.
 Environment variable `LOG_LEVEL` can use to control log level,
 set it to `debug` or `trace` to enable more log.
 
-Use [fmtjournal] to view all log fields.
+Use [fmtjournal] to view all log fields using journalctl.
 
 [fmtjournal]: https://github.com/black-desk/fmtjournal
 
