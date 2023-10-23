@@ -20,7 +20,7 @@ var checkPermissionCmd = &cobra.Command{
 				return
 			}
 
-			err = fmt.Errorf("\n\n%w\n"+CheckDocumentString, err)
+			err = fmt.Errorf("\n%w\n"+CheckDocumentString, err)
 
 			return
 		}()

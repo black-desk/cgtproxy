@@ -2,8 +2,10 @@ package cmd
 
 const (
 	CheckDocumentString = `
-You might want check documentation and wiki on github for some help.
-https://github.com/black-desk/cgtproxy
+Go to check
+1. documentation https://pkg.go.dev/github.com/black-desk/cgtproxy/cmd/cgtproxy
+2. wiki https://github.com/black-desk/cgtproxy/wiki
+for some help.
 `
 	CGTProxyCfgPath = "/etc/cgtproxy/config.yaml"
 )

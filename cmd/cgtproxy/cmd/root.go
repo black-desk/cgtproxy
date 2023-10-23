@@ -37,7 +37,9 @@ var rootCmd = &cobra.Command{
 			}
 
 			err = fmt.Errorf(
-				"\n\n%w\n"+CheckDocumentString,
+				"\n%w\n\n"+
+					`You can run 'cgtproxy check' to perform health check built in cgtproxy.`+
+					CheckDocumentString,
 				err,
 			)
 
