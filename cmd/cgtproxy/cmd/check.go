@@ -6,6 +6,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var checkFlags struct {
+	EnableLogger bool
+}
+
 // checkCmd represents the check command
 var checkCmd = &cobra.Command{
 	Use:   "check",
@@ -42,5 +46,11 @@ func checkCmdRun() (err error) {
 }
 
 func init() {
+	checkCmd.PersistentFlags().BoolVar(
+		&checkFlags.EnableLogger,
+		"with-logger", false,
+		"enable logger during check configuration",
+	)
+
 	rootCmd.AddCommand(checkCmd)
 }

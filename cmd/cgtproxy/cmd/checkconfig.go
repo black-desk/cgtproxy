@@ -8,6 +8,7 @@ import (
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 // checkConfigCmd represents the config command
@@ -34,7 +35,10 @@ var checkConfigCmd = &cobra.Command{
 func checkConfigCmdRun() (err error) {
 	defer Wrap(&err)
 
-	log := logger.Get("cgtproxy")
+	log := zap.NewNop().Sugar()
+	if checkFlags.EnableLogger {
+		log = logger.Get("cgtproxy")
+	}
 
 	var content []byte
 	content, err = os.ReadFile(flags.CfgPath)
