@@ -91,7 +91,15 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 	// ip -6 rule add fwmark <mark> lookup <table>
 	err = m.addRuleWithFamily(mark, netlink.FAMILY_V6)
 	if err != nil {
-		return
+		m.log.Errorw(
+			"Failed to add ipv6 rule.",
+			"mark", mark,
+			"table", m.cfg.RouteTable,
+			"error", err,
+		)
+
+		// TODO: It seems OK to not add this rule fail. But why?
+		err = nil
 	}
 
 	return
