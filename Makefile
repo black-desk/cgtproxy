@@ -14,7 +14,7 @@ all:
 # while current cgroup might not be owned by the user running test.
 # That means by default, we should create new cgroup by systemd-run
 # and run test in that cgroup.
-SYSTEMD_RUN ?= systemd-run --user -d -P -q
+SYSTEMD_RUN ?= systemd-run --user -d -P -t -q
 
 # The tests code is written assuming that
 # cgroup2 is mounted at /sys/fs/cgroup.
