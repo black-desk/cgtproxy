@@ -3,7 +3,7 @@ module github.com/black-desk/cgtproxy
 go 1.21
 
 require (
-	github.com/black-desk/lib/go v0.0.0-20231012014411-374671fbfbdc
+	github.com/black-desk/lib/go v0.0.0-20231021105122-e4106bdb89f9
 	github.com/deniswernert/go-fstab v0.0.0-20141204152952-eb4090f26517
 	github.com/go-playground/validator/v10 v10.15.5
 	github.com/google/nftables v0.1.1-0.20231021201155-6df7a82bbd85

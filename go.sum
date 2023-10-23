@@ -1,5 +1,5 @@
-github.com/black-desk/lib/go v0.0.0-20231012014411-374671fbfbdc h1:TkBw7Qv4R5lSd7SQxgrVVEW3EFiYCdUBgCKT4kHQhxY=
-github.com/black-desk/lib/go v0.0.0-20231012014411-374671fbfbdc/go.mod h1:M8o2UXm8jAG7bech4xc/SeNxbHquqfagVvHdKyDoRNk=
+github.com/black-desk/lib/go v0.0.0-20231021105122-e4106bdb89f9 h1:z4ENGB/6+zF3nzO0qi5ud1kxZDu6lw74+I7h5OLTmrQ=
+github.com/black-desk/lib/go v0.0.0-20231021105122-e4106bdb89f9/go.mod h1:M8o2UXm8jAG7bech4xc/SeNxbHquqfagVvHdKyDoRNk=
 github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b h1:fiO3y68dfa5ctXhgZKCniY0IfPl0U+EoyADUgG2zP+s=
 github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b/go.mod h1:H5owNzV6HHMmOk5jI+uaWAVZFVQkWrgoE3d/fABb1PQ=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
