@@ -52,18 +52,11 @@ func (m *RouteManager) removeNftableRules() {
 	return
 }
 
-func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
-	defer Wrap(&err, "add route rule")
-
-	m.log.Infow("Adding route rule.",
-		"mark", mark,
-		"table", m.cfg.RouteTable,
-	)
-
-	// ip rule add fwmark <mark> lookup <table>
-
+func (m *RouteManager) addRuleWithFamily(
+	mark config.FireWallMark, family int,
+) (err error) {
 	rule := netlink.NewRule()
-	rule.Family = netlink.FAMILY_ALL
+	rule.Family = family
 	rule.Mark = int(mark) // WARN(black_desk): ???
 	rule.Table = m.cfg.RouteTable
 
@@ -77,6 +70,29 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 	}
 
 	m.rule = append(m.rule, rule)
+
+	return
+}
+
+func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
+	defer Wrap(&err, "add route rule")
+
+	m.log.Infow("Adding route rule.",
+		"mark", mark,
+		"table", m.cfg.RouteTable,
+	)
+
+	// ip rule add fwmark <mark> lookup <table>
+	err = m.addRuleWithFamily(mark, netlink.FAMILY_V4)
+	if err != nil {
+		return
+	}
+
+	// ip -6 rule add fwmark <mark> lookup <table>
+	err = m.addRuleWithFamily(mark, netlink.FAMILY_V6)
+	if err != nil {
+		return
+	}
 
 	return
 }
