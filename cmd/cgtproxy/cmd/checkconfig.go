@@ -41,12 +41,12 @@ func checkConfigCmdRun() (err error) {
 	}
 
 	var content []byte
-	content, err = os.ReadFile(flags.CfgPath)
+	content, err = os.ReadFile(flags.cfgPath)
 	if err != nil {
 		Wrap(
 			&err,
 			"read configuration from %s",
-			flags.CfgPath,
+			flags.cfgPath,
 		)
 		return
 	}

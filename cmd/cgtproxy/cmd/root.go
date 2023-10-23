@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"strings"
@@ -21,10 +22,10 @@ import (
 )
 
 var flags struct {
-	CfgPath            string
-	CPUProfile         string
-	BlockProfile       string
-	LastingNetlinkConn bool
+	cfgPath            string
+	cpuProfile         string
+	blockProfile       string
+	lastingNetlinkConn bool
 }
 
 var rootCmd = &cobra.Command{
@@ -68,24 +69,37 @@ func generateProfileName(tmplStr string) (name string, err error) {
 	return
 }
 
+func createProfileFile(tmplStr string) (ret *os.File, err error) {
+	var path string
+	path, err = generateProfileName(tmplStr)
+	dir := filepath.Dir(path)
+	err = os.MkdirAll(dir, 0700)
+	if err != nil {
+		return
+	}
+
+	var profile *os.File
+	profile, err = os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0700)
+	if err != nil {
+		return
+	}
+
+	ret = profile
+	return
+}
+
 func rootCmdRun() (err error) {
 	log := logger.Get("cgtproxy")
 
 	profiles := strings.Split(os.Getenv("CGTPROXY_PROFILE"), ",")
 
 	if slices.Contains(profiles, "cpu") {
-		var path string
-		path, err = generateProfileName(flags.CPUProfile)
-		if err != nil {
-			return
-		}
-
 		var cpuProfile *os.File
-		cpuProfile, err = os.Create(path)
-		defer cpuProfile.Close()
+		cpuProfile, err = createProfileFile(flags.cpuProfile)
 		if err != nil {
 			return
 		}
+		defer cpuProfile.Close()
 
 		err = pprof.StartCPUProfile(cpuProfile)
 		defer pprof.StopCPUProfile()
@@ -95,14 +109,8 @@ func rootCmdRun() (err error) {
 	}
 
 	if slices.Contains(profiles, "block") {
-		var path string
-		path, err = generateProfileName(flags.BlockProfile)
-		if err != nil {
-			return
-		}
-
 		var blockProfile *os.File
-		blockProfile, err = os.Create(path)
+		blockProfile, err = createProfileFile(flags.blockProfile)
 		defer blockProfile.Close()
 		if err != nil {
 			return
@@ -115,15 +123,15 @@ func rootCmdRun() (err error) {
 		}
 	}
 
-	content, err := os.ReadFile(flags.CfgPath)
-	if errors.Is(err, os.ErrNotExist) && flags.CfgPath == CGTProxyCfgPath {
+	content, err := os.ReadFile(flags.cfgPath)
+	if errors.Is(err, os.ErrNotExist) && flags.cfgPath == CGTProxyCfgPath {
 		log.Errorw("Configuration file missing fallback to default config.")
 
 		content = []byte(config.DefaultConfig)
 		err = nil
 	} else if err != nil {
 		log.Errorw("Failed to read configuration from file",
-			"file", flags.CfgPath,
+			"file", flags.cfgPath,
 			"error", err)
 
 		return err
@@ -140,7 +148,7 @@ func rootCmdRun() (err error) {
 	}
 
 	var c interfaces.CGTProxy
-	if flags.LastingNetlinkConn {
+	if flags.lastingNetlinkConn {
 		c, err = injectedLastingCGTProxy(cfg, log)
 	} else {
 		c, err = injectedCGTProxy(cfg, log)
@@ -160,7 +168,7 @@ func rootCmdRun() (err error) {
 		cancel(&ErrCancelBySignal{sig})
 	}()
 
-	err = c.Run(ctx)
+	err = c.RunCGTProxy(ctx)
 	if err == nil {
 		return
 	}
@@ -198,14 +206,14 @@ func init() {
 	}
 
 	rootCmd.PersistentFlags().StringVarP(
-		&flags.CfgPath,
+		&flags.cfgPath,
 		"config", "c", cfgPath,
 		"the configure file to use",
 	)
 
 	rootCmd.PersistentFlags().StringVar(
-		&flags.CPUProfile,
-		"cpu-profile", "/tmp/cgtproxy.{{.PID}}.cpuprofile",
+		&flags.cpuProfile,
+		"cpu-profile", "/tmp/io.github.black-desk.cgtproxy/profiles/{{.PID}}.cpuprofile",
 		""+
 			"the template string use to create the cpu profile "+
 			"NOTE: this option only takes effect "+
@@ -213,8 +221,8 @@ func init() {
 	)
 
 	rootCmd.PersistentFlags().StringVar(
-		&flags.BlockProfile,
-		"block-profile", "/tmp/cgtproxy.{{.PID}}.blockprofile",
+		&flags.blockProfile,
+		"block-profile", "/tmp/io.github.black-desk.cgtproxy/profiles/{{.PID}}.blockprofile",
 		""+
 			"the template string use to create the block profile "+
 			"NOTE: this option only takes effect "+
@@ -222,7 +230,7 @@ func init() {
 	)
 
 	rootCmd.PersistentFlags().BoolVar(
-		&flags.LastingNetlinkConn,
+		&flags.lastingNetlinkConn,
 		"reuse-netlink-socket", false,
 		"the configure file to use",
 	)

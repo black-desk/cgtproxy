@@ -46,6 +46,7 @@ func (m *RouteManager) Run() (err error) {
 
 		if events.Result != nil {
 			events.Result <- eventsErr
+			close(events.Result)
 		}
 	}
 
