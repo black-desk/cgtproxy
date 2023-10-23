@@ -12,7 +12,7 @@ func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvents {
 	return w.eventsOut
 }
 
-func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
+func (w *CGroupFSMonitor) RunCGroupMonitor(ctx context.Context) (err error) {
 	defer Wrap(&err, "running filesystem watcher")
 	defer close(w.eventsOut)
 	defer notify.Stop(w.eventsIn)

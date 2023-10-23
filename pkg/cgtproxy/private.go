@@ -9,7 +9,7 @@ func (c *CGTProxy) runRouteManager(ctx context.Context) (err error) {
 
 	c.log.Debugw("Start route manager.")
 
-	err = c.rtManager.Run()
+	err = c.rtManager.RunRouteManager(ctx)
 	if err != nil {
 		return
 	}
@@ -22,7 +22,7 @@ func (c *CGTProxy) runCGroupMonitor(ctx context.Context) (err error) {
 
 	c.log.Debug("Start filesystem watcher.")
 
-	err = c.cgMonitor.Run(ctx)
+	err = c.cgMonitor.RunCGroupMonitor(ctx)
 	if err != nil {
 		return
 	}

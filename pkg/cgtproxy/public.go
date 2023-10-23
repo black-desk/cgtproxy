@@ -7,7 +7,7 @@ import (
 	"github.com/sourcegraph/conc/pool"
 )
 
-func (c *CGTProxy) Run(ctx context.Context) (err error) {
+func (c *CGTProxy) RunCGTProxy(ctx context.Context) (err error) {
 	c.log.Debug("CGTProxy starting.")
 	defer c.log.Debug("CGTProxy exiting.")
 	defer Wrap(&err, "running cgtproxy core")

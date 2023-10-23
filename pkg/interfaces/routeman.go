@@ -2,9 +2,11 @@
 
 package interfaces
 
-import ()
+import (
+	"context"
+)
 
 // RouteManager is an interface generated for "github.com/black-desk/cgtproxy/pkg/routeman.RouteManager".
 type RouteManager interface {
-	Run() error
+	RunRouteManager(context.Context) error
 }

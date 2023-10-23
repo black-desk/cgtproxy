@@ -1,13 +1,14 @@
 package routeman
 
 import (
+	"context"
 	"errors"
 
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 )
 
-func (m *RouteManager) Run() (err error) {
+func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 	defer Wrap(&err, "running route manager")
 
 	defer m.removeRoute()
@@ -50,5 +51,6 @@ func (m *RouteManager) Run() (err error) {
 		}
 	}
 
-	return
+	<-ctx.Done()
+	return ctx.Err()
 }
