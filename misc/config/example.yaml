@@ -9,6 +9,9 @@ route-table: 300
 # without influenced by the tproxy configuration.
 bypass:
   - 127.0.0.0/8
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
   - ::1
 
 tproxies:
@@ -65,6 +68,8 @@ rules:
     direct: true
   - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-drop\.slice\/.*
     drop: true
+  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-proxy\.slice\/.*
+    tproxy: clash-meta
 
   # For any cgroup else, TPROXY to clash-meta.
   - match: \/.*
