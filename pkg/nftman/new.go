@@ -153,7 +153,7 @@ func WithConnFactory(f interfaces.NetlinkConnector) Opt {
 }
 
 func (nft *NFTManager) initStructure() (err error) {
-	defer Wrap(&err, "flush initial content of nft table")
+	defer Wrap(&err, "flush initial content")
 
 	nft.log.Debug("Initialing nft table structure.")
 
