@@ -213,7 +213,6 @@ func (nft *NFTManager) initStructure() (err error) {
 	}
 
 	err = conn.Flush()
-	nft.ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}

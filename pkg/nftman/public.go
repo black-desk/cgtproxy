@@ -143,7 +143,6 @@ func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
 	}
 
 	err = conn.Flush()
-	nft.ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -197,7 +196,6 @@ func (nft *NFTManager) RemoveCgroups(paths []string) (err error) {
 	}
 
 	err = conn.Flush()
-	nft.ignoreNoBufferSpaceAvailable(&err)
 	if err != nil {
 		return
 	}
@@ -282,7 +280,6 @@ func (nft *NFTManager) Clear() (err error) {
 
 	conn.DelTable(nft.table)
 	err = conn.Flush()
-	nft.ignoreNoBufferSpaceAvailable(&err)
 	if errors.Is(err, os.ErrNotExist) {
 		nft.log.Debugw("Table not exist, nothing to remove.",
 			"table", nft.table.Name,

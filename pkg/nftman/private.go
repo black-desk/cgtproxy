@@ -1,12 +1,10 @@
 package nftman
 
 import (
-	"errors"
 	"net"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -15,15 +13,6 @@ import (
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
 )
-
-func (nft *NFTManager) ignoreNoBufferSpaceAvailable(perr *error) {
-	var errno syscall.Errno
-	if errors.As(*perr, &errno) && errno == syscall.ENOBUFS {
-		*perr = nil
-		nft.log.Errorw("ENOBUFS occurred.")
-		//FIXME: https://github.com/google/nftables/issues/103
-	}
-}
 
 func (nft *NFTManager) nextIP(ip net.IP) (ret net.IP) {
 	next := make(net.IP, len(ip))
@@ -376,12 +365,6 @@ func (t *NFTManager) addCgroupRuleForLevel(
 	}
 
 	conn.AddRule(rule)
-	// err = conn.Flush()
-	t.ignoreNoBufferSpaceAvailable(&err)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
