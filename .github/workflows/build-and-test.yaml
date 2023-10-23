@@ -14,6 +14,11 @@ jobs:
           cache: true
           cache-dependency-path: ${{github.workspace}}/go.sum
 
+      - name: Upgrade
+        run: |
+          sudo apt update &&
+          sudo apt install systemd util-linux
+
       - name: Build & test (debug mode)
         run: |
           make GOTAGS=debug
