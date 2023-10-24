@@ -41,7 +41,7 @@ test:
 	"
 
 PREFIX ?= /usr/local
-DESTDIR ?= /
+DESTDIR ?=
 
 .PHONY: install
 install:
