@@ -12,14 +12,15 @@ import (
 
 func (m *CGroupFSMonitor) walkFn(events *[]types.CGroupEvent) func(path string, d fs.DirEntry, err error) error {
 	return func(path string, d fs.DirEntry, err error) error {
+		if errors.Is(err, fs.ErrNotExist) {
+			m.log.Debug(
+				"Cgroup had been removed.",
+				"path", path,
+			)
+			err = nil
+		}
+
 		if err != nil {
-			if errors.Is(err, fs.ErrNotExist) {
-				m.log.Debug(
-					"Cgroup had been removed.",
-					"path", path,
-				)
-				err = nil
-			}
 			m.log.Errorw(
 				"Errors occurred while first time going through cgroupfs.",
 				"path", path,
