@@ -163,10 +163,16 @@ func (nft *NFTManager) initStructure() (err error) {
 		return
 	}
 
-	nft.table = conn.AddTable(&nftables.Table{
+	nft.table = conn.CreateTable(&nftables.Table{
 		Name:   NftTableName,
 		Family: nftables.TableFamilyINet,
 	})
+
+	err = conn.Flush()
+	if err != nil {
+		Wrap(&err, "create table")
+		return
+	}
 
 	err = nft.initIPV4BypassSet(conn)
 	if err != nil {
@@ -225,6 +231,8 @@ func (nft *NFTManager) initStructure() (err error) {
 }
 
 func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
+	defer Wrap(&err, "prepare ipv4 bypass set")
+
 	nft.ipv4BypassSet = &nftables.Set{
 		Table:        nft.table,
 		Name:         "bypass",
