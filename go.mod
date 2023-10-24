@@ -3,10 +3,10 @@ module github.com/black-desk/cgtproxy
 go 1.21
 
 require (
-	github.com/black-desk/lib/go v0.0.0-20231021105122-e4106bdb89f9
+	github.com/black-desk/lib/go v0.0.0-20231023094454-94c87a910679
 	github.com/deniswernert/go-fstab v0.0.0-20141204152952-eb4090f26517
 	github.com/go-playground/validator/v10 v10.15.5
-	github.com/google/nftables v0.1.1-0.20231021201155-6df7a82bbd85
+	github.com/google/nftables v0.1.1-0.20231024065723-32bfbb662717
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.28.1
 	github.com/sourcegraph/conc v0.3.0
@@ -31,7 +31,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
+	github.com/google/pprof v0.0.0-20231023181126-ff6d637d2a7b // indirect
 	github.com/google/wire v0.5.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/native v1.1.0 // indirect
@@ -48,5 +48,3 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
 )
-
-replace github.com/google/nftables => github.com/black-desk/nftables v0.0.0-20231024023000-507e72d30b17

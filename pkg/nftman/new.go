@@ -46,7 +46,6 @@ type NFTManager struct {
 type Opt = (func(*NFTManager) (*NFTManager, error))
 
 //go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/pkg/nftman.NFTManager -as interfaces.NFTManager -o ../interfaces/nftman.go
-
 func New(opts ...Opt) (ret *NFTManager, err error) {
 	defer Wrap(&err, "create nft table mananger")
 
@@ -81,7 +80,7 @@ func New(opts ...Opt) (ret *NFTManager, err error) {
 
 	ret = t
 
-	t.log.Debugw("Create a nft table.")
+	t.log.Debugw("NFTManager created.")
 	return
 }
 

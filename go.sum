@@ -1,5 +1,7 @@
 github.com/black-desk/lib/go v0.0.0-20231021105122-e4106bdb89f9 h1:z4ENGB/6+zF3nzO0qi5ud1kxZDu6lw74+I7h5OLTmrQ=
 github.com/black-desk/lib/go v0.0.0-20231021105122-e4106bdb89f9/go.mod h1:M8o2UXm8jAG7bech4xc/SeNxbHquqfagVvHdKyDoRNk=
+github.com/black-desk/lib/go v0.0.0-20231023094454-94c87a910679 h1:TlnFjdFKIvetgeV2OXGH/k0czjSf1puuvjtWhEhdb4s=
+github.com/black-desk/lib/go v0.0.0-20231023094454-94c87a910679/go.mod h1:M8o2UXm8jAG7bech4xc/SeNxbHquqfagVvHdKyDoRNk=
 github.com/black-desk/nftables v0.0.0-20231024023000-507e72d30b17 h1:/mmacHTt9zP1NRUMz6Y3ko7uafsOv2v6aLjItzGfxxU=
 github.com/black-desk/nftables v0.0.0-20231024023000-507e72d30b17/go.mod h1:FODgEv85GcCEyoUYZ27mPWQBSU1f67bzgNu2IITA9k8=
 github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b h1:fiO3y68dfa5ctXhgZKCniY0IfPl0U+EoyADUgG2zP+s=
@@ -29,8 +31,16 @@ github.com/golang/protobuf v1.5.3/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiu
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/google/nftables v0.0.0-20220607152305-1f0380f5c76e h1:4195/gpB4BjPlC0WqOjh9+WsiDToMJewxTozgCnbu1Y=
+github.com/google/nftables v0.0.0-20220607152305-1f0380f5c76e/go.mod h1:b97ulCCFipUC+kSin+zygkvUVpx0vyIAwxXFdY3PlNc=
+github.com/google/nftables v0.1.1-0.20231021201155-6df7a82bbd85 h1:eJvIqeddy69xqWdapD/AZVNhJD5/kPSx2RyO1rjPaeI=
+github.com/google/nftables v0.1.1-0.20231021201155-6df7a82bbd85/go.mod h1:FODgEv85GcCEyoUYZ27mPWQBSU1f67bzgNu2IITA9k8=
+github.com/google/nftables v0.1.1-0.20231024065723-32bfbb662717 h1:U0bCHvg4y7uTBQWiyE5iOC/R3Dw9Dve1TjIok0BfkbQ=
+github.com/google/nftables v0.1.1-0.20231024065723-32bfbb662717/go.mod h1:FODgEv85GcCEyoUYZ27mPWQBSU1f67bzgNu2IITA9k8=
 github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 h1:hR7/MlvK23p6+lIw9SN1TigNLn9ZnF3W4SYRKq2gAHs=
 github.com/google/pprof v0.0.0-20230602150820-91b7bce49751/go.mod h1:Jh3hGz2jkYak8qXPD19ryItVnUgpgeqzdkY/D0EaeuA=
+github.com/google/pprof v0.0.0-20231023181126-ff6d637d2a7b h1:RMpPgZTSApbPf7xaVel+QkoGPRLFLrwFO89uDUHEGf0=
+github.com/google/pprof v0.0.0-20231023181126-ff6d637d2a7b/go.mod h1:czg5+yv1E0ZGTi6S6vVK1mke0fV+FaUhNGcd6VRS9Ik=
 github.com/google/subcommands v1.0.1/go.mod h1:ZjhPrFU+Olkh9WazFPsl27BQ4UPiG37m3yTrtFlrHVk=
 github.com/google/uuid v1.3.1 h1:KjJaJ9iWZ3jOFZIf1Lqf4laDRCasjl0BCmnEGxkdLb4=
 github.com/google/uuid v1.3.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
