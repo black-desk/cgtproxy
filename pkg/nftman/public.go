@@ -5,77 +5,12 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"syscall"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
-	"github.com/google/nftables/binaryutil"
-	"github.com/google/nftables/expr"
 )
-
-func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElement, err error) {
-	defer Wrap(&err, "generating set element for route",
-		"Path", route.Path,
-		"Target", route.Target,
-	)
-
-	nft.log.Debugw("Generating set element for new cgroup route.",
-		"Path", route.Path,
-		"Target", route.Target,
-	)
-
-	path := route.Path
-	target := route.Target
-
-	if _, ok := nft.cgroupMapElement[path]; ok {
-		err = os.ErrExist
-		return
-	}
-
-	var fileInfo os.FileInfo
-	fileInfo, err = os.Stat(path)
-	if err != nil {
-		return
-	}
-
-	inode := fileInfo.Sys().(*syscall.Stat_t).Ino
-
-	route.Path = nft.removeCgroupRootFromPath(path)
-	path = route.Path
-
-	nft.log.Debugw("Get inode of cgroup file using stat(2).",
-		"path", path,
-		"inode", inode,
-	)
-
-	setElement := nftables.SetElement{
-		Key:         binaryutil.NativeEndian.PutUint64(inode),
-		VerdictData: nil,
-	}
-
-	switch target.Op {
-	case types.TargetDirect:
-		setElement.VerdictData = &expr.Verdict{
-			Kind: expr.VerdictReturn,
-		}
-
-	case types.TargetTProxy:
-		setElement.VerdictData = &expr.Verdict{
-			Kind:  expr.VerdictGoto,
-			Chain: target.Chain,
-		}
-
-	case types.TargetDrop:
-		setElement.VerdictData = &expr.Verdict{
-			Kind: expr.VerdictDrop,
-		}
-	}
-
-	ret = setElement
-	return
-}
 
 func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
 	defer Wrap(&err, "add %d routes to nftable", len(routes))
