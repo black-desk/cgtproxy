@@ -1,8 +1,12 @@
 package connector
 
-import "github.com/google/nftables"
+import (
+	. "github.com/black-desk/lib/go/errwrap"
+	"github.com/google/nftables"
+)
 
-func (c *Connector) Connect() (*nftables.Conn, error) {
+func (c *Connector) Connect() (ret *nftables.Conn, err error) {
+	defer Wrap(&err, "new netlink connection")
 	return nftables.New()
 }
 

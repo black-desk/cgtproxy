@@ -31,11 +31,14 @@ func (m *RouteManager) initializeNftableRuels() (err error) {
 }
 
 func (m *RouteManager) removeNftableRules() {
-	err := m.nft.Clear()
+	var err error
+
+	err = m.nft.Clear()
 	if err != nil {
 		m.log.Errorw("Failed to delete nft table.",
 			"error", err,
 		)
+		err = nil
 	}
 
 	for _, rule := range m.rule {
@@ -49,6 +52,15 @@ func (m *RouteManager) removeNftableRules() {
 			"error", err,
 		)
 	}
+
+	err = m.nft.Release()
+	if err != nil {
+		m.log.Errorw("Failed to release NFTManager.",
+			"error", err,
+		)
+		err = nil
+	}
+
 	return
 }
 

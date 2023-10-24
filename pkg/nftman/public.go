@@ -292,3 +292,8 @@ func (nft *NFTManager) Clear() (err error) {
 	nft.dumpNFTableRules()
 	return
 }
+
+func (nft *NFTManager) Release() (err error) {
+	defer Wrap(&err, "release NFTManager")
+	return nft.connector.Release()
+}
