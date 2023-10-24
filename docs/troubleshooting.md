@@ -8,6 +8,8 @@ running cgtproxy core: running route manager: add route: file exists
 running filesystem watcher: context canceled
 ```
 
+The "file exists" is error message of EEXIST, which means that:
+
 1. Maybe there is another cgtproxy running;
 
    Try to stop another cgtproxy.
