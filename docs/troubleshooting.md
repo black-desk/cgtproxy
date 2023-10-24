@@ -37,7 +37,7 @@ running filesystem watcher: context canceled
       # No output
       ```
 
-      Now you can just simply remove the route table and nftable ruleset by:
+   2. Now you can just simply remove the route table and nftable ruleset by:
 
       ```bash
       sudo ip route del table 300 local default dev lo scope host
@@ -45,4 +45,5 @@ running filesystem watcher: context canceled
       sudo ip rule del fwmark 3000 lookup 300
       sudo ip -6 rule del fwmark 3000 lookup 300
       sudo nft flush table inet cgtproxy
+      sudo nft delete table inet cgtproxy
       ```
