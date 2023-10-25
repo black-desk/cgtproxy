@@ -78,6 +78,8 @@ func getCgroupRoot() (cgroupRoot CGroupRoot, err error) {
 
 		fsFile = CGroupRoot(mount.File)
 		mountFound = true
+
+		break
 	}
 
 	if !mountFound {

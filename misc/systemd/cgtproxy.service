@@ -8,21 +8,15 @@ ExecStart=cgtproxy
 CapabilityBoundingSet=CAP_NET_ADMIN
 LimitNPROC=1
 
-ProtectHome=true
+ProtectHome=yes
 ProtectSystem=full
-PrivateTmp=true
-ProtectKernelTunables=true
-# FIXME:
-# This program is not going to write anything under the cgroupfs.
-# But if we use ProtectControlGroups=true here,
-# we will end up with a error with systemd v254:
-# readdirent /sys/fs/cgroup/.../memory.pressure: not a directory
-# Just disable this option for now.
-ProtectControlGroups=false
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
 ConfigurationDirectory=cgtproxy
 ConfigurationDirectoryMode=0555
-MemoryDenyWriteExecute=true
-NoNewPrivileges=true
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=yes
 
 [Install]
 WantedBy=default.target
