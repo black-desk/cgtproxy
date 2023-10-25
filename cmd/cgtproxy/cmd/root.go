@@ -125,7 +125,7 @@ func rootCmdRun() (err error) {
 
 	content, err := os.ReadFile(flags.cfgPath)
 	if errors.Is(err, os.ErrNotExist) && flags.cfgPath == CGTProxyCfgPath {
-		log.Errorw("Configuration file missing fallback to default config.")
+		log.Warn("Configuration file missing fallback to default config.")
 
 		content = []byte(config.DefaultConfig)
 		err = nil
@@ -157,6 +157,8 @@ func rootCmdRun() (err error) {
 	if err != nil {
 		return
 	}
+
+	defer c.Delete()
 
 	ctx, cancel := context.WithCancelCause(context.Background())
 

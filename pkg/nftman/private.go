@@ -1,6 +1,7 @@
 package nftman
 
 import (
+	"errors"
 	"net"
 	"os"
 	"os/exec"
@@ -443,5 +444,29 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 	}
 
 	ret = setElement
+	return
+}
+
+func (nft *NFTManager) clear() (err error) {
+	defer Wrap(&err, "remove nftable.")
+
+	var conn *nftables.Conn
+	conn, err = nft.connector.Connect()
+	if err != nil {
+		return
+	}
+
+	conn.DelTable(nft.table)
+	err = conn.Flush()
+	if errors.Is(err, os.ErrNotExist) {
+		nft.log.Debugw("Table not exist, nothing to remove.",
+			"table", nft.table.Name,
+		)
+		err = nil
+	} else if err != nil {
+		return
+	}
+
+	nft.dumpNFTableRules()
 	return
 }

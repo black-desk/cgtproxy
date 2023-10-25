@@ -10,6 +10,6 @@ func (c *Connector) Connect() (ret *nftables.Conn, err error) {
 	return nftables.New()
 }
 
-func (c *Connector) Release() error {
+func (c *Connector) Delete() error {
 	return nil
 }

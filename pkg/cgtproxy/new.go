@@ -55,7 +55,7 @@ func New(opts ...Opt) (ret *CGTProxy, err error) {
 
 	ret = c
 
-	c.log.Debugw("Create a new core.",
+	c.log.Debugw("New CGTProxy core created.",
 		"configuration", c.cfg,
 	)
 

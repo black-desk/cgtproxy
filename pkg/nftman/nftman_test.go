@@ -44,32 +44,19 @@ var _ = Describe("Netfliter table", Ordered, func() {
 			ContextTableEntry(injectedNFTManagerWithConnector).WithFmt("connector"),
 			func(injectedNFTManager func(cGroupRoot config.CGroupRoot) (*NFTManager, error)) {
 				BeforeEach(func() {
-					By("Create a Table object.", func() {
+					By("Create a nftable manager.", func() {
 						nft, err = injectedNFTManager(config.CGroupRoot(cgroupRoot))
 						Expect(err).To(Succeed())
 					})
 				})
 
 				AfterEach(func() {
-					By("Clear nftable content.", func() {
+					By("Delete nftable manager.", func() {
 						if nft == nil {
 							return
 						}
-						err = nft.Clear()
+						err = nft.Delete()
 						Expect(err).To(Succeed())
-					})
-				})
-
-				Context("then call Table.Clear()", func() {
-					BeforeEach(func() {
-						err = nft.Clear()
-					})
-
-					It("should clear the nft table with no error", func() {
-						Expect(err).To(Succeed())
-
-						result = getNFTableRules()
-						Expect(result).To(BeEmpty())
 					})
 				})
 

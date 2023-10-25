@@ -24,8 +24,8 @@ func (c *LastingConnector) Connect() (ret *nftables.Conn, err error) {
 	return
 }
 
-func (c *LastingConnector) Release() (err error) {
-	defer Wrap(&err, "release lasting netlink connection")
+func (c *LastingConnector) Delete() (err error) {
+	defer Wrap(&err, "delete lasting netlink connection")
 
 	err = c.conn.CloseLasting()
 	c.conn = nil

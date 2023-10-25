@@ -8,5 +8,6 @@ import (
 
 // RouteManager is an interface generated for "github.com/black-desk/cgtproxy/pkg/routeman.RouteManager".
 type RouteManager interface {
+	Delete() error
 	RunRouteManager(context.Context) error
 }

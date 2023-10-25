@@ -10,6 +10,7 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/nftman/lastingconnector"
 	"github.com/black-desk/cgtproxy/pkg/routeman"
 	"github.com/black-desk/cgtproxy/pkg/types"
+	"github.com/google/wire"
 	"go.uber.org/zap"
 )
 
@@ -47,7 +48,7 @@ func provideNFTManager(
 	)
 }
 
-func provideRuleManager(
+func provideRouteManager(
 	t interfaces.NFTManager,
 	cfg *config.Config,
 	ch <-chan types.CGroupEvents,
@@ -55,6 +56,20 @@ func provideRuleManager(
 ) (
 	ret interfaces.RouteManager, err error,
 ) {
+	defer func() {
+		if err == nil {
+			return
+		}
+
+		err := t.Delete()
+		if err != nil {
+			logger.Errorw(
+				"Error delete nft manager.",
+				"error", err,
+			)
+		}
+	}()
+
 	return routeman.New(
 		routeman.WithNFTMan(t),
 		routeman.WithConfig(cfg),
@@ -88,12 +103,57 @@ func provideCGTProxy(
 	logger *zap.SugaredLogger,
 	cfg *config.Config,
 ) (
-	interfaces.CGTProxy, error,
+	ret interfaces.CGTProxy, err error,
 ) {
-	return cgtproxy.New(
+	defer func() {
+		if err == nil {
+			return
+		}
+
+		err := man.Delete()
+		if err != nil {
+			logger.Errorw(
+				"Error delete route man.",
+				"error", err,
+			)
+		}
+	}()
+
+	var cgt interfaces.CGTProxy
+
+	cgt, err = cgtproxy.New(
 		cgtproxy.WithConfig(cfg),
 		cgtproxy.WithLogger(logger),
 		cgtproxy.WithCGroupMonitor(mon),
 		cgtproxy.WithRouteManager(man),
 	)
+
+	if err != nil {
+		return
+	}
+
+	ret = cgt
+	return
 }
+
+var set = wire.NewSet(
+	provideBypass,
+	provideCGTProxy,
+	provideCGroupEventChan,
+	provideCgrougMontior,
+	provideCgroupRoot,
+	provideNFTManager,
+	provideNetlinkConnector,
+	provideRouteManager,
+)
+
+var lastingConnectorSet = wire.NewSet(
+	provideBypass,
+	provideCGTProxy,
+	provideCGroupEventChan,
+	provideCgrougMontior,
+	provideCgroupRoot,
+	provideLastringNetlinkConnector,
+	provideNFTManager,
+	provideRouteManager,
+)

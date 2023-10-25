@@ -53,14 +53,6 @@ func (m *RouteManager) removeNftableRules() {
 		)
 	}
 
-	err = m.nft.Release()
-	if err != nil {
-		m.log.Errorw("Failed to release NFTManager.",
-			"error", err,
-		)
-		err = nil
-	}
-
 	return
 }
 

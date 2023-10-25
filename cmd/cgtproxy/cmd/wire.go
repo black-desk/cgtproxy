@@ -25,25 +25,3 @@ func injectedLastingCGTProxy(
 ) {
 	panic(wire.Build(lastingConnectorSet))
 }
-
-var set = wire.NewSet(
-	provideBypass,
-	provideCGTProxy,
-	provideCGroupEventChan,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideNFTManager,
-	provideNetlinkConnector,
-	provideRuleManager,
-)
-
-var lastingConnectorSet = wire.NewSet(
-	provideBypass,
-	provideCGTProxy,
-	provideCGroupEventChan,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideLastringNetlinkConnector,
-	provideNFTManager,
-	provideRuleManager,
-)

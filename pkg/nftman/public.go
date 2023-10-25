@@ -2,7 +2,6 @@ package nftman
 
 import (
 	"errors"
-	"os"
 	"sort"
 	"strings"
 
@@ -204,31 +203,27 @@ func (nft *NFTManager) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) 
 	return
 }
 
-func (nft *NFTManager) Clear() (err error) {
-	defer Wrap(&err, "remove nftable.")
+func (nft *NFTManager) Delete() (err error) {
+	defer Wrap(&err, "delete NFTManager")
 
-	var conn *nftables.Conn
-	conn, err = nft.connector.Connect()
+	errs := []error{}
+
+	err = nft.clear()
 	if err != nil {
-		return
-	}
-
-	conn.DelTable(nft.table)
-	err = conn.Flush()
-	if errors.Is(err, os.ErrNotExist) {
-		nft.log.Debugw("Table not exist, nothing to remove.",
-			"table", nft.table.Name,
-		)
+		errs = append(errs, err)
 		err = nil
-	} else if err != nil {
-		return
 	}
 
-	nft.dumpNFTableRules()
-	return
-}
+	err = nft.connector.Delete()
+	if err != nil {
+		errs = append(errs, err)
+		err = nil
+	}
 
-func (nft *NFTManager) Release() (err error) {
-	defer Wrap(&err, "release NFTManager")
-	return nft.connector.Release()
+	if len(errs) != 0 {
+		err = errors.Join(errs...)
+		return err
+	}
+
+	return
 }

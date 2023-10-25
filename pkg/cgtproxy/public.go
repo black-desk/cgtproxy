@@ -21,3 +21,14 @@ func (c *CGTProxy) RunCGTProxy(ctx context.Context) (err error) {
 
 	return pool.Wait()
 }
+
+func (c *CGTProxy) Delete() (err error) {
+	defer Wrap(&err, "delete cgtproxy")
+
+	err = c.rtManager.Delete()
+	if err != nil {
+		return
+	}
+
+	return
+}

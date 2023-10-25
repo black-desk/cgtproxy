@@ -18,7 +18,7 @@ func (c *CGTProxy) runRouteManager(ctx context.Context) (err error) {
 }
 
 func (c *CGTProxy) runCGroupMonitor(ctx context.Context) (err error) {
-	defer c.log.Debug("Filesystem watcher exited.")
+	defer c.log.Debug("Control group monitor exited.")
 
 	c.log.Debug("Start filesystem watcher.")
 

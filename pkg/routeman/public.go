@@ -54,3 +54,14 @@ func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 	<-ctx.Done()
 	return ctx.Err()
 }
+
+func (m *RouteManager) Delete() (err error) {
+	defer Wrap(&err, "delete route manager")
+
+	err = m.nft.Delete()
+	if err != nil {
+		return
+	}
+
+	return
+}

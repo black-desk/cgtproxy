@@ -8,5 +8,6 @@ import (
 
 // CGTProxy is an interface generated for "github.com/black-desk/cgtproxy/pkg/cgtproxy.CGTProxy".
 type CGTProxy interface {
+	Delete() error
 	RunCGTProxy(context.Context) error
 }

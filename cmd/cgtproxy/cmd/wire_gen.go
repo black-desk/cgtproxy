@@ -9,7 +9,6 @@ package cmd
 import (
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
-	"github.com/google/wire"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +30,7 @@ func injectedCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLog
 		return nil, err
 	}
 	v := provideCGroupEventChan(cGroupMonitor)
-	routeManager, err := provideRuleManager(nftManager, configConfig, v, sugaredLogger)
+	routeManager, err := provideRouteManager(nftManager, configConfig, v, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +57,7 @@ func injectedLastingCGTProxy(configConfig *config.Config, sugaredLogger *zap.Sug
 		return nil, err
 	}
 	v := provideCGroupEventChan(cGroupMonitor)
-	routeManager, err := provideRuleManager(nftManager, configConfig, v, sugaredLogger)
+	routeManager, err := provideRouteManager(nftManager, configConfig, v, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -68,27 +67,3 @@ func injectedLastingCGTProxy(configConfig *config.Config, sugaredLogger *zap.Sug
 	}
 	return cgtProxy, nil
 }
-
-// wire.go:
-
-var set = wire.NewSet(
-	provideBypass,
-	provideCGTProxy,
-	provideCGroupEventChan,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideNFTManager,
-	provideNetlinkConnector,
-	provideRuleManager,
-)
-
-var lastingConnectorSet = wire.NewSet(
-	provideBypass,
-	provideCGTProxy,
-	provideCGroupEventChan,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideLastringNetlinkConnector,
-	provideNFTManager,
-	provideRuleManager,
-)
