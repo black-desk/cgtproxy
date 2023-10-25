@@ -134,6 +134,10 @@ func (t *NFTManager) addTproxyChainForTProxy(
 			Data:     []byte{unix.IPPROTO_TCP},
 		}
 	} else {
+		// NOTE:
+		// Only add set when we use it, otherwise we will get an EINVAL
+		// https://github.com/torvalds/linux/blob/4f82870119a46b0d04d91ef4697ac4977a255a9d/net/netfilter/nf_tables_api.c#L9881
+
 		err = conn.AddSet(t.protoSet, t.protoSetElement)
 		if err != nil {
 			return
