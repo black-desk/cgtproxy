@@ -42,10 +42,10 @@ The "file exists" is error message of EEXIST, which means that:
    2. Now you can just simply remove the route table and nftable ruleset by:
 
       ```bash
-      sudo ip route del table 300 local default dev lo scope host
-      sudo ip -6 route del table 300 local default dev lo scope host
-      sudo ip rule del fwmark 3000 lookup 300
-      sudo ip -6 rule del fwmark 3000 lookup 300
+      sudo ip route del table 400 local default dev lo scope host
+      sudo ip -6 route del table 400 local default dev lo scope host
+      sudo ip rule del fwmark 3000 lookup 400
+      sudo ip -6 rule del fwmark 3000 lookup 400
       sudo nft flush table inet cgtproxy
       sudo nft delete table inet cgtproxy
       ```

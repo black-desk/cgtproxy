@@ -385,10 +385,7 @@ func getNFTableRules() string {
 }
 
 func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElement, err error) {
-	defer Wrap(&err, "generating set element for route",
-		"Path", route.Path,
-		"Target", route.Target,
-	)
+	defer Wrap(&err, "generating set element for route %v", route)
 
 	nft.log.Debugw("Generating set element for new cgroup route.",
 		"Path", route.Path,
