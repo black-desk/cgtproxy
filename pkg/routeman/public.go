@@ -41,9 +41,6 @@ func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 		newErr := m.handleNewCgroups(newCGroups)
 		delErr := m.handleDeleteCgroups(deleteCGroups)
 		eventsErr := errors.Join(newErr, delErr)
-		if eventsErr == nil {
-			continue
-		}
 
 		if events.Result != nil {
 			events.Result <- eventsErr
