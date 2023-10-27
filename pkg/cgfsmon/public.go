@@ -60,7 +60,7 @@ LOOP:
 	}
 
 	<-ctx.Done()
-	err = ctx.Err()
+	err = context.Cause(ctx)
 	if err != nil {
 		return
 	}
