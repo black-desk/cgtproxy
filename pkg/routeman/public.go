@@ -49,5 +49,5 @@ func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 	}
 
 	<-ctx.Done()
-	return ctx.Err()
+	return context.Cause(ctx)
 }
