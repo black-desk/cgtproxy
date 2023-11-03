@@ -73,11 +73,6 @@ func New(opts ...Opt) (ret *NFTManager, err error) {
 		t.log = zap.NewNop().Sugar()
 	}
 
-	err = t.initStructure()
-	if err != nil {
-		return
-	}
-
 	ret = t
 
 	t.log.Debugw("NFTManager created.")
@@ -151,7 +146,7 @@ func WithConnFactory(f interfaces.NetlinkConnector) Opt {
 	}
 }
 
-func (nft *NFTManager) initStructure() (err error) {
+func (nft *NFTManager) InitStructure() (err error) {
 	defer Wrap(&err, "flush initial content")
 
 	nft.log.Debug("Initialing nft table structure.")

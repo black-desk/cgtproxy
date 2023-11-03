@@ -44,8 +44,10 @@ var _ = Describe("Netfliter table", Ordered, func() {
 			ContextTableEntry(injectedNFTManagerWithConnector).WithFmt("connector"),
 			func(injectedNFTManager func(cGroupRoot config.CGroupRoot) (*NFTManager, error)) {
 				BeforeEach(func() {
-					By("Create a Table object.", func() {
+					By("Create a Table object and initialize structure", func() {
 						nft, err = injectedNFTManager(config.CGroupRoot(cgroupRoot))
+						Expect(err).To(Succeed())
+						err = nft.InitStructure()
 						Expect(err).To(Succeed())
 					})
 				})

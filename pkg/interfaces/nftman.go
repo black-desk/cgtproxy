@@ -12,6 +12,7 @@ type NFTManager interface {
 	AddChainAndRulesForTProxy(*config.TProxy) error
 	AddRoutes([]types.Route) error
 	Clear() error
+	InitStructure() error
 	Release() error
 	RemoveCgroups([]string) error
 }
