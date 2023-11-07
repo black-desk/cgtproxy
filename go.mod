@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/black-desk/lib/go v0.0.0-20231023094454-94c87a910679
 	github.com/deniswernert/go-fstab v0.0.0-20141204152952-eb4090f26517
-	github.com/go-playground/validator/v10 v10.15.5
+	github.com/go-playground/validator/v10 v10.16.0
 	github.com/google/nftables v0.1.1-0.20231024065723-32bfbb662717
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.29.0
