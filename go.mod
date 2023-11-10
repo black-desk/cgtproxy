@@ -7,7 +7,7 @@ require (
 	github.com/deniswernert/go-fstab v0.0.0-20141204152952-eb4090f26517
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/google/nftables v0.1.1-0.20231024065723-32bfbb662717
-	github.com/onsi/ginkgo/v2 v2.13.0
+	github.com/onsi/ginkgo/v2 v2.13.1
 	github.com/onsi/gomega v1.29.0
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.8.0
@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	github.com/go-logr/logr v1.2.4 // indirect
+	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
