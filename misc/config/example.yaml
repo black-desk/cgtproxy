@@ -1,4 +1,7 @@
-# Configuration documentation can be found at
+# This file is my daily use configuration,
+# I use it to show how to use cgtproxy with clash-meta.
+#
+# Futher configuration documentation can be found at
 # https://godoc.org/github.com/black-desk/cgtproxy/pkg/cgtproxy/config
 
 version: 1
@@ -15,10 +18,13 @@ tproxies:
   clash-meta:
     mark: 3000
     port: 7893
+
     # Do not proxy UDP traffic. They will be send directly.
     # no-udp: false
+
     # Do not proxy IPv6 traffic. They will be send directly.
     # no-ipv6: false
+
     # Hijack all IPv4 traffic which destination port is 53
     # and redirect them to ip:port.
     # This field is optional.
@@ -52,7 +58,7 @@ rules:
   # cgtproxy-drop.slice cgroup.
   #
   # Using this setup, you can start a non-proxy shell
-  # by run
+  # by execute:
   #
   # systemd-run --user --slice cgtproxy-direct.slice --shell
   #
