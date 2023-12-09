@@ -10,4 +10,47 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - uses: black-desk/checks@v1
+      - uses: black-desk/checks@master
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+          cache-dependency-path: ${{github.workspace}}/go.sum
+
+      - name: Upgrade
+        run: |
+          sudo apt update &&
+          sudo apt install systemd util-linux
+
+      - name: Build & test (debug mode)
+        run: |
+          make GOTAGS=debug
+          make GOTAGS=debug test
+
+      - name: Build & test
+        run: |
+          make
+          make test
+
+      - name: Coverage report
+        run: |
+          export COVERAGE_REPORT=/tmp/io.github.black-desk.cgtproxy-test/coverage.txt &&
+          echo '```' > $GITHUB_STEP_SUMMARY &&
+          make COVERAGE_REPORT=$COVERAGE_REPORT test-coverage &&
+          cat $COVERAGE_REPORT >> $GITHUB_STEP_SUMMARY &&
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  pass:
+    name: Pass
+    needs: [checks, build-and-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: |
+          true
