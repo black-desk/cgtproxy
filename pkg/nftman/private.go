@@ -113,10 +113,10 @@ func (t *NFTManager) addTproxyChainForTProxy(
 			Key:      expr.MetaKeyL4PROTO,
 			Register: 1,
 		},
-		&expr.Lookup{ // lookup reg 1 set __set%d
-			SourceRegister: 1,
-			SetID:          t.protoSet.ID,
-			SetName:        t.protoSet.Name,
+		&expr.Cmp{ // cmp eq reg 1 0x00000006
+			Op:       expr.CmpOpEq,
+			Register: 1,
+			Data:     []byte{unix.IPPROTO_TCP},
 		},
 		&expr.Immediate{ // immediate reg 1 ...
 			Register: 1,
@@ -127,20 +127,20 @@ func (t *NFTManager) addTproxyChainForTProxy(
 
 	lookup := &exprs[1]
 
-	if tp.NoUDP {
-		*lookup = &expr.Cmp{ // cmp eq reg 1 0x00000006
-			Op:       expr.CmpOpEq,
-			Register: 1,
-			Data:     []byte{unix.IPPROTO_TCP},
-		}
-	} else {
+	if !tp.NoUDP {
 		// NOTE:
 		// Only add set when we use it, otherwise we will get an EINVAL
 		// https://github.com/torvalds/linux/blob/4f82870119a46b0d04d91ef4697ac4977a255a9d/net/netfilter/nf_tables_api.c#L9881
 
+		t.protoSet.ID = 0
 		err = conn.AddSet(t.protoSet, t.protoSetElement)
 		if err != nil {
 			return
+		}
+		*lookup = &expr.Lookup{ // lookup reg 1 set __set%d
+			SourceRegister: 1,
+			SetID:          t.protoSet.ID,
+			SetName:        t.protoSet.Name,
 		}
 	}
 

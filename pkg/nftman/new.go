@@ -27,6 +27,10 @@ type NFTManager struct {
 	ipv4BypassSet *nftables.Set
 	ipv6BypassSet *nftables.Set
 
+	// NOTE(black_desk):
+	// When use AddSet to add anonymous protoSet into nftable,
+	// we should reset protoSet.ID to 0
+	// to let nftables reallocate ID for this anonymous set.
 	protoSet        *nftables.Set
 	protoSetElement []nftables.SetElement // keep anonymous set elements
 
@@ -538,6 +542,7 @@ func (nft *NFTManager) fillOutputMangleChain(
 
 	// meta l4proto != { tcp, udp } return
 
+	nft.protoSet.ID = 0
 	err = conn.AddSet(nft.protoSet, nft.protoSetElement)
 	if err != nil {
 		return

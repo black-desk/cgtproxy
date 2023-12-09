@@ -9,18 +9,19 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
+	"golang.org/x/exp/maps"
 	"golang.org/x/sys/unix"
 )
 
 func (m *RouteManager) initializeNftableRuels() (err error) {
 	defer Wrap(&err, "initializing nftable rules")
 
-	for _, tp := range m.cfg.TProxies {
-		err = m.nft.AddChainAndRulesForTProxy(tp)
-		if err != nil {
-			return
-		}
+	err = m.nft.AddChainAndRulesForTProxies(maps.Values(m.cfg.TProxies))
+	if err != nil {
+		return
+	}
 
+	for _, tp := range m.cfg.TProxies {
 		err = m.addRule(tp.Mark)
 		if err != nil {
 			return

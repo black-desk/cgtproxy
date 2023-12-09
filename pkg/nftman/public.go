@@ -144,15 +144,11 @@ func (nft *NFTManager) RemoveCgroups(paths []string) (err error) {
 	return
 }
 
-func (nft *NFTManager) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) {
+func (nft *NFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) (err error) {
 	defer Wrap(
 		&err,
-		"add chain and rules to nft table for tproxy %#v",
-		tp,
-	)
-
-	nft.log.Debugw("Adding chain and rules for tproxy.",
-		"tproxy", tp,
+		"add chain and rules to nft table for tproxies %#v",
+		tps,
 	)
 
 	var conn *nftables.Conn
@@ -161,33 +157,43 @@ func (nft *NFTManager) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) 
 		return
 	}
 
-	_, err = nft.addMarkChainForTProxy(conn, tp)
-	if err != nil {
-		return
-	}
+	for _, tp := range tps {
+		nft.log.Debugw("Generating chain and rules for tproxy.",
+			"tproxy", tp,
+		)
 
-	var chain *nftables.Chain
-
-	chain, err = nft.addTproxyChainForTProxy(conn, tp)
-	if err != nil {
-		return
-	}
-
-	err = nft.updateMarkTproxyMap(conn, tp.Mark, chain.Name)
-	if err != nil {
-		return
-	}
-
-	if tp.DNSHijack != nil {
-		chain, err = nft.addDNSChainForTproxy(conn, tp)
+		_, err = nft.addMarkChainForTProxy(conn, tp)
 		if err != nil {
 			return
 		}
 
-		err = nft.updateMarkDNSMap(conn, tp.Mark, chain.Name)
+		var chain *nftables.Chain
+
+		chain, err = nft.addTproxyChainForTProxy(conn, tp)
 		if err != nil {
 			return
 		}
+
+		err = nft.updateMarkTproxyMap(conn, tp.Mark, chain.Name)
+		if err != nil {
+			return
+		}
+
+		if tp.DNSHijack != nil {
+			chain, err = nft.addDNSChainForTproxy(conn, tp)
+			if err != nil {
+				return
+			}
+
+			err = nft.updateMarkDNSMap(conn, tp.Mark, chain.Name)
+			if err != nil {
+				return
+			}
+		}
+
+		nft.log.Debug("Chain and rules generated for this tproxy.",
+			"tproxy", tp,
+		)
 	}
 
 	err = conn.Flush()
@@ -195,8 +201,8 @@ func (nft *NFTManager) AddChainAndRulesForTProxy(tp *config.TProxy) (err error) 
 		return
 	}
 
-	nft.log.Debug("Nftable chain added for this tproxy.",
-		"tproxy", tp,
+	nft.log.Debug("Chain and rules added for these tproxies.",
+		"tproxies", tps,
 	)
 
 	nft.dumpNFTableRules()

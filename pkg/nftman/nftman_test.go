@@ -136,10 +136,12 @@ var _ = Describe("Netfliter table", Ordered, func() {
 					func(tps []*TproxyCase) {
 						BeforeEach(func() {
 							By("Initialize table with tproxies.", func() {
+								tproxies := []*config.TProxy{}
 								for _, tp := range tps {
-									err = nft.AddChainAndRulesForTProxy(tp.t)
-									Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
+									tproxies = append(tproxies, tp.t)
 								}
+								err = nft.AddChainAndRulesForTProxies(tproxies)
+								Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
 							})
 						})
 
