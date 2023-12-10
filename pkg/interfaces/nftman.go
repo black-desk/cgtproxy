@@ -13,5 +13,5 @@ type NFTManager interface {
 	AddRoutes([]types.Route) error
 	Clear() error
 	Release() error
-	RemoveCgroups([]string) error
+	RemoveRoutes([]string) error
 }

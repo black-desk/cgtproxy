@@ -238,10 +238,12 @@ var _ = Describe("Netfliter table", Ordered, func() {
 
 							Context("and remove them later", func() {
 								BeforeEach(func() {
-									nft.RemoveCgroups([]string{cgroupRoot + "/test/a"})
-									nft.RemoveCgroups([]string{cgroupRoot + "/test/b"})
-									nft.RemoveCgroups([]string{cgroupRoot + "/test/c"})
-									nft.RemoveCgroups([]string{cgroupRoot + "/test/d/d"})
+									nft.RemoveRoutes([]string{
+										cgroupRoot + "/test/a",
+										cgroupRoot + "/test/b",
+										cgroupRoot + "/test/c",
+										cgroupRoot + "/test/d/d",
+									})
 								})
 
 								It("should produce expected nftable rules", func() {

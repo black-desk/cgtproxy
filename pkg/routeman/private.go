@@ -234,7 +234,7 @@ func (m *RouteManager) handleDeleteCgroups(paths []string) (err error) {
 		"size", len(paths),
 	)
 
-	err = m.nft.RemoveCgroups(paths)
+	err = m.nft.RemoveRoutes(paths)
 	if err != nil {
 		return
 	}

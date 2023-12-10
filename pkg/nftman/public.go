@@ -93,7 +93,7 @@ func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
 	return
 }
 
-func (nft *NFTManager) RemoveCgroups(paths []string) (err error) {
+func (nft *NFTManager) RemoveRoutes(paths []string) (err error) {
 	defer Wrap(
 		&err,
 		"remove %d cgroup(s) from nftable",
