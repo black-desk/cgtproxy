@@ -16,9 +16,6 @@ all:
 # and run test in that cgroup.
 SYSTEMD_RUN ?= systemd-run --user -d -P -t -q
 
-# The tests code is written assuming that
-# cgroup2 is mounted at /sys/fs/cgroup.
-# So we have to unshare mount namespace to make sure that.
 UNSHARE ?= unshare -U -C -m -n --map-user=0 --
 
 SHELL ?= sh
