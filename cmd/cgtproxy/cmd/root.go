@@ -231,7 +231,7 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVar(
 		&flags.lastingNetlinkConn,
-		"reuse-netlink-socket", false,
-		"the configure file to use",
+		"reuse-netlink-socket", true,
+		"use lasting netlink socket",
 	)
 }
