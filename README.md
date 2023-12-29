@@ -170,7 +170,7 @@ systemctl restart cgtproxy.service
 ## TODO
 
 - [ ] ~~optional cgroup monitor implementation listening on D-Bus
-      instead of filesystem;~~
+  instead of filesystem;~~
 
   [notify](https://github.com/rjeczalik/notify)
   makes the filesystem monitor much more stable,
@@ -186,6 +186,8 @@ systemctl restart cgtproxy.service
 
 - [ ] ~~builtin TPROXY server.~~
 
-  Clash is good enough for me.
+  ~~Clash~~
+  ~~Clash.Meta~~
+  [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) is good enough for me.
 
 If you need any feature above, PR is welcome.
