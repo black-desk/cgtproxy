@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	ErrCannotFoundCgroupv2Mount = errors.New("`cgroup2` mount point not found in /proc/mounts.")
+	ErrCannotFoundCgroupv2Root = errors.New("`cgroup2` mount point not found.")
 )

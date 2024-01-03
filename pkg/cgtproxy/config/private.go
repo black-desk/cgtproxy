@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	. "github.com/black-desk/lib/go/errwrap"
-	fstab "github.com/deniswernert/go-fstab"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -58,36 +58,23 @@ func (c *Config) check() (err error) {
 func getCgroupRoot() (cgroupRoot CGroupRoot, err error) {
 	defer Wrap(&err, "get cgroupv2 mount point")
 
-	var mounts fstab.Mounts
-	mounts, err = fstab.ParseProc()
-	if err != nil {
-		return
-	}
+	paths := []string{"/sys/fs/cgroup/unified", "/sys/fs/cgroup"}
 
-	var (
-		mountFound bool
-		fsFile     CGroupRoot
-	)
-	for i := range mounts {
-		mount := mounts[i]
-		fsVfsType := mount.VfsType
-
-		if fsVfsType != "cgroup2" {
+	for i := range paths {
+		var fileInfo os.FileInfo
+		fileInfo, err = os.Stat(paths[i])
+		if err != nil {
 			continue
 		}
 
-		fsFile = CGroupRoot(mount.File)
-		mountFound = true
+		if !fileInfo.IsDir() {
+			continue
+		}
 
-		break
-	}
-
-	if !mountFound {
-		err = ErrCannotFoundCgroupv2Mount
+		cgroupRoot = CGroupRoot(paths[i])
 		return
 	}
 
-	cgroupRoot = fsFile
-
+	err = ErrCannotFoundCgroupv2Root
 	return
 }
