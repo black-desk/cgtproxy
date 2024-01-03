@@ -32,11 +32,6 @@ var checkCmd = &cobra.Command{
 }
 
 func checkCmdRun() (err error) {
-	err = checkKernelCmdRun()
-	if err != nil {
-		return
-	}
-
 	err = checkConfigCmdRun()
 	if err != nil {
 		return
