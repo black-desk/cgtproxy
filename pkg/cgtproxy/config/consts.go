@@ -4,7 +4,7 @@ const (
 	DefaultConfig = `
 version: 1
 cgroup-root: AUTO
-route-table: 400
+route-table: 300
 rules:
   - match: \/.*
     direct: true
