@@ -42,9 +42,10 @@ type NFTManager struct {
 	markTproxyMap *nftables.Set
 	markDNSMap    *nftables.Set
 
-	outputMangleChain *nftables.Chain
-	outputNATChain    *nftables.Chain
-	preroutingChain   *nftables.Chain
+	outputMangleChain     *nftables.Chain
+	outputNATChain        *nftables.Chain
+	preroutingMangleChain *nftables.Chain
+	postroutingNATChain   *nftables.Chain
 }
 
 type Opt = (func(*NFTManager) (*NFTManager, error))
@@ -216,7 +217,12 @@ func (nft *NFTManager) initStructure() (err error) {
 		return
 	}
 
-	err = nft.initPreroutingChain(conn)
+	err = nft.initPostroutingNATChain(conn)
+	if err != nil {
+		return
+	}
+
+	err = nft.initPreroutingMangleChain(conn)
 	if err != nil {
 		return
 	}
@@ -610,11 +616,64 @@ func (nft *NFTManager) initOutputNATChain(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
+func (nft *NFTManager) initPostroutingNATChain(conn *nftables.Conn) (err error) {
+	return
 	// type route hook output priority mangle; policy accept;
-	nft.preroutingChain = conn.AddChain(&nftables.Chain{
+	nft.postroutingNATChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
-		Name:     "prerouting",
+		Name:     "postrouting-nat",
+		Type:     nftables.ChainTypeNAT,
+		Hooknum:  nftables.ChainHookPostrouting,
+		Priority: nftables.ChainPriorityNATSource,
+		Policy:   &nft.policy,
+	})
+
+	// socket cgroupv2 level 0 0 return
+	exprs := []expr.Any{
+		&expr.Socket{
+			Key:      expr.SocketKeyCgroupv2,
+			Level:    0,
+			Register: 1,
+		},
+		&expr.Cmp{ // cmp eq reg 1 0
+			Op:       expr.CmpOpGt,
+			Register: 1,
+			Data:     binaryutil.NativeEndian.PutUint64(0),
+		},
+		&expr.Verdict{
+			Kind: expr.VerdictReturn,
+		},
+	}
+
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: nft.postroutingNATChain,
+		Exprs: exprs,
+	})
+
+	// masquerade
+	exprs = []expr.Any{
+		&expr.Masq{},
+	}
+
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: nft.postroutingNATChain,
+		Exprs: exprs,
+	})
+
+	return
+}
+
+func (nft *NFTManager) initPreroutingMangleChain(conn *nftables.Conn) (err error) {
+	// type route hook output priority mangle; policy accept;
+	nft.preroutingMangleChain = conn.AddChain(&nftables.Chain{
+		Table:    nft.table,
+		Name:     "prerouting-mangle",
 		Type:     nftables.ChainTypeFilter,
 		Hooknum:  nftables.ChainHookPrerouting,
 		Priority: nftables.ChainPriorityMangle,
@@ -653,7 +712,7 @@ func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
 
 	conn.AddRule(&nftables.Rule{
 		Table: nft.table,
-		Chain: nft.preroutingChain,
+		Chain: nft.preroutingMangleChain,
 		Exprs: exprs,
 	})
 
@@ -689,7 +748,7 @@ func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
 
 	conn.AddRule(&nftables.Rule{
 		Table: nft.table,
-		Chain: nft.preroutingChain,
+		Chain: nft.preroutingMangleChain,
 		Exprs: exprs,
 	})
 
@@ -710,7 +769,7 @@ func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
 
 	conn.AddRule(&nftables.Rule{
 		Table: nft.table,
-		Chain: nft.preroutingChain,
+		Chain: nft.preroutingMangleChain,
 		Exprs: exprs,
 	})
 

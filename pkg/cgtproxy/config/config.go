@@ -14,8 +14,9 @@ type Config struct {
 	// The route table number cgtproxy will create to route TPROXY traffic.
 	// This table will be removed when cgtproxy stopped.
 	RouteTable int `yaml:"route-table" validate:"required"`
+	IsGateway bool `yaml:"gateway"`
 
-	log *zap.SugaredLogger `yaml:"-"`
+	log *zap.SugaredLogger
 	raw []byte
 }
 
