@@ -6,8 +6,8 @@ require (
 	github.com/black-desk/lib/go v0.0.0-20231023094454-94c87a910679
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/google/nftables v0.1.1-0.20231024065723-32bfbb662717
-	github.com/onsi/ginkgo/v2 v2.14.0
-	github.com/onsi/gomega v1.30.0
+	github.com/onsi/ginkgo/v2 v2.15.0
+	github.com/onsi/gomega v1.31.1
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.8.0
 	github.com/vishvananda/netlink v1.1.0
