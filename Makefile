@@ -4,9 +4,7 @@ GOTAGS ?=
 
 .PHONY: all
 all:
-	# https://github.com/google/wire/pull/353
-	$(GO) get github.com/google/wire/cmd/wire@v0.5.0
-	$(GO) generate -v -x ./...
+	env GOWORK=off $(GO) generate -v -x ./...
 	$(GO) mod tidy
 	$(GO) build -v --tags=$(GOTAGS) ./cmd/cgtproxy
 
