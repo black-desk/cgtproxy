@@ -13,6 +13,10 @@ import (
 )
 
 func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
+	if len(routes) == 0 {
+		return
+	}
+
 	defer Wrap(&err, "add %d routes to nftable", len(routes))
 
 	var conn *nftables.Conn
@@ -145,6 +149,10 @@ func (nft *NFTManager) RemoveRoutes(paths []string) (err error) {
 }
 
 func (nft *NFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) (err error) {
+	if len(tps) == 0 {
+		return
+	}
+
 	defer Wrap(
 		&err,
 		"add chain and rules to nft table for tproxies %#v",
