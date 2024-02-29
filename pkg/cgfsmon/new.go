@@ -22,8 +22,13 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 
 	w := &CGroupFSMonitor{}
 
-	w.eventsOut = make(chan types.CGroupEvents, 1)
-	w.eventsIn = make(chan notify.EventInfo, 1)
+	w.eventsOut = make(chan types.CGroupEvents)
+
+	// FIXME:
+	// github.com/rjeczalik/notify drop events if receiver is too slow.
+	// https://github.com/rjeczalik/notify/issues/85
+	// https://github.com/rjeczalik/notify/issues/98
+	w.eventsIn = make(chan notify.EventInfo, 20)
 
 	for i := range opts {
 		w, err = opts[i](w)
