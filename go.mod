@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/black-desk/lib/go v0.0.0-20231023094454-94c87a910679
 	github.com/go-playground/validator/v10 v10.19.0
-	github.com/google/nftables v0.1.1-0.20231024065723-32bfbb662717
+	github.com/google/nftables v0.2.0
 	github.com/onsi/ginkgo/v2 v2.16.0
 	github.com/onsi/gomega v1.31.1
 	github.com/sourcegraph/conc v0.3.0
@@ -41,8 +41,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
