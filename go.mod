@@ -7,7 +7,7 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0
 	github.com/google/nftables v0.2.0
 	github.com/onsi/ginkgo/v2 v2.17.2
-	github.com/onsi/gomega v1.33.0
+	github.com/onsi/gomega v1.33.1
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.8.0
 	github.com/vishvananda/netlink v1.1.0
