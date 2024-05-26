@@ -30,7 +30,7 @@ var flags struct {
 
 var rootCmd = &cobra.Command{
 	Use:   "cgtproxy",
-	Short: "A transparent network proxy manager for deepin",
+	Short: "A transparent network proxy manager.",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		defer func() {
 			if err == nil {
