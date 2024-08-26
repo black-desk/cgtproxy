@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	. "github.com/black-desk/lib/go/ginkgo-helper"
-	. "github.com/black-desk/lib/go/gomega-helper"
 	"github.com/go-playground/validator/v10"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -50,13 +50,19 @@ var _ = Describe("Configuration", func() {
 	ContextTable("load from invalid configuration (%s)",
 		ContextTableEntry(
 			"../../../test/data/wrong_type.yaml",
-			new(yaml.TypeError), "yaml.TypeError",
+			func(err error) bool {
+				var typeErr = &yaml.TypeError{}
+				return errors.As(err, &typeErr)
+			}, "yaml.TypeError",
 		).WithFmt("../../../test/data/wrong_type.yaml"),
 		ContextTableEntry(
 			"../../../test/data/validation_fail.yaml",
-			validator.ValidationErrors{}, "validator.ValidationErrors",
+			func(err error) bool {
+				var validationErrs = validator.ValidationErrors{}
+				return errors.As(err, &validationErrs)
+			}, "validator.ValidationErrors",
 		).WithFmt("../../../test/data/validation_fail.yaml"),
-		func(path string, expectErr error, errString string) {
+		func(path string, function func(error) bool, errString string) {
 			var (
 				err     error
 				file    *os.File
@@ -84,7 +90,7 @@ var _ = Describe("Configuration", func() {
 			})
 
 			It(fmt.Sprintf("should fail with error: %s", errString), func() {
-				Expect(err).To(MatchErr(expectErr))
+				Expect(err).To(MatchError(function, "Error should be a "+errString))
 			})
 		})
 })
