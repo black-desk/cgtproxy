@@ -70,7 +70,7 @@ func (m *RouteManager) addRuleWithFamily(
 ) (err error) {
 	rule := netlink.NewRule()
 	rule.Family = family
-	rule.Mark = int(mark) // WARN(black_desk): ???
+	rule.Mark = uint32(mark)
 	rule.Table = m.cfg.RouteTable
 
 	err = netlink.RuleAdd(rule)
