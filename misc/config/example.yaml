@@ -44,17 +44,27 @@ tproxies:
 #       Traffics in connection created by remote host
 #       will never redirect to TPROXY server or drop.
 rules:
+  # https://aur.archlinux.org/packages/clash-meta
+  # https://aur.archlinux.org/packages/clash-meta-bin
   # `clash-meta.service` will be launched by systemd
   # at `/system.slice/clash-meta.service`.
   # This regex match that path,
   # and will make traffic from it directly send
   # by produce and apply nft rules
   # when such cgroup is created.
-  - match: \/system\.slice\/clash-meta\.service
+  - match: |-
+      \/system\.slice\/clash-meta\.service
+    direct: true
+  # https://github.com/black-desk/debs/tree/master/one.metacubex.clash-meta
+  # But my clash-meta deb package
+  # use a systemd service name `one.metacubex.clash-meta`.
+  # So I add this rule, too.
+  - match: |-
+      \/system\.slice\/one\.metacubex\.clash-meta\.service
     direct: true
 
-  # Same as above,
-  # let's configure the user-level cgtproxy-direct.slice and
+  # Same as above.
+  # Let's configure the user-level cgtproxy-direct.slice and
   # cgtproxy-drop.slice cgroup.
   #
   # Using this setup, you can start a non-proxy shell
@@ -67,13 +77,27 @@ rules:
   # which match the regex in your configuration.
   # Then cgtproxy will produce nft rules to
   # make that `run-u22.service` get rid of transparent proxy.
-  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-direct\.slice\/.*
+  - match: |-
+      \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-direct\.slice\/.*
     direct: true
-  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-drop\.slice\/.*
+  - match: |-
+      \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-drop\.slice\/.*
     drop: true
-  - match: \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-proxy\.slice\/.*
+  - match: |-
+      \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-proxy\.slice\/.*
     tproxy: clash-meta
 
+  # Application related rules:
+  # To make these rules working across desktop environments,
+  # please take a look on https://systemd.io/DESKTOP_ENVIRONMENTS/.
+
+  # https://parsec.app/
+  # `parsec` should always connect to network directly.
+  - match: |-
+      \/user\.slice\/user-\d+\.slice\/user@\d+\.service\/app\.slice\/app(?:-gnome)?-parsecd-\d+\.(?:service|scope)
+    direct: true
+
   # For any cgroup else, TPROXY to clash-meta.
-  - match: \/.*
+  - match: |-
+      \/.*
     tproxy: clash-meta
