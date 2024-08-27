@@ -90,11 +90,18 @@ rules:
   # Application related rules:
   # To make these rules working across desktop environments,
   # please take a look on https://systemd.io/DESKTOP_ENVIRONMENTS/.
+  # NOTE:
+  # | Desktop Environment | Launcher  |
+  # |---------------------|-----------|
+  # | GNOME               | `"gnome"` |
+  # | dde                 | `"DDE"`   |
+  # | KDE                 | none      |
+  # So we should use `(?:-(?:gnome|DDE))?` to match `-<launcher>`
 
   # https://parsec.app/
   # `parsec` should always connect to network directly.
   - match: |-
-      \/user\.slice\/user-\d+\.slice\/user@\d+\.service\/app\.slice\/app(?:-gnome)?-parsecd-\d+\.(?:service|scope)
+      \/user\.slice\/user-\d+\.slice\/user@\d+\.service\/app\.slice\/app(?:-(?:gnome|DDE))?-parsecd-\d+\.(?:service|scope)
     direct: true
 
   # For any cgroup else, TPROXY to clash-meta.
