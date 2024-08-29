@@ -27,11 +27,13 @@ test:
 	$(SYSTEMD_RUN) \
 	$(UNSHARE) \
 	$(SHELL) -c "\
-		mkdir -p $(CGROUPFS) && \
 		mount --make-rprivate / && \
+		mkdir -p $(CGROUPFS) && \
 		mount -t cgroup2 none $(CGROUPFS) && \
 		export CGTPROXY_TEST_CGROUP_ROOT=$(CGROUPFS) && \
 		export CGTPROXY_TEST_NFTMAN=1 && \
+		export PATH=$(PATH) && \
+		mkdir -p $(shell dirname -- "$(COVERAGE)") && \
 		$(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv -coverprofile=$(COVERAGE) \
 	"
 
