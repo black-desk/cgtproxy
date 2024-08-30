@@ -54,4 +54,4 @@ CURRENT_SOURCE_FILE_DIR="$(dirname -- "$CURRENT_SOURCE_FILE_PATH")"
 
 cd "$CURRENT_SOURCE_FILE_DIR"
 
-./print-variable.make INPUT=../Makefile PROJECT_VERSION
+echo "v$(./print-variable.make INPUT=../Makefile PROJECT_VERSION)"

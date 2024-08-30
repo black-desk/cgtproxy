@@ -7,7 +7,7 @@ builds:
     flags:
       - -v
     ldflags:
-      - -s -w -X github.com/black-desk/cgtproxy/cmd/cgtproxy/cmd.Version={{.Version}}
+      - -s -w -X github.com/black-desk/cgtproxy/cmd/cgtproxy/cmd.Version=v{{.Version}}
     goos:
       - linux
     goarch:
