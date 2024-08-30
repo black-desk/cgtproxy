@@ -1,3 +1,4 @@
+version: 2
 builds:
   - main: ./cmd/cgtproxy
     binary: cgtproxy
@@ -18,9 +19,9 @@ builds:
       - mips
       - s390x
     goarm:
-      - 5
-      - 6
-      - 7
+      - '5'
+      - '6'
+      - '7'
     goamd64:
       - v1
       - v2
