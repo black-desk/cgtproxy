@@ -1,4 +1,6 @@
 version: 2
+release:
+  prerelease: auto
 builds:
   - ldflags:
     - -s -w -X github.com/black-desk/cgtproxy/cmd/cgtproxy/cmd.Version={{.Version}}

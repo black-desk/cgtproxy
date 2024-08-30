@@ -1,9 +1,9 @@
-name: "Auto release"
+name: "Automatic prerelease powered by goreleaser"
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*-*'
 
 permissions:
   contents: write
@@ -15,7 +15,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - run: git fetch --force --tags
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'

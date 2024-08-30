@@ -1,0 +1,63 @@
+name: Automatic create tag and release.
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  auto_tag:
+    name: Automatic create new tag from tools/get_project_version.sh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run tools/get-project-version.sh
+        id: get_project_version
+        run: |
+          echo version="$(./scripts/get-project-version.sh)" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git rev-parse "${{ steps.get_project_version.outputs.version }}" &>/dev/null; then
+            echo existed=true >> $GITHUB_OUTPUT
+          else
+            echo existed=false >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run autotag
+        id: autotag
+        if: steps.check_tag.outputs.existed == 'false'
+        uses: anothrNick/github-tag-action@1.70.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+          CUSTOM_TAG: ${{ steps.get_project_version.outputs.version }}
+    outputs:
+      new_tag: ${{ steps.autotag.outputs.new_tag }}
+
+  auto_release:
+    name: Automatic release for new tag
+    runs-on: ubuntu-latest
+    needs:
+      - auto_tag
+    steps:
+      - name: Checkout repository
+        if: needs.auto_tag.outputs.new_tag
+        uses: actions/checkout@v4
+      - name: Setup go
+        if: needs.auto_tag.outputs.new_tag
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+      - uses: goreleaser/goreleaser-action@v6
+        if: needs.auto_tag.outputs.new_tag
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
