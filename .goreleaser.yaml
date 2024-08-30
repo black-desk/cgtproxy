@@ -1,5 +1,7 @@
 version: 2
 builds:
+  - ldflags:
+    - -s -w -X github.com/black-desk/cgtproxy/cmd/cgtproxy/cmd.Version={{.Version}}
   - main: ./cmd/cgtproxy
     binary: cgtproxy
     flags:

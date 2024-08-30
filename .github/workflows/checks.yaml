@@ -30,8 +30,8 @@ jobs:
 
       - name: Build & test (debug mode)
         run: |
-          make GOTAGS=debug
-          make GOTAGS=debug test
+          make GO_TAGS=debug
+          make GO_TAGS=debug test
 
       - name: Build & test
         run: |

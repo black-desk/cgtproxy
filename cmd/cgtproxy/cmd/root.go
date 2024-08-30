@@ -21,6 +21,11 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+var (
+	GitDescription = ""
+	Version        = "dev"
+)
+
 var flags struct {
 	cfgPath            string
 	cpuProfile         string
@@ -29,6 +34,12 @@ var flags struct {
 }
 
 var rootCmd = &cobra.Command{
+	Version: func() string {
+		if GitDescription == "" {
+			return Version
+		}
+		return Version + " ( git describe: " + GitDescription + ")"
+	}(),
 	Use:   "cgtproxy",
 	Short: "A transparent network proxy manager.",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
