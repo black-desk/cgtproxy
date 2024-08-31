@@ -1,0 +1,35 @@
+name: Automatic pre-release
+
+on:
+  push:
+    tags: ["v*-*"]
+
+jobs:
+  auto_pre_release:
+    name: Automatic pre-release
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # NOTE:
+          # Some automatic release action
+          # might need history for generate change log.
+          fetch-depth: 0
+
+      - name: Run actions/setup-go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Run goreleaser/goreleaser-action
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
