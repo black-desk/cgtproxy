@@ -38,7 +38,7 @@ var rootCmd = &cobra.Command{
 		if GitDescription == "" {
 			return Version
 		}
-		return Version + " ( git describe: " + GitDescription + ")"
+		return Version + " ( git describe: " + GitDescription + " )"
 	}(),
 	Use:   "cgtproxy",
 	Short: "A transparent network proxy manager.",
