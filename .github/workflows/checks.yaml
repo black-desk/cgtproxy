@@ -44,7 +44,7 @@ jobs:
         run: |
           export COVERAGE_REPORT=/tmp/io.github.black-desk.cgtproxy-test/coverage.txt &&
           echo '```' > $GITHUB_STEP_SUMMARY &&
-          make COVERAGE_REPORT=$COVERAGE_REPORT test-coverage &&
+          make COVERAGE_REPORT=$COVERAGE_REPORT test-coverage-report &&
           cat $COVERAGE_REPORT >> $GITHUB_STEP_SUMMARY &&
           echo '```' >> $GITHUB_STEP_SUMMARY
 

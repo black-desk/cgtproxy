@@ -1,12 +1,14 @@
 SHELL=sh
 
-GO ?= go
+# Go variables
+GO ?= $(shell goenv which go 2>/dev/null || command -v go)
 GOTAGS ?=
 _GO_TAGS =
 GO_LDFLAGS ?=
 _GO_LDFLAGS =
 GO_MAIN_PACKAGE_DIR = ./cmd/cgtproxy
 
+# Project version variables
 # NOTE:
 # These version variable initialization assumes that
 # you are using POSIX compatible SHELL.
@@ -22,6 +24,7 @@ PROJECT_SEMVER_GENERATED_FROM_GIT_DESCRIBE = $(shell \
 		-e 's/+$$//' \
 )
 
+# Integrate version string into golang -ldflags
 GO_VERSION_PACKAGE = github.com/black-desk/cgtproxy/cmd/cgtproxy/cmd
 _GO_LDFLAGS += -X '$(GO_VERSION_PACKAGE).Version=v$(PROJECT_SEMVER_GENERATED_FROM_GIT_DESCRIBE)'
 _GO_LDFLAGS += -X '$(GO_VERSION_PACKAGE).GitDescription=$(PROJECT_GIT_DESCRIBE)'
@@ -33,10 +36,19 @@ all:
 		-tags="$(_GO_TAGS),$(GO_TAGS)" \
 		$(GO_MAIN_PACKAGE_DIR)
 
+# `go generate` target
 .PHONY: generate
 generate:
+	# NOTE:
+	# Many developer write generate comamnds like
+	# go run -mod=mod example.com/path/to/package
+	# which is not working when go workspace is set and
+	# update go.mod file.
+	# So we need to disable workspace
+	# and run go mod tidy after generate.
 	env GOWORK=off $(GO) generate -v -x ./...
 	$(GO) mod tidy
+
 
 # We will create new cgroup dir in our tests,
 # while current cgroup might not be owned by the user running test.
@@ -48,30 +60,39 @@ UNSHARE ?= unshare -U -C -m -n --map-user=0 --
 
 CGROUPFS ?= /tmp/io.github.black-desk.cgtproxy-test/cgroupfs
 
-COVERAGE ?= /tmp/io.github.black-desk.cgtproxy-test/coverage.out
+GO_COVERAGE_OUTPUT ?= /tmp/io.github.black-desk.cgtproxy-test/coverage.out
+GO_COVERAGE_REPORT ?= /tmp/io.github.black-desk.cgtproxy-test/coverage.txt
 
 .PHONY: test
 test:
 	# NOTE:
-	# Build test binary before unshare.
-	# As we unshare network namespace,
-	# internet access will be lost after unshare is completed.
+	# Build tests but not run them.
+	# Then you can run them without internet access.
 	# The __SHOULD_NEVER_MATCH__ idea comes from
 	# https://stackoverflow.com/a/72722257/13206417
-	$(GO) test ./... -tags=$(GOTAGS) -run=__SHOULD_NEVER_MATCH__
+	$(GO) test ./... \
+		-ldflags "$(_GO_LDFLAGS) $(GO_LDFLAGS)" \
+		-tags="$(_GO_TAGS),$(GO_TAGS)" \
+		-run=__SHOULD_NEVER_MATCH__
 
-	$(SYSTEMD_RUN) \
-	$(UNSHARE) \
-	$(SHELL) -c "\
+	mkdir -p -- $(shell dirname -- "$(GO_COVERAGE_OUTPUT)")
+	mkdir -p -- $(CGROUPFS)
+
+	$(SYSTEMD_RUN) $(UNSHARE) $(SHELL) -c "\
 		mount --make-rprivate / && \
-		mkdir -p $(CGROUPFS) && \
 		mount -t cgroup2 none $(CGROUPFS) && \
 		export CGTPROXY_TEST_CGROUP_ROOT=$(CGROUPFS) && \
 		export CGTPROXY_TEST_NFTMAN=1 && \
 		export PATH=$(PATH) && \
-		mkdir -p $(shell dirname -- "$(COVERAGE)") && \
-		$(GO) test ./... --tags=$(GOTAGS) -v --ginkgo.vv -coverprofile=$(COVERAGE) \
-	"
+		$(GO) test ./... -v --ginkgo.vv \
+			-coverprofile=\"$(GO_COVERAGE_OUTPUT)\" \
+			-ldflags \"$(_GO_LDFLAGS) $(GO_LDFLAGS)\" \
+			-tags=\"$(_GO_TAGS),$(GO_TAGS)\" \
+		"
+
+.PHONY: test-coverage-report
+test-coverage-report:
+	go tool cover -func=$(GO_COVERAGE_OUTPUT) -o=$(GO_COVERAGE_REPORT)
 
 PREFIX ?= /usr/local
 DESTDIR ?=
@@ -82,9 +103,3 @@ install:
 		$(DESTDIR)$(PREFIX)/bin/cgtproxy
 	install -m644 -D misc/systemd/cgtproxy.service \
 		$(DESTDIR)$(PREFIX)/lib/systemd/system/cgtproxy.service
-
-COVERAGE_REPORT ?= /tmp/io.github.black-desk.cgtproxy-test/coverage.txt
-
-.PHONY: test-coverage
-test-coverage:
-	go tool cover -func=$(COVERAGE) -o=$(COVERAGE_REPORT)
