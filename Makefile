@@ -1,3 +1,12 @@
+DESTDIR?=
+prefix?=/usr/local
+bindir?=$(prefix)/bin
+libdir?=$(prefix)/lib
+libexecdir?=$(prefix)/libexec
+datarootdir?=$(prefix)/share
+INSTALL?=install
+INSTALL_PROGRAM?= $(INSTALL)
+INSTALL_DATA?= $(INSTALL) -m 644
 SHELL=sh
 
 # Go variables
@@ -94,12 +103,26 @@ test:
 test-coverage-report:
 	go tool cover -func=$(GO_COVERAGE_OUTPUT) -o=$(GO_COVERAGE_REPORT)
 
-PREFIX ?= /usr/local
-DESTDIR ?=
+.PHONY: install-bin
+install-bin:
+	$(INSTALL) -d "$(DESTDIR)$(bindir)"
+	$(INSTALL_PROGRAM) cgtproxy "$(DESTDIR)$(bindir)"/cgtproxy
+
+# List all paths that systemd will search for system level units using pkg-config
+systemd_system_unit_paths=$(subst :, , $(shell \
+	pkg-config systemd --variable=systemd_system_unit_path))
+# Select the first path that is under $(libdir).
+systemd_system_unit_dir?=$(word 1, \
+	$(filter $(libdir)%, $(systemd_system_unit_paths)))
+
+.PHONY: install-systemd-system-unit
+install-systemd-system-unit:
+ifeq ($(systemd_system_unit_dir),)
+	$(error Failed to find location to install systemd system units)
+endif
+	$(INSTALL) -d "$(DESTDIR)$(systemd_system_unit_dir)"
+	$(INSTALL_DATA) misc/systemd/cgtproxy.service \
+		"$(DESTDIR)$(systemd_system_unit_dir)"/cgtproxy.service
 
 .PHONY: install
-install:
-	install -m755 -D cgtproxy \
-		$(DESTDIR)$(PREFIX)/bin/cgtproxy
-	install -m644 -D misc/systemd/cgtproxy.service \
-		$(DESTDIR)$(PREFIX)/lib/systemd/system/cgtproxy.service
+install: install-bin install-systemd-system-unit
