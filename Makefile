@@ -8,6 +8,7 @@ INSTALL?=install
 INSTALL_PROGRAM?= $(INSTALL)
 INSTALL_DATA?= $(INSTALL) -m 644
 SHELL=sh
+PKG_CONFIG=pkg-config
 
 # Go variables
 GO ?= $(shell goenv which go 2>/dev/null || command -v go)
@@ -108,18 +109,17 @@ install-bin:
 	$(INSTALL) -d "$(DESTDIR)$(bindir)"
 	$(INSTALL_PROGRAM) cgtproxy "$(DESTDIR)$(bindir)"/cgtproxy
 
-# List all paths that systemd will search for system level units using pkg-config
-systemd_system_unit_paths=$(subst :, , $(shell \
-	pkg-config systemd --variable=systemd_system_unit_path))
-# Select the first path that is under $(libdir).
-systemd_system_unit_dir?=$(word 1, \
-	$(filter $(libdir)%, $(systemd_system_unit_paths)))
+systemd_system_unit_dir?=$(shell \
+	$(PKG_CONFIG) --define-variable=prefix=$(prefix) \
+	systemd --variable=systemd_system_unit_dir)
+ifeq ($(findstring $(systemd_system_unit_dir), $(subst :, , $(shell \
+	$(PKG_CONFIG) systemd --variable=systemd_system_unit_path))), )
+$(warning systemd_system_unit_dir="$(systemd_system_unit_dir)" \
+	is not in the system unit search path of current systemd installation)
+endif
 
 .PHONY: install-systemd-system-unit
 install-systemd-system-unit:
-ifeq ($(systemd_system_unit_dir),)
-	$(error Failed to find location to install systemd system units)
-endif
 	$(INSTALL) -d "$(DESTDIR)$(systemd_system_unit_dir)"
 	$(INSTALL_DATA) misc/systemd/cgtproxy.service \
 		"$(DESTDIR)$(systemd_system_unit_dir)"/cgtproxy.service
