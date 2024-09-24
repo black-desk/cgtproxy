@@ -33,7 +33,7 @@ jobs:
       - name: Run autotag
         id: autotag
         if: steps.check_tag.outputs.existed == 'false'
-        uses: anothrNick/github-tag-action@1.70.0
+        uses: anothrNick/github-tag-action@1.71.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
           CUSTOM_TAG: ${{ steps.get_project_version.outputs.version }}
