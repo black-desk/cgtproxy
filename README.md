@@ -167,7 +167,7 @@ There are some differences between cgproxy and `cgtproxy`:
 
   Check the [systemd service file] for details.
 
-  [systemd service file]: ./misc/systemd/cgtproxy.service
+  [systemd service file]: https://github.com/search?q=repo%3Ablack-desk%2Fcgtproxy%20CapabilityBoundingSet&type=code
 
 ## TODO
 
