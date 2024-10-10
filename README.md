@@ -43,6 +43,30 @@ systemctl restart cgtproxy.service
 
 [configuration guide]: ./docs/configuration.md
 
+## Tips
+
+1. cgproxy has CLI utilities `cgproxy` and `cgnoproxy`
+   to temporarily run program with(out) proxy.
+
+   If you use the [example configuration] of `cgtproxy`,
+   you can write a bash alias as this:
+
+   ```bash
+   alias cgtproxy-direct="systemd-run --user --slice cgtproxy-direct.slice"
+   ```
+
+   Then use it like this:
+
+   ```bash
+   cgtproxy-direct /some/command/to/run/without/proxy
+   ```
+
+   Go check the comments in example configuration
+   about the `cgtproxy-direct.slice`, `cgtproxy-drop.slice`
+   and `cgtproxy-proxy.slice`.
+
+[example configuration]: ./misc/config/example.yaml
+
 ## The way how `cgtproxy` works.
 
 Netfliter can be configured to filter network traffic [by cgroup],
