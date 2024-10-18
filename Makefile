@@ -70,8 +70,7 @@ UNSHARE ?= unshare -U -C -m -n --map-user=0 --
 
 CGROUPFS ?= /tmp/io.github.black-desk.cgtproxy-test/cgroupfs
 
-GO_COVERAGE_OUTPUT ?= /tmp/io.github.black-desk.cgtproxy-test/coverage.out
-GO_COVERAGE_REPORT ?= /tmp/io.github.black-desk.cgtproxy-test/coverage.txt
+GO_COVERAGE_PROFILE ?= coverage.txt
 
 .PHONY: test
 test:
@@ -85,7 +84,7 @@ test:
 		-tags="$(_GO_TAGS),$(GO_TAGS)" \
 		-run=__SHOULD_NEVER_MATCH__
 
-	mkdir -p -- $(shell dirname -- "$(GO_COVERAGE_OUTPUT)")
+	mkdir -p -- $(shell dirname -- "$(GO_COVERAGE_PROFILE)")
 	mkdir -p -- $(CGROUPFS)
 
 	$(SYSTEMD_RUN) $(UNSHARE) $(SHELL) -c "\
@@ -95,14 +94,10 @@ test:
 		export CGTPROXY_TEST_NFTMAN=1 && \
 		export PATH=$(PATH) && \
 		$(GO) test ./... -v --ginkgo.vv \
-			-coverprofile=\"$(GO_COVERAGE_OUTPUT)\" \
+			-coverprofile=\"$(GO_COVERAGE_PROFILE)\" \
 			-ldflags \"$(_GO_LDFLAGS) $(GO_LDFLAGS)\" \
 			-tags=\"$(_GO_TAGS),$(GO_TAGS)\" \
 		"
-
-.PHONY: test-coverage-report
-test-coverage-report:
-	go tool cover -func=$(GO_COVERAGE_OUTPUT) -o=$(GO_COVERAGE_REPORT)
 
 .PHONY: install-bin
 install-bin:
