@@ -38,15 +38,12 @@ jobs:
       - name: Build & test
         run: |
           make
-          make test
+          make GO_COVERAGE_PROFILE=coverage.txt test
 
-      - name: Coverage report
-        run: |
-          export COVERAGE_REPORT=/tmp/io.github.black-desk.cgtproxy-test/coverage.txt &&
-          echo '```' > $GITHUB_STEP_SUMMARY &&
-          make COVERAGE_REPORT=$COVERAGE_REPORT test-coverage-report &&
-          cat $COVERAGE_REPORT >> $GITHUB_STEP_SUMMARY &&
-          echo '```' >> $GITHUB_STEP_SUMMARY
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   pass:
     name: Pass
