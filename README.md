@@ -1,5 +1,13 @@
 # `cgtproxy`
 
+[![codecov](https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X)](https://codecov.io/github/black-desk/cgtproxy)
+![](https://img.shields.io/github/check-runs/black-desk/cgtproxy/master)
+![](https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master)
+![](https://img.shields.io/github/contributors/black-desk/cgtproxy)
+![](https://img.shields.io/github/release-date/black-desk/cgtproxy)
+![](https://img.shields.io/github/commits-since/black-desk/cgtproxy/latest/master)
+![](https://img.shields.io/github/license/black-desk/cgtproxy)
+
 `cgtproxy` is a transparent proxy **RULE** manager written in go
 inspired by [cgproxy].
 
