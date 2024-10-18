@@ -1,6 +1,11 @@
 name: Checks
 
-on: push
+on:
+  push:
+    branches:
+      - master
+      - release/*
+  pull_request:
 
 jobs:
   checks:
