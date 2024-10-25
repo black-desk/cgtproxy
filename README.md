@@ -1,6 +1,7 @@
 # `cgtproxy`
 
 [![codecov](https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X)](https://codecov.io/github/black-desk/cgtproxy)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fblack-desk%2Fcgtproxy?ref=badge_shield)
 ![](https://img.shields.io/github/check-runs/black-desk/cgtproxy/master)
 ![](https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master)
 ![](https://img.shields.io/github/contributors/black-desk/cgtproxy)
@@ -225,3 +226,7 @@ There are some differences between cgproxy and `cgtproxy`:
   [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) is good enough for me.
 
 If you need any feature above, PR is welcome.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fblack-desk%2Fcgtproxy?ref=badge_large)
