@@ -1,5 +1,7 @@
 # `cgtproxy`
 
+[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=large&issueType=license)](https://app.fossa.com/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy?ref=badge_large&issueType=license)
+
 [![codecov](https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X)](https://codecov.io/github/black-desk/cgtproxy)
 ![](https://img.shields.io/github/check-runs/black-desk/cgtproxy/master)
 ![](https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master)
