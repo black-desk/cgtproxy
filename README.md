@@ -227,3 +227,7 @@ There are some differences between cgproxy and `cgtproxy`:
   [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) is good enough for me.
 
 If you need any feature above, PR is welcome.
+
+---
+
+[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=large&issueType=license)](https://app.fossa.com/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy?ref=badge_large&issueType=license)
