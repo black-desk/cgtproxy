@@ -1,27 +1,30 @@
 # `cgtproxy`
 
-- ![license][shields-license]
-- ![checks][shields-checks]
-  [![codecov][shields-codecov]][codecov]
-  [![FOSSA License Scan Status][shields-fossa-license]][fossa-license]
-  [![FOSSA Security Scan Status][shields-fossa-security]][fossa-security]
-- ![commit activity][shields-commit-activity]
-  ![contributors][shields-contributors]
-  ![release date][shields-release-date]
-  ![commits since release][shields-commits-since-release]
+- ![license][badge-shields-io-license]
+- ![checks][badge-shields-io-checks]
+  [![go report card][badge-go-report-card]][go-report-card]
+  [![codecov][badge-shields-io-codecov]][codecov]
+  [![FOSSA license scan status][badge-fossa-license]][fossa-license]
+  [![FOSSA security scan status][badge-fossa-security]][fossa-security]
+- ![commit activity][badge-shields-io-commit-activity]
+  ![contributors][badge-shields-io-contributors]
+  ![release date][badge-shields-io-release-date]
+  ![commits since release][badge-shields-io-commits-since-release]
 
-[shields-license]: https://img.shields.io/github/license/black-desk/cgtproxy
-[shields-checks]: https://img.shields.io/github/check-runs/black-desk/cgtproxy/master
-[shields-codecov]: https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X
+[badge-shields-io-license]: https://img.shields.io/github/license/black-desk/cgtproxy
+[badge-shields-io-checks]: https://img.shields.io/github/check-runs/black-desk/cgtproxy/master
+[badge-go-report-card]: https://goreportcard.com/badge/github.com/black-desk/cgtproxy
+[go-report-card]: https://goreportcard.com/report/github.com/black-desk/cgtproxy
+[badge-shields-io-codecov]: https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X
 [codecov]: https://codecov.io/github/black-desk/cgtproxy
-[shields-fossa-license]: https://app.fossa.com/api/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=shield&issueType=license
+[badge-fossa-license]: https://app.fossa.com/api/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=shield&issueType=license
 [fossa-license]: https://app.fossa.com/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy?ref=badge_shield&issueType=license
-[shields-fossa-security]: https://app.fossa.com/api/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=shield&issueType=security
+[badge-fossa-security]: https://app.fossa.com/api/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=shield&issueType=security
 [fossa-security]: https://app.fossa.com/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy?ref=badge_shield&issueType=security
-[shields-commit-activity]: https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master
-[shields-contributors]: https://img.shields.io/github/contributors/black-desk/cgtproxy
-[shields-release-date]: https://img.shields.io/github/release-date/black-desk/cgtproxy
-[shields-commits-since-release]: https://img.shields.io/github/commits-since/black-desk/cgtproxy/latest/master
+[badge-shields-io-commit-activity]: https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master
+[badge-shields-io-contributors]: https://img.shields.io/github/contributors/black-desk/cgtproxy
+[badge-shields-io-release-date]: https://img.shields.io/github/release-date/black-desk/cgtproxy
+[badge-shields-io-commits-since-release]: https://img.shields.io/github/commits-since/black-desk/cgtproxy/latest/master
 
 `cgtproxy` is a transparent proxy **RULE** manager written in go
 inspired by [cgproxy].
