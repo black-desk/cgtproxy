@@ -81,21 +81,27 @@ Currently supported target are:
    to temporarily run program with(out) proxy.
 
    If you use the [example configuration] of `cgtproxy`,
-   you can write a bash alias as this:
+   you can write a bash function as this:
 
    ```bash
-   alias cgtproxy-direct="systemd-run --user --slice cgtproxy-direct.slice"
+   function cgtproxy-exec() {
+     local slice="cgtproxy-$1.slice"
+     shift 1
+     systemd-run --user --slice "$slice" -P "$@"
+   }
    ```
 
    Then use it like this:
 
    ```bash
-   cgtproxy-direct /some/command/to/run/without/proxy
+   cgtproxy-exec direct /some/command/to/run/without/proxy
+   cgtproxy-exec drop /some/command/to/run/without/network
+   cgtproxy-exec proxy /some/command/to/run/with/proxy
    ```
 
    Go check the comments in example configuration
-   about the `cgtproxy-direct.slice`, `cgtproxy-drop.slice`
-   and `cgtproxy-proxy.slice`.
+   about `cgtproxy-direct.slice`, `cgtproxy-drop.slice`
+   and `cgtproxy-proxy.slice` for details.
 
 [example configuration]: ./misc/config/example.yaml
 
