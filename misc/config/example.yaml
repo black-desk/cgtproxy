@@ -44,33 +44,29 @@ tproxies:
 #       Traffics in connection created by remote host
 #       will never redirect to TPROXY server or drop.
 rules:
-  # https://aur.archlinux.org/packages/clash-meta
-  # https://aur.archlinux.org/packages/clash-meta-bin
-  # `clash-meta.service` will be launched by systemd
-  # at `/system.slice/clash-meta.service`.
-  # This regex match that path,
-  # and will make traffic from it directly send
-  # by produce and apply nft rules
-  # when such cgroup is created.
-  - match: |-
-      \/system\.slice\/clash-meta\.service
-    direct: true
-  # https://github.com/black-desk/debs/tree/master/one.metacubex.clash-meta
-  # But my clash-meta deb package
-  # use a systemd service name `one.metacubex.clash-meta`.
-  # So I add this rule, too.
-  - match: |-
-      \/system\.slice\/one\.metacubex\.clash-meta\.service
+  # This rule match the clash-meta core.
+  # Make cgtproxy produce nft rules that
+  # route the network traffic comes from this cgroupfs as usual.
+  - # AUR packages `clash-meta` and `clash-meta-bin`
+    # contains the `clash-meta` systemd service,
+    # which will be launched by systemd
+    # in cgroup `/system.slice/clash-meta.service`.
+    # But [my clash-meta deb package](https://github.com/black-desk/debs/tree/master/one.metacubex.clash-meta)
+    # use a systemd service name `one.metacubex.clash-meta`.
+    match: |-
+      \/system\.slice\/(?:one\.metacubex\.)?clash-meta\.service
     direct: true
 
   # Same as above.
-  # Let's configure the user-level cgtproxy-direct.slice and
-  # cgtproxy-drop.slice cgroup.
+  # Let's configure the user-level `cgtproxy-direct.slice`,
+  # `cgtproxy-proxy.slice` and `cgtproxy-drop.slice` cgroup.
   #
   # Using this setup, you can start a non-proxy shell
   # by execute:
   #
+  # ```bash
   # systemd-run --user --slice cgtproxy-direct.slice --shell
+  # ```
   #
   # The command above start the new shell in a cgroup like
   # `/user.slice/user-1000.slice/user@1000.service/cgtproxy.slice/cgtproxy-direct.slice/run-u22.service`,
@@ -91,17 +87,23 @@ rules:
   # To make these rules working across desktop environments,
   # please take a look on https://systemd.io/DESKTOP_ENVIRONMENTS/.
   # NOTE:
-  # | Desktop Environment | Launcher  |
-  # |---------------------|-----------|
-  # | GNOME               | `"gnome"` |
-  # | dde                 | `"DDE"`   |
-  # | KDE                 | none      |
-  # So we should use `(?:-(?:gnome|DDE))?` to match `-<launcher>`
+  # | Desktop Environment | Launcher    |
+  # |---------------------|-------------|
+  # | GNOME               | `"gnome"`   |
+  # | dde                 | `"DDE"`     |
+  # | KDE                 | none        |
+  # | flatpak             | `"flatpak"` |
+  # So we should use
+  # ```
+  # \/user\.slice\/user-\d+\.slice\/user@\d+\.service\/app\.slice\/app(?:-(?:gnome|DDE|flatpak))?-APPID(?:-.+\.scope|(?:@.+)?\.service)
+  # ```
+  # to match application named `APPID`.
+  # Check https://regex101.com/r/BgZcws/2 for example application cgroup names.
 
   # https://parsec.app/
   # `parsec` should always connect to network directly.
   - match: |-
-      \/user\.slice\/user-\d+\.slice\/user@\d+\.service\/app\.slice\/app(?:-(?:gnome|DDE))?-parsecd-\d+\.(?:service|scope)
+      \/user\.slice\/user-\d+\.slice\/user@\d+\.service\/app\.slice\/app(?:-(?:gnome|DDE|flatpak))?-(?:parsecd|com\.parsecgaming\.parsec)(?:-.+\.scope|(?:@.+)?\.service)
     direct: true
 
   # For any cgroup else, TPROXY to clash-meta.
