@@ -15,14 +15,14 @@ require (
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/sys v0.27.0
 	gopkg.in/yaml.v3 v3.0.1
-	kernel.org/pub/linux/libs/security/libcap/cap v1.2.72
+	kernel.org/pub/linux/libs/security/libcap/cap v1.2.73
 )
 
 require (
 	github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
-	kernel.org/pub/linux/libs/security/libcap/psx v1.2.72 // indirect
+	kernel.org/pub/linux/libs/security/libcap/psx v1.2.73 // indirect
 )
 
 require (
