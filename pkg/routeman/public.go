@@ -12,6 +12,12 @@ func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 	defer Wrap(&err, "running route manager")
 
 	defer m.removeRoute()
+
+	err = m.nft.InitStructure()
+	if err != nil {
+		return
+	}
+
 	err = m.addRoute()
 	if err != nil {
 		return
