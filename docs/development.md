@@ -63,7 +63,7 @@ Use [fmtjournal] to view all log fields.
 
 ## build tags
 
-Add go build tag `debug` by `make GOTAGS=debug` can
+Add go build tag `debug` by `make GO_TAGS=debug` can
 produce debug build binary, which:
 
 1. make error carry more information like source position;
