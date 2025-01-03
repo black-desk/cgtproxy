@@ -12,7 +12,7 @@ PKG_CONFIG=pkg-config
 
 # Go variables
 GO ?= $(shell goenv which go 2>/dev/null || command -v go)
-GOTAGS ?=
+GO_TAGS ?=
 _GO_TAGS =
 GO_LDFLAGS ?=
 _GO_LDFLAGS =
