@@ -4,8 +4,6 @@
 - ![checks][badge-shields-io-checks]
   [![go report card][badge-go-report-card]][go-report-card]
   [![codecov][badge-shields-io-codecov]][codecov]
-  [![FOSSA license scan status][badge-fossa-license]][fossa-license]
-  [![FOSSA security scan status][badge-fossa-security]][fossa-security]
 - ![commit activity][badge-shields-io-commit-activity]
   ![contributors][badge-shields-io-contributors]
   ![release date][badge-shields-io-release-date]
@@ -17,10 +15,6 @@
 [go-report-card]: https://goreportcard.com/report/github.com/black-desk/cgtproxy
 [badge-shields-io-codecov]: https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X
 [codecov]: https://codecov.io/github/black-desk/cgtproxy
-[badge-fossa-license]: https://app.fossa.com/api/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=shield&issueType=license
-[fossa-license]: https://app.fossa.com/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy?ref=badge_shield&issueType=license
-[badge-fossa-security]: https://app.fossa.com/api/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy.svg?type=shield&issueType=security
-[fossa-security]: https://app.fossa.com/projects/custom%2B48828%2Fgithub.com%2Fblack-desk%2Fcgtproxy?ref=badge_shield&issueType=security
 [badge-shields-io-commit-activity]: https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master
 [badge-shields-io-contributors]: https://img.shields.io/github/contributors/black-desk/cgtproxy
 [badge-shields-io-release-date]: https://img.shields.io/github/release-date/black-desk/cgtproxy
@@ -104,7 +98,7 @@ Currently supported target are:
 
 [example configuration]: ./misc/config/example.yaml
 
-## The way how `cgtproxy` works.
+## How `cgtproxy` works
 
 Netfliter can be configured to filter network traffic [by cgroup],
 as well as redirect some traffic to a [TPROXY] server.
@@ -229,6 +223,22 @@ There are some differences between cgproxy and `cgtproxy`:
   Check the [systemd service file] for details.
 
   [systemd service file]: https://github.com/search?q=repo%3Ablack-desk%2Fcgtproxy%20CapabilityBoundingSet&type=code
+
+## Documentation
+
+Project documentations:
+
+- [godoc]
+- [GitHub Wiki][github-wiki]
+
+[godoc]: https://pkg.go.dev/github.com/black-desk/cgtproxy
+[github-wiki]: https://github.com/black-desk/cgtproxy/wiki
+
+Netfilter documentations:
+
+- [Documentation about the netfilter/iptables project][netfilter-documentation]
+
+[netfilter-documentation]: https://www.netfilter.org/documentation/index.html
 
 ## TODO
 
