@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/black-desk/lib/go v0.0.0-20240826013949-6a950e6b19a1
 	github.com/go-playground/validator/v10 v10.24.0
-	github.com/google/nftables v0.2.0
+	github.com/google/nftables v0.3.0
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
 	github.com/sourcegraph/conc v0.3.0
@@ -33,9 +33,8 @@ require (
 	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
 	github.com/google/wire v0.6.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/josharian/native v1.1.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/mdlayher/netlink v1.7.2 // indirect
+	github.com/mdlayher/netlink v1.7.3-0.20250113171957-fbb4dce95f42 // indirect
 	github.com/mdlayher/socket v0.5.1 // indirect
 	github.com/rjeczalik/notify v0.9.3
 	github.com/spf13/pflag v1.0.5 // indirect
