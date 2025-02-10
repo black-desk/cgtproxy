@@ -22,7 +22,7 @@ GO_MAIN_PACKAGE_DIR = ./cmd/cgtproxy
 # NOTE:
 # These version variable initialization assumes that
 # you are using POSIX compatible SHELL.
-PROJECT_VERSION = 0.2.2
+PROJECT_VERSION = 0.2.3
 PROJECT_GIT_DESCRIBE = $(shell git describe --tags --match v* --long --dirty)
 PROJECT_SEMVER_GENERATED_FROM_GIT_DESCRIBE = $(shell \
 	printf '%s\n' "$(PROJECT_GIT_DESCRIBE)" | \
