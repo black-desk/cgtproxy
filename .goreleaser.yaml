@@ -3,6 +3,8 @@ release:
   prerelease: auto
 builds:
   - main: ./cmd/cgtproxy
+    env:
+      - CGO_ENABLED=0
     binary: cgtproxy
     flags:
       - -v
