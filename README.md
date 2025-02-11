@@ -217,7 +217,7 @@ There are some differences between cgproxy and `cgtproxy`:
 
 - cgproxy requires more capability (permission) than `cgtproxy`;
 
-  cgtproxy requires at least CAP_NETWORK_ADMIN and CAP_BPF,
+  cgproxy requires at least CAP_NETWORK_ADMIN and CAP_BPF,
   but cgtproxy require only CAP_NETWORK_ADMIN.
 
   Check the [systemd service file] for details.
