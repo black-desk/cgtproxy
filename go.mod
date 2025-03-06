@@ -1,12 +1,11 @@
 module github.com/black-desk/cgtproxy
 
 go 1.23
-
 require (
 	github.com/black-desk/lib/go v0.0.0-20240826013949-6a950e6b19a1
 	github.com/go-playground/validator/v10 v10.25.0
 	github.com/google/nftables v0.3.0
-	github.com/onsi/ginkgo/v2 v2.22.2
+	github.com/onsi/ginkgo/v2 v2.23.0
 	github.com/onsi/gomega v1.36.2
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.9.1
@@ -40,9 +39,9 @@ require (
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
-	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
-	golang.org/x/tools v0.28.0 // indirect
+	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/tools v0.30.0 // indirect
 )
