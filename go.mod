@@ -1,7 +1,6 @@
 module github.com/black-desk/cgtproxy
 
 go 1.23
-
 require (
 	github.com/black-desk/lib/go v0.0.0-20240826013949-6a950e6b19a1
 	github.com/go-playground/validator/v10 v10.25.0
@@ -13,7 +12,7 @@ require (
 	github.com/vishvananda/netlink v1.3.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
-	golang.org/x/sys v0.30.0
+	golang.org/x/sys v0.31.0
 	gopkg.in/yaml.v3 v3.0.1
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.75
 )
