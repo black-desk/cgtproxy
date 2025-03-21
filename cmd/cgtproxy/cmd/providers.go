@@ -64,7 +64,8 @@ func provideRuleManager(
 }
 
 func provideCgrougMontior(
-	cgroupRoot config.CGroupRoot, logger *zap.SugaredLogger,
+	cgroupRoot config.CGroupRoot,
+	logger *zap.SugaredLogger,
 ) (
 	interfaces.CGroupMonitor, error,
 ) {

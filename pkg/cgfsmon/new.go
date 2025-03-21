@@ -1,6 +1,9 @@
 package cgfsmon
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -24,12 +27,6 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 
 	w.eventsOut = make(chan types.CGroupEvents)
 
-	// FIXME:
-	// github.com/rjeczalik/notify drop events if receiver is too slow.
-	// https://github.com/rjeczalik/notify/issues/85
-	// https://github.com/rjeczalik/notify/issues/98
-	w.eventsIn = make(chan notify.EventInfo, 1024)
-
 	for i := range opts {
 		w, err = opts[i](w)
 		if err != nil {
@@ -46,9 +43,42 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 		return
 	}
 
+	// FIXME:
+	// github.com/rjeczalik/notify may drop events when the receiver is too slow
+	// Related issues:
+	// - https://github.com/rjeczalik/notify/issues/85
+	// - https://github.com/rjeczalik/notify/issues/98
+	//
+	// To mitigate this issue, we use a buffered channel to receive events.
+	// The buffer size can be configured via CGTPROXY_MONITOR_BUFFER_SIZE environment variable.
+	// A larger buffer can handle more events in a short period but consumes more memory.
+	// If you notice event loss, try increasing this value.
+
+	// Get buffer size from environment variable, default to 1024
+	bufferSize := 1024
+	if envSize := os.Getenv("CGTPROXY_MONITOR_BUFFER_SIZE"); envSize != "" {
+		size, err := strconv.Atoi(envSize)
+		if err != nil {
+			w.log.Warnw("Invalid buffer size in CGTPROXY_MONITOR_BUFFER_SIZE, using default",
+				"value", envSize,
+				"error", err,
+			)
+		} else if size < 1 {
+			w.log.Warnw("Buffer size must be greater than 0, using default",
+				"value", size,
+			)
+		} else {
+			bufferSize = size
+		}
+	}
+
+	w.eventsIn = make(chan notify.EventInfo, bufferSize)
+
 	ret = w
 
-	w.log.Debugw("Create a cgroupv2 filesystem monitor.")
+	w.log.Debugw("Create a cgroupv2 filesystem monitor.",
+		"buffer_size", bufferSize,
+	)
 
 	return
 }
