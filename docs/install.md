@@ -1,10 +1,13 @@
-# Install
+# Installation Guide
 
-1. install from source
+There are two ways to install cgtproxy:
 
-   Check [build guide](./build.md). Run `make && sudo make install`.
+1. Install from source:
 
-2. use the shell script
+   Check the [build guide](./build.md) first,
+   then run `make && sudo make install`.
+
+2. Use the installation script:
 
    ```bash
    curl -fL https://raw.githubusercontent.com/black-desk/cgtproxy/master/scripts/get.sh | bash
