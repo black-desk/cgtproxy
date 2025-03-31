@@ -16,6 +16,11 @@ import (
 func (m *RouteManager) initializeNftableRuels() (err error) {
 	defer Wrap(&err, "initializing nftable rules")
 
+	err = m.nft.InitStructure()
+	if err != nil {
+		return
+	}
+
 	err = m.nft.AddChainAndRulesForTProxies(maps.Values(m.cfg.TProxies))
 	if err != nil {
 		return

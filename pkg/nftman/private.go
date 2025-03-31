@@ -17,6 +17,490 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
+	defer Wrap(&err, "prepare ipv4 bypass set")
+
+	nft.ipv4BypassSet = &nftables.Set{
+		Table:        nft.table,
+		Name:         "bypass",
+		KeyType:      nftables.TypeIPAddr,
+		KeyByteOrder: binaryutil.BigEndian,
+		Interval:     true,
+	}
+
+	elements := []nftables.SetElement{{
+		Key:         net.ParseIP("0.0.0.0").To4(),
+		IntervalEnd: true,
+	}}
+
+	for i := range nft.bypassIPv4 {
+		bypass := nft.bypassIPv4[i]
+		ip := net.ParseIP(bypass)
+
+		if ip != nil {
+			elements = append(elements,
+				nftables.SetElement{
+					Key: ip.To4(),
+				},
+				nftables.SetElement{
+					Key:         nft.nextIP(ip.To4()),
+					IntervalEnd: true,
+				},
+			)
+			continue
+		}
+
+		_, cidr, err := net.ParseCIDR(bypass)
+		if err != nil {
+			// This should never happened,
+			// as string has been checked by validator.
+			panic(err)
+		}
+
+		elements = append(elements,
+			nftables.SetElement{
+				Key: cidr.IP.To4(),
+			},
+			nftables.SetElement{
+				Key:         nft.nextIP(nft.lastIP(cidr).To4()),
+				IntervalEnd: true,
+			},
+		)
+	}
+
+	err = conn.AddSet(nft.ipv4BypassSet, elements)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
+	nft.ipv6BypassSet = &nftables.Set{
+		Table:        nft.table,
+		Name:         "bypass6",
+		KeyType:      nftables.TypeIP6Addr,
+		KeyByteOrder: binaryutil.BigEndian,
+		Interval:     true,
+	}
+
+	elements := []nftables.SetElement{{
+		Key:         net.ParseIP("::").To16(),
+		IntervalEnd: true,
+	}}
+
+	for i := range nft.bypassIPv6 {
+		bypass := nft.bypassIPv6[i]
+		ip := net.ParseIP(bypass)
+		if ip != nil {
+			elements = append(elements,
+				nftables.SetElement{
+					Key: ip.To16(),
+				},
+				nftables.SetElement{
+					Key:         nft.nextIP(ip.To16()),
+					IntervalEnd: true,
+				},
+			)
+			continue
+		}
+
+		_, cidr, err := net.ParseCIDR(bypass)
+		if err != nil {
+			// This should never happened,
+			// as string has been checked by validator.
+			panic(err)
+		}
+
+		elements = append(elements,
+			nftables.SetElement{
+				Key: cidr.IP.To16(),
+			},
+			nftables.SetElement{
+				Key:         nft.nextIP(nft.lastIP(cidr).To16()),
+				IntervalEnd: true,
+			},
+		)
+	}
+
+	err = conn.AddSet(nft.ipv6BypassSet, elements)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (nft *NFTManager) initProtoSet() {
+	nft.protoSet = &nftables.Set{
+		Table:     nft.table,
+		Anonymous: true,
+		Constant:  true,
+		KeyType:   nftables.TypeInetProto,
+	}
+
+	nft.protoSetElement = []nftables.SetElement{
+		{Key: []byte{unix.IPPROTO_TCP}},
+		{Key: []byte{unix.IPPROTO_UDP}},
+	}
+}
+
+func (nft *NFTManager) initCgroupMap(conn *nftables.Conn) (err error) {
+	nft.cgroupMap = &nftables.Set{
+		Table:        nft.table,
+		Name:         "cgroup-vmap",
+		KeyType:      nftables.TypeCGroupV2,
+		DataType:     nftables.TypeVerdict,
+		IsMap:        true,
+		KeyByteOrder: binaryutil.NativeEndian,
+	}
+
+	nft.cgroupMapElement = make(map[string]nftables.SetElement)
+
+	err = conn.AddSet(nft.cgroupMap, []nftables.SetElement{})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (nft *NFTManager) initMarkMap(conn *nftables.Conn) (err error) {
+	nft.markTproxyMap = &nftables.Set{
+		Table:        nft.table,
+		Name:         "mark-vmap",
+		KeyType:      nftables.TypeMark,
+		DataType:     nftables.TypeVerdict,
+		IsMap:        true,
+		KeyByteOrder: binaryutil.NativeEndian,
+	}
+
+	err = conn.AddSet(nft.markTproxyMap, []nftables.SetElement{})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (nft *NFTManager) initMarkDNSMap(conn *nftables.Conn) (err error) {
+	nft.markDNSMap = &nftables.Set{
+		Table:        nft.table,
+		Name:         "mark-dns-vmap",
+		KeyType:      nftables.TypeMark,
+		DataType:     nftables.TypeVerdict,
+		IsMap:        true,
+		KeyByteOrder: binaryutil.NativeEndian,
+	}
+
+	err = conn.AddSet(nft.markDNSMap, []nftables.SetElement{})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (nft *NFTManager) initOutputMangleChain(conn *nftables.Conn) (err error) {
+	// type filter hook prerouting priority mangle; policy accept;
+	nft.outputMangleChain = conn.AddChain(&nftables.Chain{
+		Table:    nft.table,
+		Name:     "output-mangle",
+		Type:     nftables.ChainTypeRoute,
+		Hooknum:  nftables.ChainHookOutput,
+		Priority: nftables.ChainPriorityMangle,
+		Policy:   &nft.policy,
+	})
+
+	err = nft.fillOutputMangleChain(conn, nft.outputMangleChain)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (nft *NFTManager) fillOutputMangleChain(
+	conn *nftables.Conn, chain *nftables.Chain,
+) (
+	err error,
+) {
+	nft.log.Debug("Refilling output chain.")
+
+	// ct direction == reply return
+	exprs := []expr.Any{
+		&expr.Ct{ // ct load direction => reg 1
+			Register: 1,
+			Key:      expr.CtKeyDIRECTION,
+		},
+		&expr.Cmp{ // cmp eq reg 1 0x00000001
+			Op:       expr.CmpOpEq,
+			Register: 1,
+			Data:     []byte{0x00000001}, // IP_CT_DIR_REPLY
+		},
+		&expr.Verdict{ // immediate reg 0 return
+			Kind: expr.VerdictReturn,
+		},
+	}
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: chain,
+		Exprs: exprs,
+	})
+
+	// ip daddr @bypass return
+	exprs = []expr.Any{
+		&expr.Meta{ // meta load nfproto => reg 1
+			Key:      expr.MetaKeyNFPROTO,
+			Register: 1,
+		},
+		&expr.Cmp{ // cmp eq reg 1 0x00000002
+			Op:       expr.CmpOpEq,
+			Register: 1,
+			Data:     []byte{0x00000002},
+		},
+		&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
+			OperationType: expr.PayloadLoad,
+			DestRegister:  1,
+			Base:          expr.PayloadBaseNetworkHeader,
+			Offset:        16,
+			Len:           4,
+		},
+		&expr.Lookup{ // lookup reg 1 set bypass
+			SourceRegister: 1,
+			SetID:          nft.ipv4BypassSet.ID,
+			SetName:        nft.ipv4BypassSet.Name,
+		},
+		&expr.Verdict{ // immediate reg 0 return
+			Kind: expr.VerdictReturn,
+		},
+	}
+
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: chain,
+		Exprs: exprs,
+	})
+
+	// ip6 daddr @bypass6 return
+
+	exprs = []expr.Any{
+		&expr.Meta{ // meta load nfproto => reg 1
+			Key:      expr.MetaKeyNFPROTO,
+			Register: 1,
+		},
+		&expr.Cmp{ // cmp eq reg 1 0x0000000a
+			Op:       expr.CmpOpEq,
+			Register: 1,
+			Data:     []byte{0x0000000a},
+		},
+		&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
+			OperationType: expr.PayloadLoad,
+			DestRegister:  1,
+			Base:          expr.PayloadBaseNetworkHeader,
+			Offset:        24,
+			Len:           16,
+		},
+		&expr.Lookup{ // lookup reg 1 set bypass
+			SourceRegister: 1,
+			SetID:          nft.ipv6BypassSet.ID,
+			SetName:        nft.ipv6BypassSet.Name,
+		},
+		&expr.Verdict{ // immediate reg 0 return
+			Kind: expr.VerdictReturn,
+		},
+	}
+
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: chain,
+		Exprs: exprs,
+	})
+
+	// meta l4proto != { tcp, udp } return
+
+	nft.protoSet.ID = 0
+	err = conn.AddSet(nft.protoSet, nft.protoSetElement)
+	if err != nil {
+		return
+	}
+
+	exprs = []expr.Any{
+		&expr.Meta{ // meta load l4proto => reg 1
+			Key:      expr.MetaKeyL4PROTO,
+			Register: 1,
+		},
+		&expr.Lookup{ // lookup reg 1 set __set%d
+			SourceRegister: 1,
+			SetID:          nft.protoSet.ID,
+			SetName:        nft.protoSet.Name,
+			Invert:         true,
+		},
+		&expr.Verdict{ // immediate reg 0 return
+			Kind: expr.VerdictReturn,
+		},
+	}
+
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: chain,
+		Exprs: exprs,
+	})
+
+	return
+}
+
+func (nft *NFTManager) initOutputNATChain(conn *nftables.Conn) (err error) {
+	// type nat hook prerouting priority -100; policy accept;
+	nft.outputNATChain = conn.AddChain(&nftables.Chain{
+		Table:    nft.table,
+		Name:     "output-nat",
+		Type:     nftables.ChainTypeNAT,
+		Hooknum:  nftables.ChainHookOutput,
+		Priority: nftables.ChainPriorityNATDest,
+		Policy:   &nft.policy,
+	})
+
+	// meta mark vmap @
+	exprs := []expr.Any{
+		&expr.Meta{
+			Key:      expr.MetaKeyMARK,
+			Register: 1,
+		},
+		&expr.Lookup{ // lookup reg 1 set mark-vmap dreg 0
+			SourceRegister: 1,
+			IsDestRegSet:   true,
+			SetName:        nft.markDNSMap.Name,
+			SetID:          nft.markDNSMap.ID,
+		},
+	}
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: nft.outputNATChain,
+		Exprs: exprs,
+	})
+
+	return
+}
+
+func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
+	// type route hook output priority mangle; policy accept;
+	nft.preroutingChain = conn.AddChain(&nftables.Chain{
+		Table:    nft.table,
+		Name:     "prerouting",
+		Type:     nftables.ChainTypeFilter,
+		Hooknum:  nftables.ChainHookPrerouting,
+		Priority: nftables.ChainPriorityMangle,
+		Policy:   &nft.policy,
+	})
+
+	// ip daddr @bypass return
+	exprs := []expr.Any{
+		&expr.Meta{ // meta load nfproto => reg 1
+			Key:      expr.MetaKeyNFPROTO,
+			Register: 1,
+		},
+		&expr.Cmp{ // cmp eq reg 1 0x00000002
+			Op:       expr.CmpOpEq,
+			Register: 1,
+			Data:     []byte{0x00000002},
+		},
+		&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
+			OperationType: expr.PayloadLoad,
+			DestRegister:  1,
+			Base:          expr.PayloadBaseNetworkHeader,
+			Offset:        16,
+			Len:           4,
+		},
+		&expr.Lookup{ // lookup reg 1 set bypass
+			SourceRegister: 1,
+			SetID:          nft.ipv4BypassSet.ID,
+			SetName:        nft.ipv4BypassSet.Name,
+		},
+		&expr.Verdict{ // immediate reg 0 return
+			Kind: expr.VerdictReturn,
+		},
+	}
+
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: nft.preroutingChain,
+		Exprs: exprs,
+	})
+
+	// ip6 daddr @bypass6 return
+	exprs = []expr.Any{
+		&expr.Meta{ // meta load nfproto => reg 1
+			Key:      expr.MetaKeyNFPROTO,
+			Register: 1,
+		},
+		&expr.Cmp{ // cmp eq reg 1 0x0000000a
+			Op:       expr.CmpOpEq,
+			Register: 1,
+			Data:     []byte{0x0000000a},
+		},
+		&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
+			OperationType: expr.PayloadLoad,
+			DestRegister:  1,
+			Base:          expr.PayloadBaseNetworkHeader,
+			Offset:        24,
+			Len:           16,
+		},
+		&expr.Lookup{ // lookup reg 1 set bypass
+			SourceRegister: 1,
+			SetID:          nft.ipv6BypassSet.ID,
+			SetName:        nft.ipv6BypassSet.Name,
+		},
+		&expr.Verdict{ // immediate reg 0 return
+			Kind: expr.VerdictReturn,
+		},
+	}
+
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: nft.preroutingChain,
+		Exprs: exprs,
+	})
+
+	// meta mark vmap @mark-vmap
+	exprs = []expr.Any{
+		&expr.Meta{
+			Key:      expr.MetaKeyMARK,
+			Register: 1,
+		},
+		&expr.Lookup{ // lookup reg 1 set mark-vmap dreg 0
+			SourceRegister: 1,
+			IsDestRegSet:   true,
+			SetName:        nft.markTproxyMap.Name,
+			SetID:          nft.markTproxyMap.ID,
+		},
+	}
+	exprs = addDebugCounter(exprs)
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: nft.preroutingChain,
+		Exprs: exprs,
+	})
+
+	return
+}
+
 func (nft *NFTManager) nextIP(ip net.IP) (ret net.IP) {
 	next := make(net.IP, len(ip))
 	copy(next, ip)

@@ -221,6 +221,10 @@ func (nft *NFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) (err er
 func (nft *NFTManager) Clear() (err error) {
 	defer Wrap(&err, "remove nftable.")
 
+	if nft.table == nil {
+		return
+	}
+
 	var conn *nftables.Conn
 	conn, err = nft.connector.Connect()
 	if err != nil {
@@ -245,4 +249,82 @@ func (nft *NFTManager) Clear() (err error) {
 func (nft *NFTManager) Release() (err error) {
 	defer Wrap(&err, "release NFTManager")
 	return nft.connector.Release()
+}
+
+func (nft *NFTManager) InitStructure() (err error) {
+	defer Wrap(&err, "flush initial content")
+
+	nft.log.Debug("Initialing nft table structure.")
+
+	var conn *nftables.Conn
+	conn, err = nft.connector.Connect()
+	if err != nil {
+		return
+	}
+
+	nft.table = conn.CreateTable(&nftables.Table{
+		Name:   NftTableName,
+		Family: nftables.TableFamilyINet,
+	})
+
+	err = conn.Flush()
+	if err != nil {
+		Wrap(&err, "create table")
+		return
+	}
+
+	err = nft.initIPV4BypassSet(conn)
+	if err != nil {
+		return
+	}
+
+	err = nft.initIPV6BypassSet(conn)
+	if err != nil {
+		return
+	}
+
+	nft.initProtoSet()
+
+	err = nft.initCgroupMap(conn)
+	if err != nil {
+		return
+	}
+
+	err = nft.initMarkMap(conn)
+	if err != nil {
+		return
+	}
+
+	err = nft.initMarkDNSMap(conn)
+	if err != nil {
+		return
+	}
+
+	nft.policy = nftables.ChainPolicyAccept
+
+	err = nft.initOutputMangleChain(conn)
+	if err != nil {
+		return
+	}
+
+	err = nft.initOutputNATChain(conn)
+	if err != nil {
+		return
+	}
+
+	err = nft.initPreroutingChain(conn)
+	if err != nil {
+		return
+	}
+
+	err = conn.Flush()
+	if err != nil {
+		return
+	}
+
+	nft.log.Debug("nft table structure initialized.")
+
+	nft.dumpNFTableRules()
+
+	return
 }
