@@ -40,7 +40,7 @@ _GO_LDFLAGS += -X '$(GO_VERSION_PACKAGE).Version=v$(PROJECT_SEMVER_GENERATED_FRO
 _GO_LDFLAGS += -X '$(GO_VERSION_PACKAGE).GitDescription=$(PROJECT_GIT_DESCRIBE)'
 
 .PHONY: all
-all:
+all: generate
 	$(GO) build -v \
 		-ldflags "$(_GO_LDFLAGS) $(GO_LDFLAGS)" \
 		-tags="$(_GO_TAGS),$(GO_TAGS)" \
