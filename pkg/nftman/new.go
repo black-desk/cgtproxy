@@ -259,7 +259,7 @@ func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 					Key: ip.To4(),
 				},
 				nftables.SetElement{
-					Key:         nft.nextIP(ip).To4(),
+					Key:         nft.nextIP(ip.To4()),
 					IntervalEnd: true,
 				},
 			)
