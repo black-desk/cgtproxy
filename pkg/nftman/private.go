@@ -501,6 +501,20 @@ func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
 	return
 }
 
+func (nft *NFTManager) initForwardChain(conn *nftables.Conn) (err error) {
+	// type route hook prerouting priority mangle; policy accept;
+	nft.forwardChain = conn.AddChain(&nftables.Chain{
+		Table:    nft.table,
+		Name:     "forward",
+		Type:     nftables.ChainTypeFilter,
+		Hooknum:  nftables.ChainHookForward,
+		Priority: nftables.ChainPriorityMangle,
+		Policy:   &nft.policy,
+	})
+
+	return
+}
+
 func (nft *NFTManager) nextIP(ip net.IP) (ret net.IP) {
 	next := make(net.IP, len(ip))
 	copy(next, ip)

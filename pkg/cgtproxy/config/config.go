@@ -58,6 +58,7 @@ type TProxy struct {
 	// and send them to directory to a dns server described in DNSHijack.
 	// This option is for fake-ip.
 	DNSHijack *DNSHijack `yaml:"dns-hijack"`
+	Gateway bool `yaml:"gateway"`
 }
 
 type FireWallMark uint32

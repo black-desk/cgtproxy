@@ -45,6 +45,10 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 	}
 
 	for i := range m.cfg.Rules {
+		if m.cfg.Rules[i].Match == "" {
+			continue
+		}
+
 		regex := m.cfg.Rules[i].Match
 		var matcher struct {
 			reg    *regexp.Regexp

@@ -40,8 +40,12 @@ type NFTManager struct {
 	markDNSMap    *nftables.Set
 
 	outputMangleChain *nftables.Chain
-	outputNATChain    *nftables.Chain
-	preroutingChain   *nftables.Chain
+
+	gatewayTproxy string
+
+	outputNATChain  *nftables.Chain
+	preroutingChain *nftables.Chain
+	forwardChain    *nftables.Chain
 }
 
 type Opt = (func(*NFTManager) (*NFTManager, error))

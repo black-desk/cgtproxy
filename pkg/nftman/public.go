@@ -10,6 +10,7 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
+	"github.com/google/nftables/expr"
 )
 
 func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
@@ -80,6 +81,14 @@ func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
 			return
 		}
 	}
+
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: nft.outputMangleChain,
+		Exprs: []expr.Any{
+			&expr.Counter{},
+		},
+	})
 
 	err = conn.Flush()
 	if err != nil {
@@ -199,6 +208,20 @@ func (nft *NFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) (err er
 			}
 		}
 
+		if tp.Gateway {
+			conn.AddRule(&nftables.Rule{
+				Table: nft.table,
+				Chain: nft.forwardChain,
+				Exprs: []expr.Any{
+					&expr.Counter{},
+					&expr.Verdict{
+						Kind:  expr.VerdictGoto,
+						Chain: tp.Name+"-MARK",
+					},
+				},
+			})
+		}
+
 		nft.log.Debug("Chain and rules generated for this tproxy.",
 			"tproxy", tp,
 		)
@@ -313,6 +336,11 @@ func (nft *NFTManager) InitStructure() (err error) {
 	}
 
 	err = nft.initPreroutingChain(conn)
+	if err != nil {
+		return
+	}
+
+	err = nft.initForwardChain(conn)
 	if err != nil {
 		return
 	}
