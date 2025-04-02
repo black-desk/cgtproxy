@@ -10,6 +10,7 @@ import (
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
+	"github.com/google/nftables/expr"
 )
 
 func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
@@ -79,6 +80,25 @@ func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
 		if err != nil {
 			return
 		}
+	}
+
+	if nft.gatewayTproxy != "" {
+		exprs := []expr.Any{
+			&expr.Verdict{
+				Kind:  expr.VerdictGoto,
+				Chain: nft.gatewayTproxy + "-MARK",
+			},
+		}
+
+		exprs = addDebugCounter(exprs)
+
+		rule := &nftables.Rule{
+			Table: nft.table,
+			Chain: nft.outputMangleChain,
+			Exprs: exprs,
+		}
+
+		conn.AddRule(rule)
 	}
 
 	err = conn.Flush()
@@ -197,6 +217,10 @@ func (nft *NFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) (err er
 			if err != nil {
 				return
 			}
+		}
+
+		if tp.Gateway {
+			nft.gatewayTproxy = tp.Name
 		}
 
 		nft.log.Debug("Chain and rules generated for this tproxy.",

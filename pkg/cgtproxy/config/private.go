@@ -41,15 +41,36 @@ func (c *Config) check() (err error) {
 		c.TProxies = map[string]*TProxy{}
 	}
 
+	var gatewayTproxy string
+
 	for name := range c.TProxies {
 		tp := c.TProxies[name]
 		if tp.Name == "" {
 			tp.Name = name
 		}
+
 		if tp.DNSHijack != nil && tp.DNSHijack.IP == nil {
 			addr := IPv4LocalhostStr
 			tp.DNSHijack.IP = &addr
 		}
+
+		if !tp.Gateway {
+			continue
+		}
+
+		if gatewayTproxy == "" {
+			gatewayTproxy = tp.Name
+			continue
+		}
+
+		err = fmt.Errorf("Multiple gateway targets found: %s and %s",
+			gatewayTproxy, tp.Name)
+		return
+
+	}
+
+	if gatewayTproxy != "" {
+		c.log.Debugw("Gateway mode enabled", "tproxy", gatewayTproxy)
 	}
 
 	return
