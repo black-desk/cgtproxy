@@ -101,7 +101,26 @@ Netfilter can be configured to:
 [TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
 
 Systemd's [XDG integration documentation] suggests that
-XDG applications should be launched in a systemd managed unit.
+XDG applications should be launched in a systemd managed unit:
+
+> ...
+>
+> To ensure cross-desktop compatibility and encourage sharing of good practices,
+> desktop environments should adhere to the following conventions:
+>
+> - Application units should follow the scheme
+>   `app[-<launcher>]-<ApplicationID>[@<RANDOM>].service` or
+>   `app[-<launcher>]-<ApplicationID>-<RANDOM>.scope`[^application-id] e.g:
+>   - app-gnome-org.gnome.Evince@12345.service
+>   - app-flatpak-org.telegram.desktop@12345.service
+>   - app-KDE-org.kde.okular@12345.service
+>   - app-org.kde.amarok.service
+>   - app-org.gnome.Evince-12345.scope
+>
+> ...
+
+[^application-id]: https://specifications.freedesktop.org/desktop-entry-spec/latest/file-naming.html#desktop-file-id
+
 For example, [Telegram] from [Flatpak] launched by desktop environment
 will run in a cgroup like:
 
