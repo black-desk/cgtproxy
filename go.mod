@@ -15,7 +15,7 @@ require (
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 	golang.org/x/sys v0.32.0
 	gopkg.in/yaml.v3 v3.0.1
-	kernel.org/pub/linux/libs/security/libcap/cap v1.2.75
+	kernel.org/pub/linux/libs/security/libcap/cap v1.2.76
 )
 
 require (
@@ -23,7 +23,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
-	kernel.org/pub/linux/libs/security/libcap/psx v1.2.75 // indirect
+	kernel.org/pub/linux/libs/security/libcap/psx v1.2.76 // indirect
 )
 
 require (
