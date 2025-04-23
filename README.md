@@ -1,23 +1,28 @@
 # cgtproxy
 
-[![license][badge-shields-io-license]](#)
-[![checks][badge-shields-io-checks]](#)
+[![license][badge-shields-io-license]][license-file]
+[![checks][badge-shields-io-checks]][actions]
 [![go report card][badge-go-report-card]][go-report-card]
 [![codecov][badge-shields-io-codecov]][codecov]
-[![commit activity][badge-shields-io-commit-activity]](#)
-[![contributors][badge-shields-io-contributors]](#)
-[![release date][badge-shields-io-release-date]](#)
-[![commits since release][badge-shields-io-commits-since-release]](#)
+[![commit activity][badge-shields-io-commit-activity]][commits]
+[![contributors][badge-shields-io-contributors]][contributors]
+[![release date][badge-shields-io-release-date]][releases]
+[![commits since release][badge-shields-io-commits-since-release]][commits]
 
 [badge-shields-io-license]: https://img.shields.io/github/license/black-desk/cgtproxy
+[license-file]: LICENSE
 [badge-shields-io-checks]: https://img.shields.io/github/check-runs/black-desk/cgtproxy/master
+[actions]: https://github.com/black-desk/cgtproxy/actions
 [badge-go-report-card]: https://goreportcard.com/badge/github.com/black-desk/cgtproxy
 [go-report-card]: https://goreportcard.com/report/github.com/black-desk/cgtproxy
 [badge-shields-io-codecov]: https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X
 [codecov]: https://codecov.io/github/black-desk/cgtproxy
 [badge-shields-io-commit-activity]: https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master
+[commits]: https://github.com/black-desk/cgtproxy/commits/master
 [badge-shields-io-contributors]: https://img.shields.io/github/contributors/black-desk/cgtproxy
+[contributors]: https://github.com/black-desk/cgtproxy/graphs/contributors
 [badge-shields-io-release-date]: https://img.shields.io/github/release-date/black-desk/cgtproxy
+[releases]: https://github.com/black-desk/cgtproxy/releases
 [badge-shields-io-commits-since-release]: https://img.shields.io/github/commits-since/black-desk/cgtproxy/latest/master
 
 `cgtproxy` is a transparent proxy **RULE** manager written in Go,
@@ -30,6 +35,7 @@ redirecting network traffic in each cgroup to a specific [target].
 [target]: https://www.frozentux.net/iptables-tutorial/iptables-tutorial.html#TARGETS
 
 Currently supported targets are:
+
 - DIRECT
 - DROP
 - TPROXY
@@ -39,6 +45,7 @@ Currently supported targets are:
 1. [Install](./docs/install.md) cgtproxy
 
 2. Enable and start the systemd service:
+
    ```bash
    # Run this if you have old cgtproxy running as systemd service
    # systemctl daemon-reload
@@ -46,6 +53,7 @@ Currently supported targets are:
    ```
 
    Check the nft rules generated with [the default configuration]:
+
    ```bash
    sudo nft list ruleset
    ```
@@ -54,6 +62,7 @@ Currently supported targets are:
    - Write your configuration following the [configuration guide]
    - Place it at `/etc/cgtproxy/config.yaml`
    - Restart the service:
+
      ```bash
      systemctl restart cgtproxy.service
      ```
@@ -74,6 +83,7 @@ function cgtproxy-exec() {
 ```
 
 Use it like this:
+
 ```bash
 # Run without proxy
 cgtproxy-exec direct /some/command
@@ -94,6 +104,7 @@ and `cgtproxy-proxy.slice`.
 ## How It Works
 
 Netfilter can be configured to:
+
 - Filter network traffic [by cgroup]
 - Redirect traffic to a [TPROXY] server
 
@@ -111,20 +122,21 @@ XDG applications should be launched in a systemd managed unit:
 > - Application units should follow the scheme
 >   `app[-<launcher>]-<ApplicationID>[@<RANDOM>].service` or
 >   `app[-<launcher>]-<ApplicationID>-<RANDOM>.scope`[^application-id] e.g:
->   - app-gnome-org.gnome.Evince@12345.service
->   - app-flatpak-org.telegram.desktop@12345.service
->   - app-KDE-org.kde.okular@12345.service
->   - app-org.kde.amarok.service
->   - app-org.gnome.Evince-12345.scope
+>
+>   - `app-gnome-org.gnome.Evince@12345.service`
+>   - `app-flatpak-org.telegram.desktop@12345.service`
+>   - `app-KDE-org.kde.okular@12345.service`
+>   - `app-org.kde.amarok.service`
+>   - `app-org.gnome.Evince-12345.scope`
 >
 > ...
 
-[^application-id]: https://specifications.freedesktop.org/desktop-entry-spec/latest/file-naming.html#desktop-file-id
+[^application-id]: <https://specifications.freedesktop.org/desktop-entry-spec/latest/file-naming.html#desktop-file-id>
 
 For example, [Telegram] from [Flatpak] launched by desktop environment
 will run in a cgroup like:
 
-```
+```plaintext
 /user.slice/user-1000.slice/user@1000.service/app.slice/app-flatpak-org.telegram.desktop@12345.service
 ```
 
@@ -192,6 +204,7 @@ Check the [systemd service file] for details.
 ## Documentation
 
 Project Documentation:
+
 - [GoDoc][godoc]
 - [GitHub Wiki][github-wiki]
 
@@ -199,6 +212,7 @@ Project Documentation:
 [github-wiki]: https://github.com/black-desk/cgtproxy/wiki
 
 Netfilter Documentation:
+
 - [Netfilter/iptables Documentation][netfilter-documentation]
 
 [netfilter-documentation]: https://www.netfilter.org/documentation/index.html
