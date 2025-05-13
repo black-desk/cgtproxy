@@ -207,9 +207,12 @@ Project Documentation:
 
 - [GoDoc][godoc]
 - [GitHub Wiki][github-wiki]
+- [![DeepWiki][badge-deepwiki]][deepwiki]
 
 [godoc]: https://pkg.go.dev/github.com/black-desk/cgtproxy
 [github-wiki]: https://github.com/black-desk/cgtproxy/wiki
+[badge-deepwiki]: https://deepwiki.com/badge.svg
+[deepwiki]: https://deepwiki.com/black-desk/cgtproxy
 
 Netfilter Documentation:
 
