@@ -54,7 +54,6 @@ jobs:
     name: pass
     if: always()
     needs:
-      - auto_tag
       - auto_release
       - generic
       - go
