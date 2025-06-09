@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+# SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
 # NOTE:
 # Use /usr/bin/env to find shell interpreter for better portability.
 # Reference: https://en.wikipedia.org/wiki/Shebang_%28Unix%29#Portability
