@@ -2,10 +2,13 @@
 #
 # SPDX-License-Identifier: MIT
 
-name: Continuous integration for pull request
+name: Continuous integration
 
 on:
   pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
   generic:
@@ -36,9 +39,23 @@ jobs:
           sudo apt update
           sudo apt install -y autoconf automake libtool
       - uses: black-desk/workflows/autotools@master
+
+  autotools-debug:
+    permissions:
+      id-token: write
+      contents: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          # https://github.com/actions/runner-images/issues/10443#issuecomment-2616616457
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+          sudo apt update
+          sudo apt install -y autoconf automake libtool
+      - uses: black-desk/workflows/autotools@master
         env:
           GO_TAGS: debug
-      - uses: black-desk/workflows/autotools@master
 
   pass:
     name: pass
@@ -47,6 +64,7 @@ jobs:
       - generic
       - go
       - autotools
+      - autotools-debug
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
