@@ -6,7 +6,6 @@ SPDX-License-Identifier: MIT
 
 # cgtproxy
 
-[![license][badge-shields-io-license]][license-file]
 [![checks][badge-shields-io-checks]][actions]
 [![go report card][badge-go-report-card]][go-report-card]
 [![codecov][badge-shields-io-codecov]][codecov]
@@ -15,8 +14,6 @@ SPDX-License-Identifier: MIT
 [![release date][badge-shields-io-release-date]][releases]
 [![commits since release][badge-shields-io-commits-since-release]][commits]
 
-[badge-shields-io-license]: https://img.shields.io/github/license/black-desk/cgtproxy
-[license-file]: LICENSE
 [badge-shields-io-checks]: https://img.shields.io/github/check-runs/black-desk/cgtproxy/master
 [actions]: https://github.com/black-desk/cgtproxy/actions
 [badge-go-report-card]: https://goreportcard.com/badge/github.com/black-desk/cgtproxy
@@ -250,6 +247,18 @@ Netfilter Documentation:
   [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) is good enough for me.
 
 If you need any feature above, PR is welcome.
+
+## License
+
+This project follows
+[the REUSE Specification](https://reuse.software/spec-3.3/).
+
+You can use [reuse-tool](https://github.com/fsfe/reuse-tool) to
+generate an SPDX Document of all files in the project like this:
+
+```bash
+reuse spdx
+```
 
 ---
 
