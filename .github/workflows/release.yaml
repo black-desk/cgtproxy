@@ -2,11 +2,14 @@
 #
 # SPDX-License-Identifier: MIT
 
-name: Automatic pre-release
+name: Automatic (pre)release via goreleaser
 
 on:
   push:
-    tags: ["v*-*"]
+    tags:
+      - v*-*
+    branches:
+      - master
 
 jobs:
   goreleaser:
