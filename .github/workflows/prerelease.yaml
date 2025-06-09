@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+name: Automatic pre-release
+
+on:
+  push:
+    tags: ["v*-*"]
+
+jobs:
+  goreleaser:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: black-desk/workflows/goreleaser@master

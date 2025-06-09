@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+name: Continuous integration for pull request
+
+on:
+  pull_request:
+
+jobs:
+  generic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: black-desk/workflows/generic@master
+
+  go:
+    permissions:
+      id-token: write
+      contents: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: black-desk/workflows/go@master
+
+  autotools:
+    permissions:
+      id-token: write
+      contents: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          # https://github.com/actions/runner-images/issues/10443#issuecomment-2616616457
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+          sudo apt update
+          sudo apt install -y autoconf automake libtool
+      - uses: black-desk/workflows/autotools@master
+        env:
+          GO_TAGS: debug
+      - uses: black-desk/workflows/autotools@master
+
+  pass:
+    name: pass
+    if: always()
+    needs:
+      - generic
+      - go
+      - autotools
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}

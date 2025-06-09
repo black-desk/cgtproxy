@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Build Guide
 
 It is ok to use `go build ./cmd/cgtproxy` to build this project

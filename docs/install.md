@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Installation Guide
 
 There are two ways to install cgtproxy:
