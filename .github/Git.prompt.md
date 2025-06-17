@@ -1,0 +1,1 @@
+../.prompts/github-copilot/Git.prompt.md
