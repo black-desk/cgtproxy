@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-name: Automatic (pre)release via goreleaser
+name: Continuous deployment
 
 on:
   push:
