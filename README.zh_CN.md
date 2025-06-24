@@ -14,42 +14,35 @@ SPDX-License-Identifier: MIT
 [![codecov][badge-shields-io-codecov]][codecov]
 [![go report card][badge-go-report-card]][go-report-card]
 
-[badge-shields-io-checks]: https://img.shields.io/github/check-runs/black-desk/cgtproxy/master
-
+[badge-shields-io-checks]:
+  https://img.shields.io/github/check-runs/black-desk/cgtproxy/master
 [actions]: https://github.com/black-desk/cgtproxy/actions
-
-[badge-shields-io-commit-activity]: https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master
-
+[badge-shields-io-commit-activity]:
+  https://img.shields.io/github/commit-activity/w/black-desk/cgtproxy/master
 [commits]: https://github.com/black-desk/cgtproxy/commits/master
-
-[badge-shields-io-contributors]: https://img.shields.io/github/contributors/black-desk/cgtproxy
-
+[badge-shields-io-contributors]:
+  https://img.shields.io/github/contributors/black-desk/cgtproxy
 [contributors]: https://github.com/black-desk/cgtproxy/graphs/contributors
-
-[badge-shields-io-release-date]: https://img.shields.io/github/release-date/black-desk/cgtproxy
-
+[badge-shields-io-release-date]:
+  https://img.shields.io/github/release-date/black-desk/cgtproxy
 [releases]: https://github.com/black-desk/cgtproxy/releases
-
-[badge-shields-io-commits-since-release]: https://img.shields.io/github/commits-since/black-desk/cgtproxy/latest
-
-[badge-shields-io-codecov]: https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X
-
+[badge-shields-io-commits-since-release]:
+  https://img.shields.io/github/commits-since/black-desk/cgtproxy/latest
+[badge-shields-io-codecov]:
+  https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X
 [codecov]: https://codecov.io/github/black-desk/cgtproxy
-
-[badge-go-report-card]: https://goreportcard.com/badge/github.com/black-desk/cgtproxy
-
+[badge-go-report-card]:
+  https://goreportcard.com/badge/github.com/black-desk/cgtproxy
 [go-report-card]: https://goreportcard.com/report/github.com/black-desk/cgtproxy
 
-[en](README.md) | zh\_CN
+[en](README.md) | zh_CN
 
 `cgtproxy`是一个受[cgproxy]项目启发，用Go语言编写的透明代理**规则**管理器。
 
 该项目通过根据配置文件自动更新[nft]规则，将每个[cgroup]中的网络流量重定向到特定的目标，可以以应用为粒度设置动态的透明代理规则。
 
 [nft]: https://www.netfilter.org/projects/nftables/manpage.html
-
 [cgproxy]: https://github.com/springzfx/cgproxy
-
 [cgroup]: https://man7.org/linux/man-pages/man7/cgroups.7.html
 
 目前支持的目标包括：
@@ -78,7 +71,6 @@ SPDX-License-Identifier: MIT
    ```
 
 3. 创建您自己的配置：
-
    - 根据[配置指南]编写配置
    - 将配置文件放置在 `/etc/cgtproxy/config.yaml`
    - 重启服务：
@@ -87,8 +79,8 @@ SPDX-License-Identifier: MIT
      systemctl restart cgtproxy.service
      ```
 
-[默认配置]: https://pkg.go.dev/github.com/black-desk/cgtproxy/pkg/cgtproxy/config#pkg-constants
-
+[默认配置]:
+  https://pkg.go.dev/github.com/black-desk/cgtproxy/pkg/cgtproxy/config#pkg-constants
 [配置指南]: ./docs/configuration.zh_CN.md
 
 ## 技巧
@@ -151,12 +143,12 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 
 该文档并未直接规定“应用 ID”的内容，但目前各 Linux 桌面启动应用时均使用“[桌面文件ID]”。
 
-[桌面文件ID]: https://specifications.freedesktop.org/desktop-entry-spec/latest/file-naming.html#desktop-file-id
+[桌面文件ID]:
+  https://specifications.freedesktop.org/desktop-entry-spec/latest/file-naming.html#desktop-file-id
 
 例如，由桌面环境启动的来自[Flatpak]的[Telegram]将在类似以下的 cgroup 中运行：
 
 [Telegram]: https://github.com/telegramdesktop/tdesktop
-
 [Flatpak]: https://github.com/flatpak/flatpak
 
 ```plaintext
@@ -174,7 +166,6 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 在 Linux 上进行应用级代理配置的常见方法都有局限性：
 
 1. 环境变量：
-
    - 没有简单的方法可以在应用层面配置。
    - 某些应用程序会忽略环境变量。
 
@@ -182,10 +173,10 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 
    Clash会在有应用程序创建了新套接字时[扫描procfs][clash-procfs]，来确定该链接实际上是由哪个二进制发起的，然后决定如何路由。
 
-   [clash-procfs]: https://github.com/Dreamacro/clash/blob/4d66da2277ddaf41f83bd889b064c0a584f7a8ad/component/process/process_linux.go#L129
+   [clash-procfs]:
+     https://github.com/Dreamacro/clash/blob/4d66da2277ddaf41f83bd889b064c0a584f7a8ad/component/process/process_linux.go#L129
 
    这个方案有以下问题：
-
    - 进程较多时可能会存在性能问题
    - 通过脚本编写的程序（如使用[pyqt]的编写的应用）无法被正确判断
    - 应用程序通过运行命令行工具联网时无法正确判断
@@ -195,7 +186,6 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 3. 使用[cgproxy]：
 
    该方案存在严重的安全问题：
-
    - cgproxy 会将进程从原始cgroup中移出
    - 存在未授权的用户级进程逃逸到系统级cgroup
 
@@ -212,10 +202,9 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
    您可以在[这里][nftables_differences_with_iptables]查看[iptables]和[nftables]的区别。
 
    [iptables]: https://linux.die.net/man/8/iptables
-
    [nftables]: https://wiki.archlinux.org/title/Nftables
-
-   [nftables_differences_with_iptables]: https://wiki.nftables.org/wiki-nftables/index.php/Main_differences_with_iptables
+   [nftables_differences_with_iptables]:
+     https://wiki.nftables.org/wiki-nftables/index.php/Main_differences_with_iptables
 
 2. `cgproxy`预定义了数个[cgroup]，并为其创建路由规则；而`cgtproxy`不创建[cgroup]，当[cgroup]出现时动态更新路由规则。
 
@@ -223,7 +212,8 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 
 4. `cgproxy`需要`CAP_SYS_ADMIN`、`CAP_NETWORK_ADMIN`和`CAP_BPF`；而`cgtproxy`只需要`CAP_NETWORK_ADMIN`。详情请查看[systemd服务文件]。
 
-[systemd服务文件]: https://github.com/search?q=repo%3Ablack-desk%2Fcgtproxy%20CapabilityBoundingSet&type=code
+[systemd服务文件]:
+  https://github.com/search?q=repo%3Ablack-desk%2Fcgtproxy%20CapabilityBoundingSet&type=code
 
 ## 文档
 
@@ -234,11 +224,8 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 - [![DeepWiki][badge-deepwiki]][deepwiki]
 
 [godoc]: https://pkg.go.dev/github.com/black-desk/cgtproxy
-
 [github-wiki]: https://github.com/black-desk/cgtproxy/wiki
-
 [badge-deepwiki]: https://deepwiki.com/badge.svg
-
 [deepwiki]: https://deepwiki.com/black-desk/cgtproxy
 
 Netfilter 文档：
@@ -254,17 +241,14 @@ Netfilter 文档：
   [notify](https://github.com/rjeczalik/notify)使文件系统监控更加稳定，对于我个人使用来说，已经没有必要实现另一种监控机制了。
 
 - [ ] 为fake-ip劫持DNS；
-
   - [x] ipv4；
-
   - [ ] ~~ipv6；~~
 
     我没有任何仅支持ipv6的设备，不需要也无法验证这个功能。
 
 - [ ] ~~内置TPROXY服务器。~~
 
-  ~~Clash~~
-  ~~Clash.Meta~~
+  ~~Clash~~ ~~Clash.Meta~~
   [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo)对我来说已经足够好了。
 
 如果您需要上述任何功能，欢迎提交拉取请求。
@@ -283,7 +267,7 @@ reuse spdx
 
 [REUSE规范]: https://reuse.software/spec-3.3/
 
-***
+---
 
 <picture>
   <source
