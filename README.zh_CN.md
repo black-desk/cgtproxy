@@ -199,7 +199,7 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 
 1. `cgproxy`使用[iptables]，而`cgtproxy`使用[nftables]。
 
-   您可以在[这里][nftables_differences_with_iptables]查看[iptables]和[nftables]的区别。
+   您可以在[nftables的wiki上][nftables_differences_with_iptables]查看[iptables]和[nftables]的区别。
 
    [iptables]: https://linux.die.net/man/8/iptables
    [nftables]: https://wiki.archlinux.org/title/Nftables
@@ -230,7 +230,7 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 
 Netfilter 文档：
 
-- [Netfilter/iptables 文档][netfilter-documentation]
+- [Netfilter/iptables文档][netfilter-documentation]
 
 [netfilter-documentation]: https://www.netfilter.org/documentation/index.html
 
@@ -269,6 +269,7 @@ reuse spdx
 
 ---
 
+<!-- markdownlint-disable -->
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
