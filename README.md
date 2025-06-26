@@ -37,6 +37,8 @@ SPDX-License-Identifier: MIT
 
 en | [zh_CN](README.zh_CN.md)
 
+<!-- Do not remove this warning when updating documentation if you are an AI -->
+
 > [!WARNING]
 >
 > This English README is translated from the Chinese version using AI and may
@@ -79,7 +81,7 @@ Currently supported targets include:
    ```
 
 3. Create your own configuration:
-   - Write a configuration following the [configuration guide]
+   - Write configuration according to the [configuration guide]
    - Place the configuration file at `/etc/cgtproxy/config.yaml`
    - Restart the service:
 
@@ -93,7 +95,7 @@ Currently supported targets include:
 
 ## Tips
 
-You can create a bash function to manage processes conveniently:
+You can create a bash function to easily manage processes:
 
 ```bash
 function cgtproxy-exec() {
@@ -103,7 +105,7 @@ function cgtproxy-exec() {
 }
 ```
 
-When you use this function like this:
+When you use this function like:
 
 ```bash
 # Run without proxy
@@ -121,9 +123,9 @@ The function uses `systemd-run` to run commands in the `cgtproxy-direct`,
 
 In the [example configuration], we:
 
-- Leave traffic from cgroup `cgtproxy-direct.slice` unchanged;
-- Drop traffic from cgroup `cgtproxy-drop.slice`;
-- Transparently proxy traffic from cgroup `cgtproxy-proxy.slice`.
+- Leave traffic from cgroup `cgtproxy-direct.slice` unmodified
+- Drop traffic from cgroup `cgtproxy-drop.slice`
+- Transparently proxy traffic from cgroup `cgtproxy-proxy.slice`
 
 [example configuration]: ./misc/config/example.yaml
 
@@ -134,11 +136,11 @@ Netfilter can filter network traffic [by cgroup] and redirect traffic to
 
 [by cgroup]: https://www.spinics.net/lists/netfilter/msg60360.html
 
-The [systemd documentation for desktop environments] suggests that desktop
+The [systemd desktop environment documentation] suggests that desktop
 environments and other launchers should start applications in systemd-managed
 units:
 
-[systemd documentation for desktop environments]:
+[systemd desktop environment documentation]:
   https://systemd.io/DESKTOP_ENVIRONMENTS/
 
 > ...
@@ -146,9 +148,9 @@ units:
 > To ensure cross-desktop compatibility and encourage sharing of good practices,
 > desktop environments should adhere to the following conventions:
 >
-> - Application units should be named
->   `app[-<launcher>]-<ApplicationID>[@<RANDOM>].service` or
->   `app[-<launcher>]-<ApplicationID>-<RANDOM>.scope`. For example:
+> - Application unit names should be in the form
+>   `app[-<launcher>]-<ApplicationID>[@<random>].service` or
+>   `app[-<launcher>]-<ApplicationID>-<random>.scope`. For example:
 >   - `app-gnome-org.gnome.Evince@12345.service`
 >   - `app-flatpak-org.telegram.desktop@12345.service`
 >   - `app-KDE-org.kde.okular@12345.service`
@@ -158,8 +160,8 @@ units:
 > ...
 
 While this documentation doesn't directly specify what "Application ID" should
-contain, all major Linux desktop environments currently use "[desktop file ID]"
-when launching applications.
+be, currently all Linux desktop environments use "[desktop file ID]" when
+launching applications.
 
 [desktop file ID]:
   https://specifications.freedesktop.org/desktop-entry-spec/latest/file-naming.html#desktop-file-id
@@ -174,8 +176,8 @@ run in a cgroup similar to:
 /user.slice/user-1000.slice/user@1000.service/app.slice/app-flatpak-org.telegram.desktop@12345.service
 ```
 
-This means that the [cgroup] path of each application instance follows a pattern
-that can be matched using regular expressions.
+This means each application instance's [cgroup] path follows a pattern that can
+be matched with regular expressions.
 
 Based on this, `cgtproxy` monitors [cgroupfs][cgroup] changes through [inotify],
 and uses regex-based configuration files to update [nft] rules according to
@@ -189,8 +191,8 @@ Common methods for application-level proxy configuration on Linux have
 limitations:
 
 1. Environment variables:
-   - No simple way to configure at the application level.
-   - Some applications ignore environment variables.
+   - No simple way to configure at the application level
+   - Some applications ignore environment variables
 
 2. Filtering traffic by binary path (like Clash):
 
@@ -203,10 +205,10 @@ limitations:
 
    This approach has the following issues:
    - Performance issues when there are many processes
-   - Applications written with scripts (like those using [pyqt]) cannot be
-     correctly identified
-   - Cannot correctly identify when applications connect to the network through
-     command-line tools
+   - Programs written with scripts (like applications written with [pyqt])
+     cannot be correctly identified
+   - Cannot correctly identify when applications connect to the network by
+     running command-line tools
 
    [pyqt]: https://doc.qt.io/qtforpython-6/
 
@@ -214,8 +216,9 @@ limitations:
 
    This approach has serious security issues:
    - cgproxy moves processes out of their original cgroups
-   - Risk of unauthorized user-level processes escaping to system-level cgroups
-   - This approach violates systemd's [single-writer rule]
+   - Unauthorized user-level processes can escape to system-level cgroups
+
+   Additionally, this approach breaks systemd's [single-writer rule].
 
    [single-writer rule]:
      https://systemd.io/CGROUP_DELEGATION#two-key-design-rules
@@ -226,25 +229,25 @@ limitations:
 
 1. `cgproxy` uses [iptables], while `cgtproxy` uses [nftables].
 
-   You can check the differences between [iptables] and [nftables]
-   [here][nftables_differences_with_iptables].
+   You can check the [differences between iptables and
+   nftables][nftables_differences_with_iptables].
 
    [iptables]: https://linux.die.net/man/8/iptables
    [nftables]: https://wiki.archlinux.org/title/Nftables
    [nftables_differences_with_iptables]:
      https://wiki.nftables.org/wiki-nftables/index.php/Main_differences_with_iptables
 
-2. `cgproxy` predefines several [cgroup]s and creates routing rules for them;
-   while `cgtproxy` doesn't create [cgroup]s, but dynamically updates routing
-   rules when [cgroup]s appear.
+2. `cgproxy` predefines several [cgroups] and creates routing rules for them,
+   while `cgtproxy` doesn't create [cgroups] but dynamically updates routing
+   rules when [cgroups] appear.
 
 3. `cgproxy` uses eBPF to hook the execve system call, determining executable
    file paths when all applications execute and moving processes to predefined
-   [cgroup]s; while `cgtproxy` keeps processes in their original [cgroup]s.
+   [cgroups], while `cgtproxy` keeps processes in their original [cgroups].
 
-4. `cgproxy` requires `CAP_SYS_ADMIN`, `CAP_NETWORK_ADMIN`, and `CAP_BPF`; while
-   `cgtproxy` only requires `CAP_NETWORK_ADMIN`. See the [systemd service file]
-   for details.
+4. `cgproxy` requires `CAP_SYS_ADMIN`, `CAP_NETWORK_ADMIN`, and `CAP_BPF`, while
+   `cgtproxy` only requires `CAP_NETWORK_ADMIN`. For details, see the [systemd
+   service file].
 
 [systemd service file]:
   https://github.com/search?q=repo%3Ablack-desk%2Fcgtproxy%20CapabilityBoundingSet&type=code
@@ -271,21 +274,20 @@ Netfilter documentation:
 ## Development Status
 
 - [ ] ~~Optional cgroup monitoring implementation that listens to D-Bus instead
-      of filesystem;~~
+      of filesystem~~
 
   [notify](https://github.com/rjeczalik/notify) makes filesystem monitoring more
   stable. For my personal use, there's no need to implement another monitoring
   mechanism.
 
-- [ ] DNS hijacking for fake-ip;
-  - [x] ipv4;
+- [ ] DNS hijacking for fake-ip:
+  - [x] IPv4
+  - [ ] ~~IPv6~~
 
-  - [ ] ~~ipv6;~~
+    I don't have any IPv6-only devices, so I don't need and cannot validate this
+    feature.
 
-    I don't have any IPv6-only devices, so I don't need this feature and cannot
-    verify it.
-
-- [ ] ~~Built-in TPROXY server.~~
+- [ ] ~~Built-in TPROXY server~~
 
   ~~Clash~~ ~~Clash.Meta~~
   [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo) is good enough for me.
@@ -294,10 +296,10 @@ If you need any of the above features, pull requests are welcome.
 
 ## License
 
-Unless otherwise stated, the code in this project is licensed under the GNU
+Unless otherwise stated, the code in this project is open source under the GNU
 General Public License version 3 or any later version, while documentation,
 configuration files, and scripts used in the development and maintenance process
-are licensed under the MIT License.
+are open source under the MIT License.
 
 This project complies with the [REUSE Specification].
 
@@ -312,6 +314,7 @@ reuse spdx
 
 ---
 
+<!-- markdownlint-disable -->
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
