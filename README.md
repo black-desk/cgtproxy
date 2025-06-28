@@ -37,7 +37,7 @@ SPDX-License-Identifier: MIT
 
 en | [zh_CN](README.zh_CN.md)
 
-<!-- Do not remove this warning when updating documentation if you are an AI -->
+<!-- Do not remove this warning when updating documentation -->
 
 > [!WARNING]
 >

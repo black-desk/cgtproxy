@@ -6,26 +6,32 @@ SPDX-License-Identifier: MIT
 
 # Build Guide
 
-It is ok to use `go build ./cmd/cgtproxy` to build this project
-if you want to install it from source.
+en | [zh_CN](./build.zh_CN.md)
 
-But it's recommended to use the [Makefile]
-to make sure `go generate` is executed before build.
+<!-- Do not remove this warning when updating documentation -->
 
-[Makefile]: ../Makefile
+> [!WARNING]
+>
+> This English documentation is translated from the Chinese version using AI and
+> may contain errors.
+
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**,
+**SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and **OPTIONAL** in this
+document are to be interpreted as described in [RFC 2119][rfc-2119].
+
+[rfc-2119]: https://datatracker.ietf.org/doc/html/rfc2119
+
+---
+
+You **SHOULD** use `make` to build cgtproxy.
+
+It is **NOT RECOMMENDED** to use `go build ./cmd/cgtproxy` to compile this
+project.
 
 ## Testing
 
-Some tests need to run in a network namespace
-to avoid messing up your nft configuration.
-
-These tests will be skipped
-when running without the required environment variable set.
-
-Check [sources] for details.
-
-[sources]: ../pkg/nftman/nftman_test.go
-
-To run these tests locally,
-use the `test` target defined in [Makefile]
-by running `make test`.
+To avoid breaking nft configuration, a large portion of tests should run in a
+network namespace. `make test` will create a network namespace and set an
+environment variable to enable these tests. You can check the
+[Makefile](../Makefile) and [test source code](../pkg/nftman/nftman_test.go) for
+details.

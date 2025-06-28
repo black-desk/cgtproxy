@@ -6,9 +6,18 @@ SPDX-License-Identifier: MIT
 
 # Troubleshooting
 
+en | [zh_CN](./troubleshooting.zh_CN.md)
+
+<!-- Do not remove this warning when updating documentation -->
+
+> [!WARNING]
+>
+> This English documentation is translated from the Chinese version using AI and
+> may contain errors.
+
 ## File exists
 
-```
+```text
 Error:
 running cgtproxy core: running route manager: add route: file exists
 running filesystem watcher: context canceled
