@@ -10,7 +10,7 @@ require (
 	github.com/black-desk/lib/go v0.0.0-20240826013949-6a950e6b19a1
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/google/nftables v0.3.0
-	github.com/onsi/ginkgo/v2 v2.27.1
+	github.com/onsi/ginkgo/v2 v2.27.2
 	github.com/onsi/gomega v1.38.2
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.10.1
@@ -27,7 +27,6 @@ require (
 	github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b // indirect
 	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
-	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.76 // indirect
