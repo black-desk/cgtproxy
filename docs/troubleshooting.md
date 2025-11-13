@@ -113,11 +113,38 @@ by adding the environment variable:
 Environment=CGTPROXY_MONITOR_BUFFER_SIZE=2048
 ```
 
-Note that a larger buffer size will consume more memory
-but can handle more events in a short period.
-If you still experience event loss after increasing the buffer size,
-you might need to:
+## DNS Resolution Not Being Redirected
 
-1. Further increase the buffer size
-2. Check if your system is under heavy load
-3. Consider reducing the rate of cgroup creation/deletion if possible
+If you find that
+DNS requests from certain programs (such as `curl`) are not being redirected,
+this may be caused by the NSS (Name Service Switch) mechanism.
+
+When programs use the NSS (Name Service Switch) functionality provided by libc
+for domain name resolution,
+they check the `hosts` line in the `/etc/nsswitch.conf` configuration file.
+In some distributions, this line contains a `resolve` entry before `dns`:
+
+```text
+hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
+```
+
+This `resolve` entry corresponds to `libnss-resolve.so` (an NSS plugin provided
+by systemd), which **connects directly to `systemd-resolved` via local socket**
+instead of sending DNS queries through the network stack.
+Therefore, these DNS requests completely bypass nftables rules
+and cannot be redirected by cgtproxy.
+
+> [!WARNING]
+> The following solution requires modifying system configuration.
+> Do NOT make this modification unless you understand
+> what it means and the potential consequences.
+
+Consider removing `resolve` from the `hosts` line in `/etc/nsswitch.conf`.
+This will make programs use standard DNS queries sent through the network stack,
+allowing them to be captured by netfilter rules.
+
+In most cases currently, this has the same effect as using the `resolve` plugin:
+when systemd-resolved is enabled, `/etc/resolv.conf` is taken over
+by systemd-resolved (usually pointing to `127.0.0.53`),
+so programs will still perform DNS resolution through systemd-resolved,
+but this time through the network stack.
