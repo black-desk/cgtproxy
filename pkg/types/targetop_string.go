@@ -19,8 +19,9 @@ const _TargetOp_name = "noopdroptproxydirect"
 var _TargetOp_index = [...]uint8{0, 4, 8, 14, 20}
 
 func (i TargetOp) String() string {
-	if i >= TargetOp(len(_TargetOp_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_TargetOp_index)-1 {
 		return "TargetOp(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _TargetOp_name[_TargetOp_index[i]:_TargetOp_index[i+1]]
+	return _TargetOp_name[_TargetOp_index[idx]:_TargetOp_index[idx+1]]
 }
