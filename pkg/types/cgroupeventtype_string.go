@@ -17,8 +17,9 @@ const _CgroupEventType_name = "NewDelete"
 var _CgroupEventType_index = [...]uint8{0, 3, 9}
 
 func (i CgroupEventType) String() string {
-	if i >= CgroupEventType(len(_CgroupEventType_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_CgroupEventType_index)-1 {
 		return "CgroupEventType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _CgroupEventType_name[_CgroupEventType_index[i]:_CgroupEventType_index[i+1]]
+	return _CgroupEventType_name[_CgroupEventType_index[idx]:_CgroupEventType_index[idx+1]]
 }
