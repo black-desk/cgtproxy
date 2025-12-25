@@ -8,7 +8,7 @@ go 1.24.0
 
 require (
 	github.com/black-desk/lib/go v0.0.0-20240826013949-6a950e6b19a1
-	github.com/go-playground/validator/v10 v10.30.0
+	github.com/go-playground/validator/v10 v10.30.1
 	github.com/google/nftables v0.3.0
 	github.com/onsi/ginkgo/v2 v2.27.3
 	github.com/onsi/gomega v1.38.3
