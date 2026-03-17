@@ -40,6 +40,9 @@ jobs:
 
           sudo apt update
           sudo apt install -y autoconf automake libtool
+
+          # https://stackoverflow.com/a/79780883
+          go env -w GOTOOLCHAIN=go1.25.0+auto
       - uses: black-desk/workflows/autotools@master
 
   autotools-debug:
@@ -55,6 +58,9 @@ jobs:
 
           sudo apt update
           sudo apt install -y autoconf automake libtool
+
+          # https://stackoverflow.com/a/79780883
+          go env -w GOTOOLCHAIN=go1.25.0+auto
       - uses: black-desk/workflows/autotools@master
         env:
           GO_TAGS: debug
