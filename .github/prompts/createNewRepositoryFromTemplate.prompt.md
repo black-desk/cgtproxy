@@ -1,1 +1,0 @@
-../../.prompts/github-copilot/createNewRepositoryFromTemplate.prompt.md
