@@ -6,6 +6,9 @@ package cgfsmon
 
 import (
 	"context"
+	"errors"
+	"io/fs"
+	"time"
 
 	"github.com/black-desk/cgtproxy/pkg/types"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -22,7 +25,30 @@ func (w *CGroupFSMonitor) RunCGroupMonitor(ctx context.Context) (err error) {
 	defer notify.Stop(w.eventsIn)
 	defer close(w.eventsIn)
 
-	err = notify.Watch(string(w.root)+"/...", w.eventsIn, notify.Create, notify.Remove)
+	// FIXME(workaround): during system startup, transient service cgroups
+	// (e.g. lm-sensors.service) may disappear while rjeczalik/notify's
+	// internal AddDir traverses the tree. The library does not tolerate
+	// this (see its TODO in node.go AddDir). Retrying gives the system
+	// time to settle.
+	const maxRetries = 3
+	for i := range maxRetries {
+		err = notify.Watch(string(w.root)+"/...", w.eventsIn, notify.Create, notify.Remove)
+		if err == nil {
+			break
+		}
+		if !errors.Is(err, fs.ErrNotExist) {
+			return
+		}
+		w.log.Infow("notify.Watch failed, retrying...",
+			"attempt", i+1,
+			"error", err,
+		)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second):
+		}
+	}
 	if err != nil {
 		return
 	}
