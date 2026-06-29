@@ -191,3 +191,79 @@ var _ = Describe("CGroupFSMonitor", func() {
 		})
 	})
 })
+
+// RunCGroupMonitor only does filesystem watching (inotify + walk), so it can
+// be exercised against a plain temp directory without privileges.
+var _ = Describe("RunCGroupMonitor", func() {
+	var (
+		root string
+		m    *CGroupFSMonitor
+
+		newPaths chan string
+		delPaths chan string
+	)
+
+	BeforeEach(func() {
+		var err error
+		root, err = os.MkdirTemp("", "cgfsmon-run-*")
+		Expect(err).ToNot(HaveOccurred())
+
+		m, err = New(WithCgroupRoot(config.CGroupRoot(root)))
+		Expect(err).ToNot(HaveOccurred())
+
+		// A collector drains the output channel so the monitor never blocks on
+		// a send, and records the paths it sees split by event type.
+		newPaths = make(chan string, 256)
+		delPaths = make(chan string, 256)
+	})
+
+	AfterEach(func() {
+		Expect(os.RemoveAll(root)).To(Succeed())
+	})
+
+	It("should emit the first-pass walk and live create/delete events", func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan error, 1)
+
+		// Pre-create a directory so the first-pass walk has something to report.
+		Expect(os.MkdirAll(filepath.Join(root, "existing"), 0o755)).To(Succeed())
+
+		go func() { done <- m.RunCGroupMonitor(ctx) }()
+
+		// Drain the monitor output in the background.
+		go func() {
+			for ev := range m.Events() {
+				for i := range ev.Events {
+					switch ev.Events[i].EventType {
+					case types.CgroupEventTypeNew:
+						select {
+						case newPaths <- ev.Events[i].Path:
+						default:
+						}
+					case types.CgroupEventTypeDelete:
+						select {
+						case delPaths <- ev.Events[i].Path:
+						default:
+						}
+					}
+				}
+			}
+		}()
+
+		By("reporting the pre-existing directory from the first-pass walk")
+		Eventually(newPaths).Should(Receive(Equal(filepath.Join(root, "existing"))))
+
+		By("reporting a directory created after startup")
+		created := filepath.Join(root, "created")
+		Expect(os.MkdirAll(created, 0o755)).To(Succeed())
+		Eventually(newPaths, "3s").Should(Receive(Equal(created)))
+
+		By("reporting a directory removed after startup")
+		Expect(os.Remove(created)).To(Succeed())
+		Eventually(delPaths, "3s").Should(Receive(Equal(created)))
+
+		By("stopping cleanly when the context is cancelled")
+		cancel()
+		Eventually(done, "3s").Should(Receive(MatchError(context.Canceled)))
+	})
+})
