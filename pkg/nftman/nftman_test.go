@@ -7,6 +7,7 @@ package nftman
 import (
 	"math/rand"
 	"os"
+	"strconv"
 	"syscall"
 	"testing"
 
@@ -16,6 +17,14 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+// pstr returns a pointer to the given string, for fields like DNSHijack.IP.
+func pstr(s string) *string { return &s }
+
+const needSandboxMessage = "" +
+	"Skip tests of core/table as it requires some capabilities. " +
+	"If you really want to run tests of this package, " +
+	"try run `make test` at the root directory of this repository."
 
 var _ = Describe("Netfliter table", Ordered, func() {
 	var (
@@ -28,11 +37,7 @@ var _ = Describe("Netfliter table", Ordered, func() {
 			return
 		}
 
-		Skip("" +
-			"Skip tests of core/table as it requires some capabilities. " +
-			"If you really want to run tests of this package, " +
-			"try run `make test` at the root directory of this repository.",
-		)
+		Skip(needSandboxMessage)
 	})
 
 	Context("created", func() {
@@ -129,20 +134,20 @@ var _ = Describe("Netfliter table", Ordered, func() {
 									"meta l4proto { tcp, udp } tproxy to :7895",
 								},
 							},
-							{
-								t: &config.TProxy{
-									Name:   "tproxy4",
-									NoUDP:  true,
-									NoIPv6: true,
-									Port:   7896,
-									Mark:   104,
-								},
-								expects: []string{
-									"chain tproxy4",
-									"meta l4proto tcp tproxy ip to :7896",
-								},
+						{
+							t: &config.TProxy{
+								Name:   "tproxy4",
+								NoUDP:  true,
+								NoIPv6: true,
+								Port:   7896,
+								Mark:   104,
 							},
-						}).WithFmt(),
+							expects: []string{
+								"chain tproxy4",
+								"meta l4proto tcp tproxy ip to :7896",
+							},
+						},
+					}).WithFmt(),
 						func(tps []*TproxyCase) {
 							BeforeEach(func() {
 								By("Initialize table with tproxies.", func() {
@@ -280,6 +285,80 @@ var _ = Describe("Netfliter table", Ordered, func() {
 				})
 			})
 	})
+})
+
+var _ = Describe("DNS hijack", Ordered, func() {
+	var (
+		nft        *NFTManager
+		cgroupRoot = os.Getenv("CGTPROXY_TEST_CGROUP_ROOT")
+	)
+
+	BeforeAll(func() {
+		if !(os.Geteuid() == 0 && os.Getenv("CGTPROXY_TEST_NFTMAN") == "1") {
+			Skip(needSandboxMessage)
+		}
+	})
+
+	BeforeEach(func() {
+		var err error
+		nft, err = injectedNFTManagerWithLastingConnector(config.CGroupRoot(cgroupRoot))
+		Expect(err).To(Succeed())
+
+		err = nft.InitStructure()
+		Expect(err).To(Succeed())
+	})
+
+	AfterEach(func() {
+		if nft != nil {
+			Expect(nft.Clear()).To(Succeed())
+		}
+	})
+
+	// A single entry runs both UDP-only and UDP+TCP hijacks together so we
+	// can also assert the mark-dns-vmap dispatch table in one ruleset.
+	ContextTable("with a DNS-hijacking tproxy (%s)",
+		ContextTableEntry([]*config.TProxy{
+			{Name: "dnsonly", Port: 7897, Mark: 105, DNSHijack: &config.DNSHijack{
+				IP: pstr("127.0.0.1"), Port: 5353,
+			}},
+		}).WithFmt("UDP only"),
+		ContextTableEntry([]*config.TProxy{
+			{Name: "dnstcp", Port: 7898, Mark: 106, DNSHijack: &config.DNSHijack{
+				IP: pstr("192.168.0.1"), Port: 5354, TCP: true,
+			}},
+		}).WithFmt("UDP + TCP"),
+		func(tps []*config.TProxy) {
+			var result string
+
+			BeforeEach(func() {
+				Expect(nft.AddChainAndRulesForTProxies(tps)).To(Succeed())
+				result = getNFTableRules()
+			})
+
+			It("should create a per-tproxy DNS chain", func() {
+				Expect(result).To(ContainSubstring("chain " + tps[0].Name + "-DNS"))
+			})
+
+			It("should wire the fwmark into the mark-dns-vmap", func() {
+				Expect(result).To(ContainSubstring("goto " + tps[0].Name + "-DNS"))
+			})
+
+			It("should emit a UDP dnat rule for :53", func() {
+				Expect(result).To(ContainSubstring(
+					"udp dport 53 dnat ip to " + *tps[0].DNSHijack.IP +
+						":" + strconv.Itoa(int(tps[0].DNSHijack.Port))))
+			})
+
+			It("should emit a TCP dnat rule only when TCP hijack is requested", func() {
+				tcpRule := "tcp dport 53 dnat ip to " + *tps[0].DNSHijack.IP +
+					":" + strconv.Itoa(int(tps[0].DNSHijack.Port))
+				if tps[0].DNSHijack.TCP {
+					Expect(result).To(ContainSubstring(tcpRule))
+				} else {
+					Expect(result).ToNot(ContainSubstring(tcpRule))
+				}
+			})
+		})
 })
 
 func TestTable(t *testing.T) {

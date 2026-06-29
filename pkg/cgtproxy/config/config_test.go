@@ -17,6 +17,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"gopkg.in/yaml.v3"
+	"go.uber.org/zap"
 )
 
 var _ = Describe("Configuration", func() {
@@ -103,3 +104,29 @@ func TestConfig(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Configuration Suite")
 }
+
+var _ = Describe("Rule.String", func() {
+	ContextTable("formatting a rule (%s)",
+		ContextTableEntry(&config.Rule{Match: "/drop/.*", Drop: true},
+			"rule [ match: /drop/.* | DROP ]").WithFmt("drop"),
+		ContextTableEntry(&config.Rule{Match: "/direct/.*", Direct: true},
+			"rule [ match: /direct/.* | DIRECT ]").WithFmt("direct"),
+		ContextTableEntry(&config.Rule{Match: "/proxy/.*", TProxy: "clash"},
+			"rule [ match: /proxy/.* | TPROXY clash ]").WithFmt("tproxy"),
+		func(rule *config.Rule, expected string) {
+			It("should render the expected string", func() {
+				Expect(rule.String()).To(Equal(expected))
+			})
+		})
+})
+
+var _ = Describe("WithLogger", func() {
+	It("should inject the given logger into the configuration", func() {
+		log := zap.NewExample().Sugar()
+		_, err := config.New(
+			config.WithContent([]byte(config.DefaultConfig)),
+			config.WithLogger(log),
+		)
+		Expect(err).ToNot(HaveOccurred())
+	})
+})
