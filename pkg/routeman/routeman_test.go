@@ -5,7 +5,9 @@
 package routeman
 
 import (
+	"context"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
@@ -14,6 +16,7 @@ import (
 	. "github.com/black-desk/lib/go/ginkgo-helper"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 )
 
@@ -282,5 +285,102 @@ var _ = Describe("RouteManager", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(injected))
 		})
+	})
+})
+
+// RunRouteManager drives real netlink (ip rule / ip route) on top of the
+// NFTManager interface, so it is exercised against the sandbox network
+// namespace with a fake NFTManager injected. This covers addRoute, addRule,
+// addRuleWithFamily, initializeNftableRuels, removeRoute, removeNftableRules
+// and the event loop.
+var _ = Describe("RunRouteManager (sandbox)", Ordered, func() {
+	BeforeAll(func() {
+		// Reuse the same gate as the nftman suite: it is set by `make test`
+		// inside a fresh user+network namespace with CAP_NET_ADMIN.
+		if !(os.Geteuid() == 0 && os.Getenv("CGTPROXY_TEST_NFTMAN") == "1") {
+			Skip("RunRouteManager needs the sandbox network namespace; run via `make test`")
+		}
+	})
+
+	var (
+		m   *RouteManager
+		nft *fakeNFTManager
+		ch  chan types.CGroupEvents
+
+		ctx        context.Context
+		cancel     context.CancelFunc
+		done       chan error
+		tearedDown bool
+	)
+
+	BeforeEach(func() {
+		// A fresh network namespace has its loopback interface down, which
+		// makes "ip route add local default dev lo" fail with "network is
+		// down". Bring it up to match a real system.
+		lo, err := netlink.LinkByName("lo")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(netlink.LinkSetUp(lo)).To(Succeed())
+
+		nft = &fakeNFTManager{}
+		ch = make(chan types.CGroupEvents)
+
+		m, err = New(
+			WithConfig(mustConfig(testConfigYAML)),
+			WithNFTMan(nft),
+			WithCGroupEventChan(ch),
+		)
+		Expect(err).ToNot(HaveOccurred())
+
+		ctx, cancel = context.WithCancel(context.Background())
+		done = make(chan error, 1)
+		tearedDown = false
+		go func() { done <- m.RunRouteManager(ctx) }()
+	})
+
+	AfterEach(func() {
+		if !tearedDown {
+			cancel()
+			close(ch)
+			Eventually(done, "5s").Should(Receive())
+		}
+	})
+
+	It("should install routes/rules during startup and tear them down on exit", func() {
+		By("initializing the nft structure and per-tproxy rules")
+		// initializeNftableRuels calls InitStructure + AddChainAndRulesForTProxies
+		// on the (fake) NFTManager before entering the event loop. Round-trip a
+		// sentinel event through the loop to synchronize on setup completion.
+		// The send runs in its own goroutine so a failed setup surfaces as a
+		// clear timeout instead of a deadlock.
+		result := make(chan error, 1)
+		go func() {
+			ch <- types.CGroupEvents{
+				Events: []types.CGroupEvent{{
+					Path:      "/user/proxy/app.service",
+					EventType: types.CgroupEventTypeNew,
+				}},
+				Result: result,
+			}
+		}()
+		Eventually(result, "5s").Should(Receive(BeNil()))
+
+		Expect(nft.inited).To(BeTrue())
+		Expect(nft.addedChains).To(HaveLen(1))
+		Expect(nft.addedRoutes).To(HaveLen(1))
+		Expect(nft.addedRoutes[0].Target.Op).To(Equal(types.TargetTProxy))
+
+		By("removing the nft table and routes when the loop exits")
+		// Closing the channel exits the for-range loop; cancelling the context
+		// unblocks the trailing <-ctx.Done(). Both are required.
+		close(ch)
+		cancel()
+		tearedDown = true
+
+		var err error
+		Eventually(done, "5s").Should(Receive(&err))
+		Expect(err).To(MatchError(context.Canceled))
+
+		Expect(nft.cleared).To(BeTrue())
+		Expect(nft.released).To(BeTrue())
 	})
 })
