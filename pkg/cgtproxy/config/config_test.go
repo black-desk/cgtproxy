@@ -16,8 +16,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"gopkg.in/yaml.v3"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 var _ = Describe("Configuration", func() {
