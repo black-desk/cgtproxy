@@ -42,7 +42,8 @@ v
 
 ## 更新NFTables规则
 
-与用C语言编写的`nft`用户空间工具不同，Google的golang nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须找出`nft`向netlink套接字写入的底层表达式。
+与用C语言编写的`nft`用户空间工具不同，Google的golang
+nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须找出`nft`向netlink套接字写入的底层表达式。
 
 参考该golang包作者的一个[评论]，我们可以使用`nft --debug all -f ...`来检查`nft`中发生了什么。
 

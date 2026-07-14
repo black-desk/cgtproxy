@@ -134,20 +134,20 @@ var _ = Describe("Netfliter table", Ordered, func() {
 									"meta l4proto { tcp, udp } tproxy to :7895",
 								},
 							},
-						{
-							t: &config.TProxy{
-								Name:   "tproxy4",
-								NoUDP:  true,
-								NoIPv6: true,
-								Port:   7896,
-								Mark:   104,
+							{
+								t: &config.TProxy{
+									Name:   "tproxy4",
+									NoUDP:  true,
+									NoIPv6: true,
+									Port:   7896,
+									Mark:   104,
+								},
+								expects: []string{
+									"chain tproxy4",
+									"meta l4proto tcp tproxy ip to :7896",
+								},
 							},
-							expects: []string{
-								"chain tproxy4",
-								"meta l4proto tcp tproxy ip to :7896",
-							},
-						},
-					}).WithFmt(),
+						}).WithFmt(),
 						func(tps []*TproxyCase) {
 							BeforeEach(func() {
 								By("Initialize table with tproxies.", func() {

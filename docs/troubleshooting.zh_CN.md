@@ -25,7 +25,6 @@ running filesystem watcher: context canceled
 2. 之前的cgtproxy没有正常退出，可能被SIG_KILL信号杀死。
 
    系统重启应该能解决这个问题，如果你不想重启，请按照以下说明操作：
-
    1. 检查具体发生了什么：
 
       ```bash
@@ -64,12 +63,9 @@ running filesystem watcher: context canceled
 
 你可能会观察到以下症状：
 
-1. 对于创建事件丢失：
-   某些cgroup存在但在nftables中没有对应的规则。
+1. 对于创建事件丢失：某些cgroup存在但在nftables中没有对应的规则。
 
-2. 对于删除事件丢失：
-   当运行`nft list ruleset`时，你可能会发现nftables中的规则引用了具有inode号码而不是路径的cgroup。
-   这是因为当cgroup路径在文件系统中不再存在时，内核只能提供inode号码。
+2. 对于删除事件丢失：当运行`nft list ruleset`时，你可能会发现nftables中的规则引用了具有inode号码而不是路径的cgroup。这是因为当cgroup路径在文件系统中不再存在时，内核只能提供inode号码。
 
 要检查是否遇到事件丢失：
 
@@ -99,28 +95,21 @@ Environment=CGTPROXY_MONITOR_BUFFER_SIZE=2048
 
 ## DNS 解析未被重定向
 
-如果你发现某些程序（如 `curl`）的 DNS 请求没有被重定向，
-这可能是NSS (Name Service Switch) 机制导致的。
+如果你发现某些程序（如 `curl`）的 DNS 请求没有被重定向，这可能是NSS (Name
+Service Switch) 机制导致的。
 
-当程序使用libc提供的NSS(Name Service Switch)功能进行域名解析时，
-会检查`/etc/nsswitch.conf`配置文件中的`hosts`行。
-在一些发行版中，这一行在`dns`之前包含一个`resolve`项：
+当程序使用libc提供的NSS(Name Service
+Switch)功能进行域名解析时，会检查`/etc/nsswitch.conf`配置文件中的`hosts`行。在一些发行版中，这一行在`dns`之前包含一个`resolve`项：
 
 ```
 hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
 ```
 
-这个`resolve`项对应`libnss-resolve.so`（由 systemd 提供的 NSS 插件），
-它**直接通过本地 socket 连接到 `systemd-resolved`**，而不是通过网络栈发送DNS查询。
-因此，这些DNS请求完全绕过了nftables规则，无法被cgtproxy重定向。
+这个`resolve`项对应`libnss-resolve.so`（由 systemd 提供的 NSS 插件），它**直接通过本地 socket 连接到
+`systemd-resolved`**，而不是通过网络栈发送DNS查询。因此，这些DNS请求完全绕过了nftables规则，无法被cgtproxy重定向。
 
-> [!WARNING]
-> 以下解决方案需要修改系统配置。除非你理解这样做的含义和潜在后果，否则不要进行此修改。
+> [!WARNING] 以下解决方案需要修改系统配置。除非你理解这样做的含义和潜在后果，否则不要进行此修改。
 
-可以考虑从`/etc/nsswitch.conf`的`hosts`行中移除`resolve`。
-这将使程序使用标准的DNS查询通过网络栈发送请求，从而可以被netfilter规则捕获。
+可以考虑从`/etc/nsswitch.conf`的`hosts`行中移除`resolve`。这将使程序使用标准的DNS查询通过网络栈发送请求，从而可以被netfilter规则捕获。
 
-目前在绝大多数情况下，这样做的效果与使用`resolve`插件是一样的：
-因为启用systemd-resolved的时候，`/etc/resolv.conf`会被systemd-resolved接管
-（通常是指向`127.0.0.53`），
-程序最终仍然会通过systemd-resolved进行DNS解析，只是会经过网络栈。
+目前在绝大多数情况下，这样做的效果与使用`resolve`插件是一样的：因为启用systemd-resolved的时候，`/etc/resolv.conf`会被systemd-resolved接管（通常是指向`127.0.0.53`），程序最终仍然会通过systemd-resolved进行DNS解析，只是会经过网络栈。

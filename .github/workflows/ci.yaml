@@ -10,7 +10,7 @@ on:
     branches:
       - master
   schedule:
-    - cron: '0 0 * * 0' # Every Sunday at midnight UTC
+    - cron: "0 0 * * 0" # Every Sunday at midnight UTC
   workflow_dispatch:
 
 jobs:
@@ -18,6 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: black-desk/workflows/generic@master
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: black-desk/workflows/format@master
 
   go:
     permissions:
@@ -79,6 +84,7 @@ jobs:
     if: always()
     needs:
       - generic
+      - format
       - go
       - autotools
       - autotools-debug
