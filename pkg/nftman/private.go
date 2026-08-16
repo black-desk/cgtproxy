@@ -915,7 +915,7 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 			Kind: expr.VerdictReturn,
 		}
 
-	case types.TargetTProxy:
+	case types.TargetTProxy, types.TargetGateway:
 		setElement.VerdictData = &expr.Verdict{
 			Kind:  expr.VerdictGoto,
 			Chain: target.Chain,

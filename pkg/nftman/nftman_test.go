@@ -421,6 +421,35 @@ var _ = Describe("Gateways", Ordered, func() {
 						fmt.Sprintf("0x%08x :", gw.Mark)))
 				}
 			})
+
+			Context("then add a cgroup routed to a gateway", func() {
+				BeforeEach(func() {
+					By("Add a cgroup route for a gateway target.", func() {
+						err := os.MkdirAll(cgroupRoot+"/test/gw", 0755)
+						Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
+
+						err = nft.AddRoutes([]types.Route{{
+							Path: cgroupRoot + "/test/gw",
+							Target: types.Target{
+								Op:    types.TargetGateway,
+								Chain: gws[0].Name + "-MARK",
+							},
+						}})
+						Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
+					})
+				})
+
+				AfterEach(func() {
+					Expect(syscall.Rmdir(cgroupRoot + "/test/gw")).To(Succeed())
+					Expect(syscall.Rmdir(cgroupRoot + "/test")).To(Succeed())
+				})
+
+				It("should route the cgroup to the gateway mark chain", func() {
+					result = getNFTableRules()
+					Expect(result).To(ContainSubstring("test/gw"))
+					Expect(result).To(ContainSubstring("goto " + gws[0].Name + "-MARK"))
+				})
+			})
 		})
 })
 
