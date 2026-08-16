@@ -60,6 +60,7 @@ Currently supported targets include:
 - `DIRECT` (direct connection)
 - `DROP` (drop packets)
 - [`TPROXY`][TPROXY]
+- `GATEWAY` (route to a specific next-hop gateway, which does transparent proxy)
 
 [TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
 

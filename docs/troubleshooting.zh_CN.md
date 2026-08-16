@@ -57,6 +57,16 @@ running filesystem watcher: context canceled
       sudo nft delete table inet cgtproxy
       ```
 
+   如果你还配置了网关，也需要删除它们对应的规则和路由。每个网关按名字排序
+   依次使用 `route-table + 1`、`route-table + 2`……，mark 在配置的 `gateways`
+   段里：
+
+      ```bash
+      # 对每个 mark 为 <mark>、表号为 <table> 的网关：
+      sudo ip rule del fwmark <mark> lookup <table>
+      sudo ip route del table <table> default via <gateway-ip> dev <dev>
+      ```
+
 ## 事件丢失
 
 如果你注意到某些cgroup事件没有被cgtproxy捕获，可能是由于文件系统监视器中的事件丢失。当事件接收器处理事件的速度太慢时就会发生这种情况。

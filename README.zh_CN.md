@@ -50,6 +50,7 @@ SPDX-License-Identifier: MIT
 - `DIRECT`（直连）
 - `DROP`（丢弃）
 - [`TPROXY`][TPROXY]
+- `GATEWAY`（路由到指定的下一跳网关，由网关自行做透明代理）
 
 [TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
 

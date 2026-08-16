@@ -36,11 +36,31 @@ tproxies:
       ip: 127.0.0.1
       port: 53
 
+# Route traffic of a cgroup to a specific next-hop gateway,
+# which is expected to do transparent proxy by itself.
+# Each gateway gets a route table allocated automatically:
+# route-table + 1, route-table + 2, ... in gateway name order.
+# The mark must be unique among all tproxies and gateways.
+#
+# gateway requires:
+#   ip:  the address of the next-hop gateway (IPv4 or IPv6).
+#        Only the family of this address is routed to the gateway;
+#        traffic of the other family is sent directly.
+#   dev: the network interface used to reach the gateway.
+#   mark: the fwmark used to select the route table of this gateway.
+#
+# gateways:
+#   home-router:
+#     ip: 192.168.1.1
+#     dev: eth0
+#     mark: 4000
+
 # Rules are matched in order.
 # `match` is an regex to match the cgroup path.
 # `direct` means the traffic will not be redirect to any TPROXY server;
 # `drop` means the traffic will be drop;
 # `tproxy` means the traffic will be redirect to that TPROXY server.
+# `gateway` means the traffic will be routed to that next-hop gateway.
 #
 # NOTE: You can use systemd-cgls to check the cgroup layout on your system.
 #
@@ -86,6 +106,16 @@ rules:
   - match: |-
       \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-proxy\.slice\/.*
     tproxy: clash-meta
+
+  # Route traffic in the cgtproxy-gateway.slice to the gateway above.
+  #
+  # NOTE: The route table of a gateway only contains the default route
+  #       via the gateway, so traffic to loopback or local addresses
+  #       from a gateway-matched cgroup must be covered by `bypass`,
+  #       otherwise it will be sent to the gateway as well.
+  # - match: |-
+  #     \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-gateway\.slice\/.*
+  #   gateway: home-router
 
   # Application related rules:
   # To make these rules working across desktop environments,
