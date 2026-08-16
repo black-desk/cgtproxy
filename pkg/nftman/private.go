@@ -538,14 +538,14 @@ func (nft *NFTManager) lastIP(ipnet *net.IPNet) (ret net.IP) {
 	return
 }
 
-func (t *NFTManager) addMarkChainForTProxy(
-	conn *nftables.Conn, tp *config.TProxy,
+func (t *NFTManager) addMarkChain(
+	conn *nftables.Conn, name string, mark config.FireWallMark,
 ) (
 	ret *nftables.Chain, err error,
 ) {
 	chain := &nftables.Chain{
 		Table: t.table,
-		Name:  tp.Name + "-MARK",
+		Name:  name + "-MARK",
 	}
 
 	conn.AddChain(chain)
@@ -556,7 +556,7 @@ func (t *NFTManager) addMarkChainForTProxy(
 		&expr.Immediate{ // immediate reg 1 ...
 			Register: 1,
 			Data: binaryutil.NativeEndian.PutUint32(
-				uint32(tp.Mark),
+				uint32(mark),
 			),
 		},
 		&expr.Meta{

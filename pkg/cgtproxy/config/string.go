@@ -16,6 +16,9 @@ func (r *Rule) String() string {
 	} else if r.TProxy != "" {
 		return fmt.Sprintf("rule [ match: %s | TPROXY %s ]",
 			r.Match, r.TProxy)
+	} else if r.Gateway != "" {
+		return fmt.Sprintf("rule [ match: %s | GATEWAY %s ]",
+			r.Match, r.Gateway)
 	}
 
 	panic("this should never happened")

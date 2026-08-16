@@ -12,11 +12,12 @@ func _() {
 	_ = x[TargetDrop-1]
 	_ = x[TargetTProxy-2]
 	_ = x[TargetDirect-3]
+	_ = x[TargetGateway-4]
 }
 
-const _TargetOp_name = "noopdroptproxydirect"
+const _TargetOp_name = "noopdroptproxydirectgateway"
 
-var _TargetOp_index = [...]uint8{0, 4, 8, 14, 20}
+var _TargetOp_index = [...]uint8{0, 4, 8, 14, 20, 27}
 
 func (i TargetOp) String() string {
 	idx := int(i) - 0
