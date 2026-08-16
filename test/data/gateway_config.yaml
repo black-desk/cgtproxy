@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+version: 1
+cgroup-root: AUTO
+route-table: 300
+
+tproxies:
+  clash:
+    port: 7893
+    mark: 4000
+
+gateways:
+  router:
+    ip: 192.168.1.1
+    dev: eth0
+    mark: 5000
+  router6:
+    ip: 2001:db8::1
+    dev: eth1
+    mark: 5001
+
+rules:
+  - match: /user.slice/*proxy*.service/*
+    tproxy: clash
+  - match: /user.slice/*via-router*.service/*
+    gateway: router
+  - match: /user.slice/*via-router6*.service/*
+    gateway: router6
