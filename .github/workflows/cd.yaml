@@ -5,14 +5,13 @@
 name: Continuous deployment
 
 on:
-  push:
-    tags:
-      - v*-*
-    branches:
-      - master
+  workflow_call:
 
 jobs:
   goreleaser:
+    concurrency:
+      group: cgtproxy-release
+      cancel-in-progress: false
     permissions:
       contents: write
     runs-on: ubuntu-latest

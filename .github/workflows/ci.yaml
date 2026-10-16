@@ -94,3 +94,10 @@ jobs:
         uses: re-actors/alls-green@release/v1
         with:
           jobs: ${{ toJSON(needs) }}
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: pass
+    permissions:
+      contents: write
+    uses: ./.github/workflows/cd.yaml
