@@ -294,6 +294,20 @@ Netfilter documentation:
 
 If you need any of the above features, pull requests are welcome.
 
+## Releases
+
+`Makefile`'s `PROJECT_VERSION` drives both stable and prerelease versions.
+Commit a version change (for example, `0.3.4` or `0.3.4-rc.1`) to `master`.
+After the same commit passes CI's `pass` job, CI calls the reusable
+`.github/workflows/cd.yaml` workflow. GoReleaser creates and pushes the matching
+`v` tag and publishes a GitHub Release; `release.prerelease: auto` marks RC
+versions as prereleases. Do not create release tags manually.
+
+Release jobs run one at a time. An unchanged version tagged at another commit is
+skipped. If publication fails after tagging, use **Re-run failed jobs** on the
+original CI run to retry that commit. PR checks, scheduled checks, and manual CI
+runs do not publish releases.
+
 ## License
 
 Unless otherwise stated, the code in this project is open source under the GNU
