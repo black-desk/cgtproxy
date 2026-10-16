@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net"
 	"os"
+	"sort"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/types"
@@ -30,8 +31,21 @@ func (m *RouteManager) initializeNftableRuels() (err error) {
 		return
 	}
 
+	err = m.nft.AddChainAndRulesForGateways(maps.Values(m.cfg.Gateways))
+	if err != nil {
+		return
+	}
+
 	for _, tp := range m.cfg.TProxies {
 		err = m.addRule(tp.Mark)
+		if err != nil {
+			return
+		}
+	}
+
+	for name := range m.cfg.Gateways {
+		gw := m.cfg.Gateways[name]
+		err = m.addGatewayRule(gw, m.gatewayTable[name])
 		if err != nil {
 			return
 		}
@@ -75,12 +89,12 @@ func (m *RouteManager) removeNftableRules() {
 }
 
 func (m *RouteManager) addRuleWithFamily(
-	mark config.FireWallMark, family int,
+	mark config.FireWallMark, table, family int,
 ) (err error) {
 	rule := netlink.NewRule()
 	rule.Family = family
 	rule.Mark = uint32(mark)
-	rule.Table = m.cfg.RouteTable
+	rule.Table = table
 
 	err = netlink.RuleAdd(rule)
 	if errors.Is(err, os.ErrExist) {
@@ -105,13 +119,13 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 	)
 
 	// ip rule add fwmark <mark> lookup <table>
-	err = m.addRuleWithFamily(mark, netlink.FAMILY_V4)
+	err = m.addRuleWithFamily(mark, m.cfg.RouteTable, netlink.FAMILY_V4)
 	if err != nil {
 		return
 	}
 
 	// ip -6 rule add fwmark <mark> lookup <table>
-	err = m.addRuleWithFamily(mark, netlink.FAMILY_V6)
+	err = m.addRuleWithFamily(mark, m.cfg.RouteTable, netlink.FAMILY_V6)
 	if err != nil {
 		m.log.Errorw(
 			"Failed to add ipv6 rule.",
@@ -125,6 +139,34 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 	}
 
 	return
+}
+
+func (m *RouteManager) addGatewayRule(
+	gw *config.Gateway, table int,
+) (err error) {
+	defer Wrap(&err, "add route rule")
+
+	m.log.Infow("Adding route rule.",
+		"gateway", gw.Name,
+		"mark", gw.Mark,
+		"table", table,
+	)
+
+	// ip rule add fwmark <mark> lookup <table>
+	err = m.addRuleWithFamily(gw.Mark, table, ipFamily(gw.IP))
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func ipFamily(ip string) int {
+	if net.ParseIP(ip).To4() != nil {
+		return netlink.FAMILY_V4
+	}
+
+	return netlink.FAMILY_V6
 }
 
 func (m *RouteManager) addRoute() (err error) {
@@ -169,6 +211,74 @@ func (m *RouteManager) addRoute() (err error) {
 	}
 
 	return
+}
+
+func (m *RouteManager) addGatewayRoutes() (err error) {
+	defer Wrap(&err, "add gateway routes")
+
+	names := maps.Keys(m.cfg.Gateways)
+	sort.Strings(names)
+
+	for _, name := range names {
+		gw := m.cfg.Gateways[name]
+
+		err = m.addGatewayRoute(gw, m.gatewayTable[name])
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func (m *RouteManager) addGatewayRoute(
+	gw *config.Gateway, table int,
+) (err error) {
+	defer Wrap(&err, "add route")
+
+	m.log.Infow("Adding route.",
+		"gateway", gw.Name,
+		"table", table,
+	)
+
+	var iface *net.Interface
+	iface, err = net.InterfaceByName(gw.Dev)
+	if err != nil {
+		return
+	}
+
+	var cidr *net.IPNet
+	_, cidr, err = net.ParseCIDR(defaultCidr(gw.IP))
+	if err != nil {
+		return
+	}
+
+	route := &netlink.Route{
+		LinkIndex: iface.Index,
+		Dst:       cidr,
+		Gw:        net.ParseIP(gw.IP),
+		Table:     table,
+		// Treat the gateway as directly reachable through Dev,
+		// so no recursive lookup for the gateway is required.
+		Flags: unix.RTNH_F_ONLINK,
+	}
+
+	err = netlink.RouteAdd(route)
+	if err != nil {
+		return
+	}
+
+	m.route = append(m.route, route)
+
+	return
+}
+
+func defaultCidr(ip string) string {
+	if net.ParseIP(ip).To4() != nil {
+		return "0.0.0.0/0"
+	}
+
+	return "0::0/0"
 }
 
 func (m *RouteManager) removeRoute() {

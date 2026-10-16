@@ -24,6 +24,7 @@ var _ = Describe("Configuration", func() {
 	ContextTable("load from valid configuration (%s)",
 		ContextTableEntry("../../../misc/config/example.yaml"),
 		ContextTableEntry("../../../test/data/example_config.yaml"),
+		ContextTableEntry("../../../test/data/gateway_config.yaml"),
 		func(path string) {
 			var (
 				err     error
@@ -100,6 +101,91 @@ var _ = Describe("Configuration", func() {
 		})
 })
 
+var _ = Describe("Gateway validation", func() {
+	Context("with a rule referencing an unknown gateway", func() {
+		It("should fail", func() {
+			content := []byte(`
+version: 1
+cgroup-root: AUTO
+route-table: 300
+rules:
+  - match: /.*
+    gateway: does-not-exist
+`)
+			_, err := config.New(config.WithContent(content))
+			Expect(err).To(MatchError(ContainSubstring("unknown gateway")))
+		})
+	})
+
+	Context("with a tproxy and a gateway sharing a mark", func() {
+		It("should fail", func() {
+			content := []byte(`
+version: 1
+cgroup-root: AUTO
+route-table: 300
+tproxies:
+  clash:
+    port: 7893
+    mark: 4000
+gateways:
+  router:
+    ip: 192.168.1.1
+    dev: eth0
+    mark: 4000
+rules:
+  - match: /.*
+    tproxy: clash
+`)
+			_, err := config.New(config.WithContent(content))
+			Expect(err).To(MatchError(ContainSubstring("shares the same mark")))
+		})
+	})
+
+	Context("with a rule using both tproxy and gateway", func() {
+		It("should fail", func() {
+			content := []byte(`
+version: 1
+cgroup-root: AUTO
+route-table: 300
+tproxies:
+  clash:
+    port: 7893
+    mark: 4000
+gateways:
+  router:
+    ip: 192.168.1.1
+    dev: eth0
+    mark: 5000
+rules:
+  - match: /.*
+    tproxy: clash
+    gateway: router
+`)
+			_, err := config.New(config.WithContent(content))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("with a gateway missing the mark", func() {
+		It("should fail", func() {
+			content := []byte(`
+version: 1
+cgroup-root: AUTO
+route-table: 300
+gateways:
+  router:
+    ip: 192.168.1.1
+    dev: eth0
+rules:
+  - match: /.*
+    gateway: router
+`)
+			_, err := config.New(config.WithContent(content))
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})
+
 func TestConfig(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Configuration Suite")
@@ -113,6 +199,8 @@ var _ = Describe("Rule.String", func() {
 			"rule [ match: /direct/.* | DIRECT ]").WithFmt("direct"),
 		ContextTableEntry(&config.Rule{Match: "/proxy/.*", TProxy: "clash"},
 			"rule [ match: /proxy/.* | TPROXY clash ]").WithFmt("tproxy"),
+		ContextTableEntry(&config.Rule{Match: "/gw/.*", Gateway: "router"},
+			"rule [ match: /gw/.* | GATEWAY router ]").WithFmt("gateway"),
 		func(rule *config.Rule, expected string) {
 			It("should render the expected string", func() {
 				Expect(rule.String()).To(Equal(expected))

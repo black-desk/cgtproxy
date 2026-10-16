@@ -174,7 +174,7 @@ func (nft *NFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) (err er
 			"tproxy", tp,
 		)
 
-		_, err = nft.addMarkChainForTProxy(conn, tp)
+		_, err = nft.addMarkChain(conn, tp.Name, tp.Mark)
 		if err != nil {
 			return
 		}
@@ -215,6 +215,48 @@ func (nft *NFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) (err er
 
 	nft.log.Debug("Chain and rules added for these tproxies.",
 		"tproxies", tps,
+	)
+
+	nft.dumpNFTableRules()
+
+	return
+}
+
+func (nft *NFTManager) AddChainAndRulesForGateways(gws []*config.Gateway) (err error) {
+	if len(gws) == 0 {
+		return
+	}
+
+	defer Wrap(
+		&err,
+		"add chain and rules to nft table for gateways %#v",
+		gws,
+	)
+
+	var conn *nftables.Conn
+	conn, err = nft.connector.Connect()
+	if err != nil {
+		return
+	}
+
+	for _, gw := range gws {
+		nft.log.Debugw("Generating chain and rules for gateway.",
+			"gateway", gw,
+		)
+
+		_, err = nft.addMarkChain(conn, gw.Name, gw.Mark)
+		if err != nil {
+			return
+		}
+	}
+
+	err = conn.Flush()
+	if err != nil {
+		return
+	}
+
+	nft.log.Debug("Chain and rules added for these gateways.",
+		"gateways", gws,
 	)
 
 	nft.dumpNFTableRules()

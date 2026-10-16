@@ -65,6 +65,16 @@ The "file exists" is error message of EEXIST, which means that:
       sudo nft delete table inet cgtproxy
       ```
 
+   If you also configured gateways, remove their rules and routes too. Each
+   gateway uses `route-table + 1`, `route-table + 2`, ... in gateway name
+   order, and its mark is configured in the `gateways` section:
+
+   ```bash
+   # For each gateway with mark <mark> and table <table>:
+   sudo ip rule del fwmark <mark> lookup <table>
+   sudo ip route del table <table> default via <gateway-ip> dev <dev>
+   ```
+
 ## Event Loss
 
 If you notice that some cgroup events are not being captured by cgtproxy, it

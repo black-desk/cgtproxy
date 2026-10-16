@@ -6,6 +6,7 @@ package routeman
 
 import (
 	"regexp"
+	"sort"
 
 	"github.com/black-desk/cgtproxy/pkg/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/pkg/interfaces"
@@ -13,6 +14,7 @@ import (
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
+	"golang.org/x/exp/maps"
 )
 
 type RouteManager struct {
@@ -26,6 +28,11 @@ type RouteManager struct {
 		reg    *regexp.Regexp
 		target types.Target
 	}
+
+	// gatewayTable stores the route table assigned to each gateway.
+	// Tables are allocated from RouteTable + 1 in gateway name order,
+	// so that multiple gateways never share one table.
+	gatewayTable map[string]int
 
 	rule  []*netlink.Rule
 	route []*netlink.Route
@@ -68,6 +75,10 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 			matcher.target.Op = types.TargetTProxy
 			matcher.target.Chain =
 				m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
+		} else if m.cfg.Rules[i].Gateway != "" {
+			matcher.target.Op = types.TargetGateway
+			matcher.target.Chain =
+				m.cfg.Gateways[m.cfg.Rules[i].Gateway].Name
 		} else {
 			panic("this should never happened.")
 		}
@@ -77,6 +88,13 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 		}
 
 		m.matchers = append(m.matchers, &matcher)
+	}
+
+	m.gatewayTable = map[string]int{}
+	names := maps.Keys(m.cfg.Gateways)
+	sort.Strings(names)
+	for i, name := range names {
+		m.gatewayTable[name] = m.cfg.RouteTable + i + 1
 	}
 
 	ret = m

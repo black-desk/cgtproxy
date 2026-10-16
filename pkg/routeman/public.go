@@ -21,6 +21,11 @@ func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 		return
 	}
 
+	err = m.addGatewayRoutes()
+	if err != nil {
+		return
+	}
+
 	defer m.removeNftableRules()
 	err = m.initializeNftableRuels()
 	if err != nil {

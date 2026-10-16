@@ -7,10 +7,11 @@ package types
 type TargetOp uint32
 
 const (
-	TargetNoop   TargetOp = iota // noop
-	TargetDrop                   // drop
-	TargetTProxy                 //tproxy
-	TargetDirect                 //direct
+	TargetNoop    TargetOp = iota // noop
+	TargetDrop                    // drop
+	TargetTProxy                  //tproxy
+	TargetDirect                  //direct
+	TargetGateway                 //gateway
 )
 
 //go:generate go run golang.org/x/tools/cmd/stringer -type=TargetOp -linecomment
