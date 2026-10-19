@@ -46,8 +46,11 @@ PREROUTING excludes connection replies, local destinations, non-unicast traffic,
 and destinations in `bypass` before processing TCP/UDP. The root proxy's
 `no-udp` and `no-ipv6` settings apply; a configured IPv4 DNS hijack still
 handles UDP 53. DNS DNAT runs before TPROXY and clears the proxy mark so the
-packet is routed to the DNS destination. Redirecting forwarded DNS to
-`127.0.0.1` requires `route_localnet` on the incoming interface, for example
+packet is routed to the DNS destination. Later packets skip marking only when
+their original port is 53 and their DNAT destination matches the selected
+proxy's DNS configuration. Other DNAT connections continue to follow their
+cgroup or root target. Redirecting forwarded DNS to `127.0.0.1` requires
+`route_localnet` on the incoming interface, for example
 `net.ipv4.conf.docker0.route_localnet=1`. Alternatively, use a DNS address
 reachable from that interface.
 

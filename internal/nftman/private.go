@@ -257,16 +257,6 @@ func (nft *NFTManager) fillOutputMangleChain(
 		Exprs: exprs,
 	})
 
-	// NAT rules run only on a connection's first packet. Do not mark later
-	// packets again after DNS DNAT has already selected their destination.
-	nft.addReturnRule(conn, chain,
-		&expr.Ct{Register: 1, Key: expr.CtKeySTATUS},
-		&expr.Bitwise{SourceRegister: 1, DestRegister: 1, Len: 4,
-			Mask: binaryutil.NativeEndian.PutUint32(1 << 5), // IPS_DST_NAT
-			Xor:  binaryutil.NativeEndian.PutUint32(0)},
-		&expr.Cmp{Op: expr.CmpOpNeq, Register: 1, Data: binaryutil.NativeEndian.PutUint32(0)},
-	)
-
 	// ip daddr @bypass return
 	exprs = []expr.Any{
 		&expr.Meta{ // meta load nfproto => reg 1
@@ -564,6 +554,7 @@ func (t *NFTManager) addMarkChainForTProxy(
 
 	conn.AddChain(chain)
 	t.addProxyProtocolGuards(conn, chain, tp)
+	t.addDNSHijackGuard(conn, chain, tp)
 
 	// meta mark set ...
 

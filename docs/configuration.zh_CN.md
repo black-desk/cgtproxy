@@ -34,7 +34,7 @@ rules:
 PREROUTING 中先跳过连接回复、访问本机地址、非单播流量，以及目的地址命中 `bypass`
 的流量，再处理 TCP/UDP。代理目标的 `no-udp` 和 `no-ipv6`
 也适用于根目标；配置的 IPv4 DNS 劫持仍可处理 UDP
-53。DNS 劫持在 TPROXY 前执行 DNAT，并清除代理标记，以按 DNS 目标地址正常路由。当转发流量的 DNS 被重定向到
+53。DNS 劫持在 TPROXY 前执行 DNAT，并清除代理标记，以按 DNS 目标地址正常路由。后续报文只有在原始目标端口为 53、且 DNAT 目标与所选代理的 DNS 配置一致时才跳过打标；其他 DNAT 连接仍按 cgroup 或根目标处理。当转发流量的 DNS 被重定向到
 `127.0.0.1` 时，需要在入接口启用 `route_localnet`，例如
 `net.ipv4.conf.docker0.route_localnet=1`。也可以使用能够从该接口访问的 DNS 地址。
 
