@@ -37,7 +37,7 @@ func (m *RouteManager) initializeNftableRuels() (err error) {
 		}
 	}
 
-	return
+	return m.nft.SetRootTarget(m.targetForPath("/"))
 }
 
 func (m *RouteManager) removeNftableRules() {
@@ -198,21 +198,7 @@ func (m *RouteManager) handleNewCgroups(paths []string) (err error) {
 			"path", path,
 		)
 
-		var target types.Target
-		for i := range m.matchers {
-			if !m.matchers[i].reg.Match([]byte(path)) {
-				continue
-			}
-
-			m.log.Debugw("Rule found for this cgroup",
-				"cgroup", path,
-				"rule", m.cfg.Rules[i].String(),
-			)
-
-			target = m.matchers[i].target
-
-			break
-		}
+		target := m.targetForPath(path)
 
 		if target.Op == types.TargetNoop {
 			m.log.Debugw("No rule match this cgroup",
@@ -234,6 +220,19 @@ func (m *RouteManager) handleNewCgroups(paths []string) (err error) {
 	}
 
 	return
+}
+
+func (m *RouteManager) targetForPath(path string) types.Target {
+	for i := range m.matchers {
+		if m.matchers[i].reg.MatchString(path) {
+			m.log.Debugw("Rule found for this cgroup",
+				"cgroup", path,
+				"rule", m.cfg.Rules[i].String(),
+			)
+			return m.matchers[i].target
+		}
+	}
+	return types.Target{}
 }
 
 func (m *RouteManager) handleDeleteCgroups(paths []string) (err error) {

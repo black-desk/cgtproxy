@@ -17,7 +17,7 @@ import (
 )
 
 func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
-	if len(routes) == 0 {
+	if len(routes) == 0 && nft.outputRootReady {
 		return
 	}
 
@@ -49,9 +49,11 @@ func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
 
 	nft.log.Debugw("new cgroup map elements", "value", tmpCGroupMapElement)
 
-	err = conn.SetAddElements(nft.cgroupMap, elements)
-	if err != nil {
-		return
+	if len(elements) != 0 {
+		err = conn.SetAddElements(nft.cgroupMap, elements)
+		if err != nil {
+			return
+		}
 	}
 
 	tmp := map[int]struct{}{}
@@ -84,6 +86,7 @@ func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
 			return
 		}
 	}
+	nft.addRootFallback(conn, nft.outputMangleChain)
 
 	err = conn.Flush()
 	if err != nil {
@@ -91,6 +94,7 @@ func (nft *NFTManager) AddRoutes(routes []types.Route) (err error) {
 	}
 
 	nft.cgroupMapElement = tmpCGroupMapElement
+	nft.outputRootReady = true
 
 	nft.log.Infow("New cgroup routes added to nft.",
 		"size", len(routes),
@@ -202,6 +206,7 @@ func (nft *NFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) (err er
 				return
 			}
 		}
+		nft.tproxies[tp.Name+"-MARK"] = tp
 
 		nft.log.Debug("Chain and rules generated for this tproxy.",
 			"tproxy", tp,
@@ -305,6 +310,9 @@ func (nft *NFTManager) InitStructure() (err error) {
 	}
 
 	nft.policy = nftables.ChainPolicyAccept
+	nft.tproxies = make(map[string]*config.TProxy)
+	nft.outputRootReady = false
+	nft.rootChain = conn.AddChain(&nftables.Chain{Table: nft.table, Name: "cgroup-root"})
 
 	err = nft.initOutputMangleChain(conn)
 	if err != nil {
@@ -317,6 +325,11 @@ func (nft *NFTManager) InitStructure() (err error) {
 	}
 
 	err = nft.initPreroutingChain(conn)
+	if err != nil {
+		return
+	}
+
+	err = nft.initForwardingChains(conn)
 	if err != nil {
 		return
 	}

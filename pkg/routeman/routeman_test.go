@@ -32,9 +32,11 @@ type fakeNFTManager struct {
 	removedPaths []string
 	addedChains  []*config.TProxy
 
-	inited   bool
-	cleared  bool
-	released bool
+	inited        bool
+	cleared       bool
+	released      bool
+	rootTarget    types.Target
+	rootTargetSet bool
 
 	initStructureErr error
 	addChainErr      error
@@ -76,6 +78,11 @@ func (f *fakeNFTManager) Release() error {
 	return f.releaseErr
 }
 
+func (f *fakeNFTManager) SetRootTarget(target types.Target) error {
+	f.rootTarget, f.rootTargetSet = target, true
+	return nil
+}
+
 // mustConfig builds a validated *config.Config from raw YAML, panicking the
 // spec on failure.
 func mustConfig(yamlContent string) *config.Config {
@@ -102,6 +109,28 @@ rules:
 `
 
 var _ = Describe("RouteManager", func() {
+	DescribeTable("selecting the root cgroup target",
+		func(rules []config.Rule, expected types.Target) {
+			cfg := mustConfig(testConfigYAML)
+			cfg.Rules = rules
+			m, err := New(WithConfig(cfg), WithNFTMan(&fakeNFTManager{}))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(m.targetForPath("/")).To(Equal(expected))
+		},
+		Entry("uses the catch-all proxy", []config.Rule{
+			{Match: `/system\.slice/.*`, Direct: true},
+			{Match: `/.*`, TProxy: "clash"},
+		}, types.Target{Op: types.TargetTProxy, Chain: "clash-MARK"}),
+		Entry("supports an explicit direct root", []config.Rule{
+			{Match: `^/$`, Direct: true}, {Match: `/.*`, TProxy: "clash"},
+		}, types.Target{Op: types.TargetDirect}),
+		Entry("supports a drop root", []config.Rule{{Match: `^/$`, Drop: true}}, types.Target{Op: types.TargetDrop}),
+		Entry("keeps the first matching target", []config.Rule{
+			{Match: `/.*`, TProxy: "clash"}, {Match: `^/$`, Direct: true},
+		}, types.Target{Op: types.TargetTProxy, Chain: "clash-MARK"}),
+		Entry("does nothing without a root match", []config.Rule{{Match: `^/app/`, Drop: true}}, types.Target{}),
+	)
+
 	Describe("construction via New", func() {
 		Context("with a missing required dependency", func() {
 			It("should fail when the NFT manager is nil", func() {
@@ -365,6 +394,8 @@ var _ = Describe("RunRouteManager (sandbox)", Ordered, func() {
 		Eventually(result, "5s").Should(Receive(BeNil()))
 
 		Expect(nft.inited).To(BeTrue())
+		Expect(nft.rootTargetSet).To(BeTrue())
+		Expect(nft.rootTarget).To(Equal(types.Target{}))
 		Expect(nft.addedChains).To(HaveLen(1))
 		Expect(nft.addedRoutes).To(HaveLen(1))
 		Expect(nft.addedRoutes[0].Target.Op).To(Equal(types.TargetTProxy))
