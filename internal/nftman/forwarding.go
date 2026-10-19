@@ -5,6 +5,8 @@
 package nftman
 
 import (
+	"net"
+
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
@@ -87,6 +89,38 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn) error {
 		}),
 	})
 	return nil
+}
+
+func (nft *NFTManager) addDNSHijackGuard(conn *nftables.Conn, chain *nftables.Chain, tp *config.TProxy) {
+	if tp.DNSHijack == nil {
+		return
+	}
+	// NAT chains only run on the first packet. Skip marking subsequent DNS
+	// packets only when the original port and translated resolver match this
+	// proxy's DNS hijack. Other DNAT connections must still be marked on every
+	// packet. Reading the conntrack tuples also avoids reserving a ct mark.
+	filters := []expr.Any{
+		&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
+		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.NFPROTO_IPV4}},
+		&expr.Ct{Register: 1, Key: expr.CtKeySTATUS},
+		&expr.Bitwise{SourceRegister: 1, DestRegister: 1, Len: 4,
+			Mask: binaryutil.NativeEndian.PutUint32(1 << 5), // IPS_DST_NAT
+			Xor:  binaryutil.NativeEndian.PutUint32(0)},
+		&expr.Cmp{Op: expr.CmpOpNeq, Register: 1, Data: binaryutil.NativeEndian.PutUint32(0)},
+		&expr.Ct{Register: 1, Key: expr.CtKeyPROTODST},
+		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: binaryutil.BigEndian.PutUint16(53)},
+		&expr.Ct{Register: 1, Key: expr.CtKeySRC, Direction: ctReplyDirection}, // reply source is the DNAT destination
+		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: net.ParseIP(*tp.DNSHijack.IP).To4()},
+		&expr.Ct{Register: 1, Key: expr.CtKeyPROTOSRC, Direction: ctReplyDirection},
+		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: binaryutil.BigEndian.PutUint16(tp.DNSHijack.Port)},
+	}
+	if !tp.DNSHijack.TCP {
+		filters = append(filters,
+			&expr.Meta{Key: expr.MetaKeyL4PROTO, Register: 1},
+			&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.IPPROTO_UDP}},
+		)
+	}
+	nft.addReturnRule(conn, chain, filters...)
 }
 
 // Excluded protocols must bypass marking as well as TPROXY dispatch.

@@ -167,7 +167,7 @@ stop_cgtproxy() {
 probe() {
 	local source=$1 network=$2 address=$3 expect=$4 before
 	local command=("$FIXTURE_BIN" client -network "$network" -address "$address" -expect "$expect")
-	if [[ $expect == proxy || $expect == second ]]; then command+=(-destination "$address"); fi
+	if [[ $expect == proxy || $expect == second || -n ${5:-} ]]; then command+=(-destination "${5:-$address}"); fi
 	if [[ $expect == drop ]]; then before=$(cat "$CASE_WORK"/*.receipts | wc -l); fi
 	if [[ $source == forwarded ]]; then
 		nsenter -t "$client_ns" -n "${command[@]}"
