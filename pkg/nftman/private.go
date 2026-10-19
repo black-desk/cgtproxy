@@ -207,7 +207,7 @@ func (nft *NFTManager) initMarkDNSMap(conn *nftables.Conn) (err error) {
 }
 
 func (nft *NFTManager) initOutputMangleChain(conn *nftables.Conn) (err error) {
-	// type filter hook prerouting priority mangle; policy accept;
+	// type route hook output priority mangle; policy accept;
 	nft.outputMangleChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
 		Name:     "output-mangle",
@@ -221,6 +221,8 @@ func (nft *NFTManager) initOutputMangleChain(conn *nftables.Conn) (err error) {
 	if err != nil {
 		return
 	}
+	// AddRoutes installs the fallback atomically with the first cgroup scan,
+	// after explicit proxy-daemon exclusions are available.
 
 	return
 }
@@ -399,7 +401,7 @@ func (nft *NFTManager) initOutputNATChain(conn *nftables.Conn) (err error) {
 }
 
 func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
-	// type route hook output priority mangle; policy accept;
+	// type filter hook prerouting priority mangle; policy accept;
 	nft.preroutingChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
 		Name:     "prerouting",
@@ -719,6 +721,8 @@ func (t *NFTManager) addDNSChainForTproxy(
 	}()
 
 	exprs := []expr.Any{
+		&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
+		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.NFPROTO_IPV4}},
 		&expr.Meta{ // meta load l4proto => reg 1
 			Key:      expr.MetaKeyL4PROTO,
 			Register: 1,
@@ -740,6 +744,9 @@ func (t *NFTManager) addDNSChainForTproxy(
 			Register: 1,
 			Data:     binaryutil.BigEndian.PutUint16(53),
 		},
+		// DNAT chooses the DNS destination; do not route it back into TPROXY.
+		&expr.Immediate{Register: 1, Data: binaryutil.NativeEndian.PutUint32(0)},
+		&expr.Meta{Key: expr.MetaKeyMARK, SourceRegister: true, Register: 1},
 		&expr.Immediate{ // immediate reg 1 xxx
 			Register: 1,
 			Data:     net.ParseIP(*tp.DNSHijack.IP).To4(),
@@ -768,6 +775,8 @@ func (t *NFTManager) addDNSChainForTproxy(
 	}
 
 	exprs = []expr.Any{
+		&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
+		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.NFPROTO_IPV4}},
 		&expr.Meta{ // meta load l4proto => reg 1
 			Key:      expr.MetaKeyL4PROTO,
 			Register: 1,
@@ -790,6 +799,8 @@ func (t *NFTManager) addDNSChainForTproxy(
 			Register: 1,
 			Data:     binaryutil.BigEndian.PutUint16(53),
 		},
+		&expr.Immediate{Register: 1, Data: binaryutil.NativeEndian.PutUint32(0)},
+		&expr.Meta{Key: expr.MetaKeyMARK, SourceRegister: true, Register: 1},
 		&expr.Immediate{ // immediate reg 1 xxx
 			Register: 1,
 			Data:     net.ParseIP(*tp.DNSHijack.IP).To4(),

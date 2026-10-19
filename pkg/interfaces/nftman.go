@@ -15,4 +15,5 @@ type NFTManager interface {
 	InitStructure() error
 	Release() error
 	RemoveRoutes([]string) error
+	SetRootTarget(types.Target) error
 }

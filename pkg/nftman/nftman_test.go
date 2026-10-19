@@ -345,12 +345,12 @@ var _ = Describe("DNS hijack", Ordered, func() {
 
 			It("should emit a UDP dnat rule for :53", func() {
 				Expect(result).To(ContainSubstring(
-					"udp dport 53 dnat ip to " + *tps[0].DNSHijack.IP +
+					"udp dport 53 meta mark set 0x00000000 dnat ip to " + *tps[0].DNSHijack.IP +
 						":" + strconv.Itoa(int(tps[0].DNSHijack.Port))))
 			})
 
 			It("should emit a TCP dnat rule only when TCP hijack is requested", func() {
-				tcpRule := "tcp dport 53 dnat ip to " + *tps[0].DNSHijack.IP +
+				tcpRule := "tcp dport 53 meta mark set 0x00000000 dnat ip to " + *tps[0].DNSHijack.IP +
 					":" + strconv.Itoa(int(tps[0].DNSHijack.Port))
 				if tps[0].DNSHijack.TCP {
 					Expect(result).To(ContainSubstring(tcpRule))

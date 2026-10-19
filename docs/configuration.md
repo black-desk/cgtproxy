@@ -19,3 +19,41 @@ You can refer to the [example configuration](../misc/config/example.yaml) and
 [GoDoc][godoc].
 
 [godoc]: https://pkg.go.dev/github.com/black-desk/cgtproxy
+
+## Root cgroup and forwarded traffic
+
+The path `/` is matched against `rules` in order. The first match selects the
+root cgroup target, shared by the fallback for local traffic and traffic
+forwarded through this host from Docker bridge containers, VMs, or LAN devices.
+It supports `direct`, `drop`, and `tproxy`. With no root match, forwarding is
+left unchanged. Explicit local cgroup decisions take precedence over the root
+fallback.
+
+For example, place this rule before other rules to keep forwarded traffic direct
+while configuring local applications with subsequent rules:
+
+```yaml
+rules:
+  - match: "^/$"
+    direct: true
+  # Other application rules...
+```
+
+A catch-all `match: '/.*'` also matches the root path and therefore controls
+forwarded traffic. Forwarded packets cannot be matched against the sending
+process's cgroup; all forwarding sources share the root target. No `gateway`
+configuration field is needed.
+
+PREROUTING excludes connection replies, local destinations, non-unicast traffic,
+and destinations in `bypass` before processing TCP/UDP. The root proxy's
+`no-udp` and `no-ipv6` settings apply; a configured IPv4 DNS hijack still
+handles UDP 53. DNS DNAT runs before TPROXY and clears the proxy mark so the
+packet is routed to the DNS destination. Redirecting forwarded DNS to
+`127.0.0.1` requires `route_localnet` on the incoming interface, for example
+`net.ipv4.conf.docker0.route_localnet=1`. Alternatively, use a DNS address
+reachable from that interface.
+
+cgtproxy does not change forwarding sysctls, interface settings, or other
+firewall rules. The network administrator supplies IP forwarding, firewall
+permissions, and any NAT needed for direct forwarding; Docker usually configures
+these.
