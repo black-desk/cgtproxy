@@ -6,7 +6,7 @@
 # I use it to show how to use cgtproxy with clash-meta.
 #
 # Further configuration documentation can be found at
-# https://godoc.org/github.com/black-desk/cgtproxy/pkg/cgtproxy/config
+# See docs/configuration.md and internal/cgtproxy/config/config.go.
 
 version: 1
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"

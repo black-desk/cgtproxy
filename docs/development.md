@@ -22,14 +22,10 @@ the [wire.go] file to figure out how this application is constructed.
 
 [wire]: https://github.com/google/wire
 [dependency injection]: https://en.wikipedia.org/wiki/Dependency_injection
-[wire.go]: ../cmd/cgtproxy/cmd/wire.go
+[wire.go]: ../internal/cmd/wire.go
 
-Dependency injection is also used in tests, check [this](../pkg/nftman/wire.go).
-
-All dependency of cgtproxy is exported as interface in [the interfaces package],
-you are welcome to replace them with your own implementation.
-
-[the interfaces package]: ../pkg/interfaces
+Implementation packages live in `internal/` and are private to cgtproxy.
+Internal interfaces organize components and do not form a public library API.
 
 The basic workflow of cgtproxy:
 
@@ -38,13 +34,13 @@ fs notifier [github.com/rjeczalik/notify]
 |
 | new inotify event
 v
-cgroup monitor [github.com/black-desk/cgtproxy/pkg/cgfsmon]
+cgroup monitor [github.com/black-desk/cgtproxy/internal/cgfsmon]
 |
 | cgroup event
 v
-route manager [github.com/black-desk/cgtproxy/pkg/routeman]
+route manager [github.com/black-desk/cgtproxy/internal/routeman]
 |
-| update nft, use nftman [github.com/black-desk/cgtproxy/pkg/nftman]
+| update nft, use nftman [github.com/black-desk/cgtproxy/internal/nftman]
 v
 netfilter framework in kernel
 ```

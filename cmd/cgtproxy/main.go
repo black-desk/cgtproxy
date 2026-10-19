@@ -4,7 +4,7 @@
 
 package main
 
-import "github.com/black-desk/cgtproxy/cmd/cgtproxy/cmd"
+import "github.com/black-desk/cgtproxy/internal/cmd"
 
 func main() {
 	cmd.Execute()

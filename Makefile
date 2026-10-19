@@ -39,7 +39,7 @@ PROJECT_SEMVER_GENERATED_FROM_GIT_DESCRIBE = $(shell \
 )
 
 # Integrate version string into golang -ldflags
-GO_VERSION_PACKAGE = github.com/black-desk/cgtproxy/cmd/cgtproxy/cmd
+GO_VERSION_PACKAGE = github.com/black-desk/cgtproxy/internal/cmd
 _GO_LDFLAGS += -X '$(GO_VERSION_PACKAGE).Version=v$(PROJECT_SEMVER_GENERATED_FROM_GIT_DESCRIBE)'
 _GO_LDFLAGS += -X '$(GO_VERSION_PACKAGE).GitDescription=$(PROJECT_GIT_DESCRIBE)'
 
@@ -64,44 +64,29 @@ generate:
 	$(GO) mod tidy
 
 
-# We will create new cgroup dir in our tests,
-# while current cgroup might not be owned by the user running test.
-# That means by default, we should create new cgroup by systemd-run
-# and run test in that cgroup.
-SYSTEMD_RUN ?= systemd-run --user -d -P -t -q
-
-UNSHARE ?= unshare -U -C -m -n --map-user=0 --
-
-CGROUPFS ?= /tmp/io.github.black-desk.cgtproxy-test/cgroupfs
-
+# Run each end-to-end case in a delegated cgroup and isolated namespaces.
+SYSTEMD_RUN ?= systemd-run --user -d -P -q
+TEST_BUILD_DIR ?= $(CURDIR)/.test
 GO_COVERAGE_PROFILE ?= coverage.txt
+E2E_CASE ?=
 
 .PHONY: test
 test:
-	# NOTE:
-	# Build tests but not run them.
-	# Then you can run them without internet access.
-	# The __SHOULD_NEVER_MATCH__ idea comes from
-	# https://stackoverflow.com/a/72722257/13206417
-	$(GO) test ./... \
+	mkdir -p -- "$(TEST_BUILD_DIR)" "$$(dirname -- "$(GO_COVERAGE_PROFILE)")"
+	$(GO) build -cover -coverpkg=./cmd/...,./internal/... -covermode=atomic \
 		-ldflags "$(_GO_LDFLAGS) $(GO_LDFLAGS)" \
 		-tags="$(_GO_TAGS),$(GO_TAGS)" \
-		-run=__SHOULD_NEVER_MATCH__
-
-	mkdir -p -- $(shell dirname -- "$(GO_COVERAGE_PROFILE)")
-	mkdir -p -- $(CGROUPFS)
-
-	$(SYSTEMD_RUN) $(UNSHARE) $(SHELL) -c "\
-		mount --make-rprivate / && \
-		mount -t cgroup2 none $(CGROUPFS) && \
-		export CGTPROXY_TEST_CGROUP_ROOT=$(CGROUPFS) && \
-		export CGTPROXY_TEST_NFTMAN=1 && \
-		export PATH=$(PATH) && \
-		$(GO) test ./... -v --ginkgo.vv \
-			-coverprofile=\"$(GO_COVERAGE_PROFILE)\" \
-			-ldflags \"$(_GO_LDFLAGS) $(GO_LDFLAGS)\" \
-			-tags=\"$(_GO_TAGS),$(GO_TAGS)\" \
-		"
+		-o "$(TEST_BUILD_DIR)/cgtproxy" $(GO_MAIN_PACKAGE_DIR)
+	$(GO) build -o "$(TEST_BUILD_DIR)/fixture" ./test/e2e/fixture
+	# Building from GOROOT also supports toolchain downloads without covdata installed.
+	$(GO) build -o "$(TEST_BUILD_DIR)/covdata" cmd/covdata
+	set -e; \
+		coverage_dir=$$(mktemp -d "$(TEST_BUILD_DIR)/coverage.XXXXXX"); \
+		status=0; \
+		$(SYSTEMD_RUN) env PATH="$(PATH)" E2E_CASE="$(E2E_CASE)" \
+			bash test/e2e/run.sh "$(TEST_BUILD_DIR)/cgtproxy" "$(TEST_BUILD_DIR)/fixture" "$$coverage_dir" || status=$$?; \
+		"$(TEST_BUILD_DIR)/covdata" textfmt -i="$$coverage_dir" -o="$(GO_COVERAGE_PROFILE)"; \
+		exit "$$status"
 
 .PHONY: install-bin
 install-bin:

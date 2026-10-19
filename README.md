@@ -89,8 +89,7 @@ Currently supported targets include:
      systemctl restart cgtproxy.service
      ```
 
-[default configuration]:
-  https://pkg.go.dev/github.com/black-desk/cgtproxy/pkg/cgtproxy/config#pkg-constants
+[default configuration]: ./internal/cgtproxy/config/consts.go
 [configuration guide]: ./docs/configuration.md
 
 ## Tips
@@ -256,11 +255,10 @@ limitations:
 
 Project documentation:
 
-- [GoDoc][godoc]
+- [Development notes](./docs/development.md)
 - [GitHub Wiki][github-wiki]
 - [![DeepWiki][badge-deepwiki]][deepwiki]
 
-[godoc]: https://pkg.go.dev/github.com/black-desk/cgtproxy
 [github-wiki]: https://github.com/black-desk/cgtproxy/wiki
 [badge-deepwiki]: https://deepwiki.com/badge.svg
 [deepwiki]: https://deepwiki.com/black-desk/cgtproxy

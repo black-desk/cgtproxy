@@ -45,7 +45,7 @@ jobs:
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
           sudo apt update
-          sudo apt install -y autoconf automake libtool
+          sudo apt install -y autoconf automake libtool iproute2 nftables util-linux procps
 
       - uses: actions/setup-go@v7
         with:
@@ -54,6 +54,13 @@ jobs:
           cache-dependency-path: ${{ github.workspace }}/go.sum
 
       - uses: black-desk/workflows/autotools@master
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-logs
+          path: .test/results.*/
+          include-hidden-files: true
 
   autotools-debug:
     permissions:
@@ -67,7 +74,7 @@ jobs:
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
           sudo apt update
-          sudo apt install -y autoconf automake libtool
+          sudo apt install -y autoconf automake libtool iproute2 nftables util-linux procps
 
       - uses: actions/setup-go@v7
         with:
@@ -78,6 +85,13 @@ jobs:
       - uses: black-desk/workflows/autotools@master
         env:
           GO_TAGS: debug
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-debug-logs
+          path: .test/results.*/
+          include-hidden-files: true
 
   pass:
     name: pass
