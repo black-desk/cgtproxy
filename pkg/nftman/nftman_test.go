@@ -5,6 +5,7 @@
 package nftman
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 	"strconv"
@@ -357,6 +358,97 @@ var _ = Describe("DNS hijack", Ordered, func() {
 				} else {
 					Expect(result).ToNot(ContainSubstring(tcpRule))
 				}
+			})
+		})
+})
+
+var _ = Describe("Gateways", Ordered, func() {
+	var (
+		nft        *NFTManager
+		cgroupRoot = os.Getenv("CGTPROXY_TEST_CGROUP_ROOT")
+	)
+
+	BeforeAll(func() {
+		if !(os.Geteuid() == 0 && os.Getenv("CGTPROXY_TEST_NFTMAN") == "1") {
+			Skip(needSandboxMessage)
+		}
+	})
+
+	BeforeEach(func() {
+		var err error
+		nft, err = injectedNFTManagerWithLastingConnector(config.CGroupRoot(cgroupRoot))
+		Expect(err).To(Succeed())
+
+		err = nft.InitStructure()
+		Expect(err).To(Succeed())
+	})
+
+	AfterEach(func() {
+		if nft != nil {
+			Expect(nft.Clear()).To(Succeed())
+		}
+	})
+
+	ContextTable("with some gateways (%s)",
+		ContextTableEntry([]*config.Gateway{
+			{Name: "gw1", IP: "10.0.0.1", Dev: "eth0", Mark: 200},
+			{Name: "gw2", IP: "2001:db8::1", Dev: "eth1", Mark: 201},
+		}).WithFmt("v4 + v6"),
+		func(gws []*config.Gateway) {
+			var result string
+
+			BeforeEach(func() {
+				By("Initialize table with gateways.", func() {
+					Expect(nft.AddChainAndRulesForGateways(gws)).To(Succeed(),
+						"nft:\n%s", getNFTableRules())
+				})
+				result = getNFTableRules()
+			})
+
+			It("should create a mark chain per gateway", func() {
+				for _, gw := range gws {
+					Expect(result).To(ContainSubstring("chain " + gw.Name + "-MARK"))
+					Expect(result).To(ContainSubstring(
+						fmt.Sprintf("meta mark set 0x%08x", gw.Mark)))
+				}
+			})
+
+			It("should not create tproxy chains or wire gateway marks into mark-vmap", func() {
+				Expect(result).ToNot(ContainSubstring("tproxy to :"))
+				for _, gw := range gws {
+					Expect(result).ToNot(ContainSubstring("chain " + gw.Name + " {"))
+					Expect(result).ToNot(ContainSubstring(
+						fmt.Sprintf("0x%08x :", gw.Mark)))
+				}
+			})
+
+			Context("then add a cgroup routed to a gateway", func() {
+				BeforeEach(func() {
+					By("Add a cgroup route for a gateway target.", func() {
+						err := os.MkdirAll(cgroupRoot+"/test/gw", 0755)
+						Expect(err).To(Or(Succeed(), MatchError(os.ErrExist)))
+
+						err = nft.AddRoutes([]types.Route{{
+							Path: cgroupRoot + "/test/gw",
+							Target: types.Target{
+								Op:    types.TargetGateway,
+								Chain: gws[0].Name + "-MARK",
+							},
+						}})
+						Expect(err).To(Succeed(), "nft:\n%s", getNFTableRules())
+					})
+				})
+
+				AfterEach(func() {
+					Expect(syscall.Rmdir(cgroupRoot + "/test/gw")).To(Succeed())
+					Expect(syscall.Rmdir(cgroupRoot + "/test")).To(Succeed())
+				})
+
+				It("should route the cgroup to the gateway mark chain", func() {
+					result = getNFTableRules()
+					Expect(result).To(ContainSubstring("test/gw"))
+					Expect(result).To(ContainSubstring("goto " + gws[0].Name + "-MARK"))
+				})
 			})
 		})
 })

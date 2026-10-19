@@ -9,6 +9,7 @@ import (
 
 // NFTManager is an interface generated for "github.com/black-desk/cgtproxy/pkg/nftman.NFTManager".
 type NFTManager interface {
+	AddChainAndRulesForGateways([]*config.Gateway) error
 	AddChainAndRulesForTProxies([]*config.TProxy) error
 	AddRoutes([]types.Route) error
 	Clear() error

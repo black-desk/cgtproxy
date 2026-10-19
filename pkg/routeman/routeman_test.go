@@ -28,9 +28,10 @@ func TestRouteManager(t *testing.T) {
 // fakeNFTManager is a test double for interfaces.NFTManager that records
 // every call instead of touching the kernel.
 type fakeNFTManager struct {
-	addedRoutes  []types.Route
-	removedPaths []string
-	addedChains  []*config.TProxy
+	addedRoutes   []types.Route
+	removedPaths  []string
+	addedChains   []*config.TProxy
+	addedGateways []*config.Gateway
 
 	inited   bool
 	cleared  bool
@@ -38,6 +39,7 @@ type fakeNFTManager struct {
 
 	initStructureErr error
 	addChainErr      error
+	addGatewaysErr   error
 	addRoutesErr     error
 	removeRoutesErr  error
 	clearErr         error
@@ -54,6 +56,11 @@ func (f *fakeNFTManager) InitStructure() error {
 func (f *fakeNFTManager) AddChainAndRulesForTProxies(tps []*config.TProxy) error {
 	f.addedChains = append(f.addedChains, tps...)
 	return f.addChainErr
+}
+
+func (f *fakeNFTManager) AddChainAndRulesForGateways(gws []*config.Gateway) error {
+	f.addedGateways = append(f.addedGateways, gws...)
+	return f.addGatewaysErr
 }
 
 func (f *fakeNFTManager) AddRoutes(routes []types.Route) error {
@@ -92,9 +99,16 @@ tproxies:
   clash:
     port: 7893
     mark: 520
+gateways:
+  router:
+    ip: 10.0.0.1
+    dev: lo
+    mark: 521
 rules:
   - match: .*proxy.*
     tproxy: clash
+  - match: .*gateway.*
+    gateway: router
   - match: .*direct.*
     direct: true
   - match: .*drop.*
@@ -128,7 +142,16 @@ var _ = Describe("RouteManager", func() {
 				)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(m).ToNot(BeNil())
-				Expect(m.matchers).To(HaveLen(3))
+				Expect(m.matchers).To(HaveLen(4))
+			})
+
+			It("should assign gateway tables after the base route table", func() {
+				m, err := New(
+					WithConfig(mustConfig(testConfigYAML)),
+					WithNFTMan(&fakeNFTManager{}),
+				)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(m.gatewayTable).To(Equal(map[string]int{"router": 301}))
 			})
 
 			It("should accept a non-nil event channel", func() {
@@ -191,6 +214,8 @@ var _ = Describe("RouteManager", func() {
 		ContextTable("matching cgroup path %q",
 			ContextTableEntry("/user/proxy/app.service",
 				types.TargetTProxy, "clash-MARK").WithFmt("/user/proxy/app.service"),
+			ContextTableEntry("/user/gateway/app.service",
+				types.TargetGateway, "router-MARK").WithFmt("/user/gateway/app.service"),
 			ContextTableEntry("/user/direct/app.service",
 				types.TargetDirect, "").WithFmt("/user/direct/app.service"),
 			ContextTableEntry("/user/drop/app.service",
@@ -366,8 +391,34 @@ var _ = Describe("RunRouteManager (sandbox)", Ordered, func() {
 
 		Expect(nft.inited).To(BeTrue())
 		Expect(nft.addedChains).To(HaveLen(1))
+		Expect(nft.addedGateways).To(HaveLen(1))
 		Expect(nft.addedRoutes).To(HaveLen(1))
 		Expect(nft.addedRoutes[0].Target.Op).To(Equal(types.TargetTProxy))
+
+		By("installing the gateway ip rule and route")
+		gatewayRulePresent := func() bool {
+			rules, err := netlink.RuleList(netlink.FAMILY_V4)
+			Expect(err).ToNot(HaveOccurred())
+			for i := range rules {
+				if rules[i].Mark == 521 && rules[i].Table == 301 {
+					return true
+				}
+			}
+			return false
+		}
+		Expect(gatewayRulePresent()).To(BeTrue())
+
+		lo, err := netlink.LinkByName("lo")
+		Expect(err).ToNot(HaveOccurred())
+		routes, err := netlink.RouteListFiltered(
+			netlink.FAMILY_V4,
+			&netlink.Route{Table: 301},
+			netlink.RT_FILTER_TABLE,
+		)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(routes).To(HaveLen(1))
+		Expect(routes[0].Gw.String()).To(Equal("10.0.0.1"))
+		Expect(routes[0].LinkIndex).To(Equal(lo.Attrs().Index))
 
 		By("removing the nft table and routes when the loop exits")
 		// Closing the channel exits the for-range loop; cancelling the context
@@ -376,11 +427,19 @@ var _ = Describe("RunRouteManager (sandbox)", Ordered, func() {
 		cancel()
 		tearedDown = true
 
-		var err error
 		Eventually(done, "5s").Should(Receive(&err))
 		Expect(err).To(MatchError(context.Canceled))
 
 		Expect(nft.cleared).To(BeTrue())
 		Expect(nft.released).To(BeTrue())
+
+		Expect(gatewayRulePresent()).To(BeFalse())
+		routes, err = netlink.RouteListFiltered(
+			netlink.FAMILY_V4,
+			&netlink.Route{Table: 301},
+			netlink.RT_FILTER_TABLE,
+		)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(routes).To(BeEmpty())
 	})
 })

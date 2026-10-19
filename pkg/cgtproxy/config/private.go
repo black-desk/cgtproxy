@@ -56,6 +56,85 @@ func (c *Config) check() (err error) {
 		}
 	}
 
+	if c.Gateways == nil {
+		c.Gateways = map[string]*Gateway{}
+	}
+
+	for name := range c.Gateways {
+		gw := c.Gateways[name]
+		if gw.Name == "" {
+			gw.Name = name
+		}
+	}
+
+	err = c.checkRuleReferences()
+	if err != nil {
+		return
+	}
+
+	err = c.checkMarkUniqueness()
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (c *Config) checkRuleReferences() (err error) {
+	for i := range c.Rules {
+		rule := &c.Rules[i]
+
+		if rule.TProxy != "" {
+			if _, ok := c.TProxies[rule.TProxy]; !ok {
+				err = fmt.Errorf(
+					"rule %d references unknown tproxy %q",
+					i, rule.TProxy,
+				)
+				return
+			}
+		}
+
+		if rule.Gateway != "" {
+			if _, ok := c.Gateways[rule.Gateway]; !ok {
+				err = fmt.Errorf(
+					"rule %d references unknown gateway %q",
+					i, rule.Gateway,
+				)
+				return
+			}
+		}
+	}
+
+	return
+}
+
+func (c *Config) checkMarkUniqueness() (err error) {
+	marks := make(map[FireWallMark]string, len(c.TProxies)+len(c.Gateways))
+
+	for name := range c.TProxies {
+		mark := c.TProxies[name].Mark
+		if prev, ok := marks[mark]; ok {
+			err = fmt.Errorf(
+				"tproxy %q shares the same mark %d with %s",
+				name, mark, prev,
+			)
+			return
+		}
+		marks[mark] = "tproxy " + name
+	}
+
+	for name := range c.Gateways {
+		mark := c.Gateways[name].Mark
+		if prev, ok := marks[mark]; ok {
+			err = fmt.Errorf(
+				"gateway %q shares the same mark %d with %s",
+				name, mark, prev,
+			)
+			return
+		}
+		marks[mark] = "gateway " + name
+	}
+
 	return
 }
 
