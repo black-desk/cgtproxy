@@ -79,8 +79,7 @@ SPDX-License-Identifier: MIT
      systemctl restart cgtproxy.service
      ```
 
-[默认配置]:
-  https://pkg.go.dev/github.com/black-desk/cgtproxy/pkg/cgtproxy/config#pkg-constants
+[默认配置]: ./internal/cgtproxy/config/consts.go
 [配置指南]: ./docs/configuration.zh_CN.md
 
 ## 技巧
@@ -219,11 +218,10 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 
 项目文档：
 
-- [GoDoc][godoc]
+- [开发说明](./docs/development.zh_CN.md)
 - [GitHub Wiki][github-wiki]
 - [![DeepWiki][badge-deepwiki]][deepwiki]
 
-[godoc]: https://pkg.go.dev/github.com/black-desk/cgtproxy
 [github-wiki]: https://github.com/black-desk/cgtproxy/wiki
 [badge-deepwiki]: https://deepwiki.com/badge.svg
 [deepwiki]: https://deepwiki.com/black-desk/cgtproxy

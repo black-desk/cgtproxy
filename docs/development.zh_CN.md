@@ -14,13 +14,10 @@ SPDX-License-Identifier: MIT
 
 [wire]: https://github.com/google/wire
 [依赖注入]: https://en.wikipedia.org/wiki/Dependency_injection
-[wire.go]: ../cmd/cgtproxy/cmd/wire.go
+[wire.go]: ../internal/cmd/wire.go
 
-测试中也使用了依赖注入，请查看[这里](../pkg/nftman/wire.go)。
-
-cgtproxy的所有依赖都以接口的形式导出在[接口包]中，欢迎你用自己的实现来替换它们。
-
-[接口包]: ../pkg/interfaces
+所有实现包位于
+`internal/`，仅供 cgtproxy 自身使用。内部接口用于组织组件，不作为公开的库 API。
 
 cgtproxy的基本工作流程：
 
@@ -29,13 +26,13 @@ cgtproxy的基本工作流程：
 |
 | 新的inotify事件
 v
-cgroup监视器 [github.com/black-desk/cgtproxy/pkg/cgfsmon]
+cgroup监视器 [github.com/black-desk/cgtproxy/internal/cgfsmon]
 |
 | cgroup事件
 v
-路由管理器 [github.com/black-desk/cgtproxy/pkg/routeman]
+路由管理器 [github.com/black-desk/cgtproxy/internal/routeman]
 |
-| 更新nft，使用nftman [github.com/black-desk/cgtproxy/pkg/nftman]
+| 更新nft，使用nftman [github.com/black-desk/cgtproxy/internal/nftman]
 v
 内核中的netfilter框架
 ```

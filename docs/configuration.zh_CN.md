@@ -8,9 +8,7 @@ SPDX-License-Identifier: MIT
 
 [en](./configuration.md) | zh_CN
 
-你可以参考[示例配置](../misc/config/example.yaml)以及[GoDoc][godoc]。
-
-[godoc]: https://pkg.go.dev/github.com/black-desk/cgtproxy
+你可以参考[示例配置](../misc/config/example.yaml)以及[配置字段定义](../internal/cgtproxy/config/config.go)。
 
 ## 根 cgroup 和转发流量
 

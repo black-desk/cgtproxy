@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+version: 1
+cgroup-root: AUTO
+route-table: 31300
+rules:
+  - match: "/.*"
+    direct: true

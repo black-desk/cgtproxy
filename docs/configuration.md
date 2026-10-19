@@ -16,9 +16,7 @@ en | [zh_CN](./configuration.zh_CN.md)
 > may contain errors.
 
 You can refer to the [example configuration](../misc/config/example.yaml) and
-[GoDoc][godoc].
-
-[godoc]: https://pkg.go.dev/github.com/black-desk/cgtproxy
+[configuration fields](../internal/cgtproxy/config/config.go).
 
 ## Root cgroup and forwarded traffic
 

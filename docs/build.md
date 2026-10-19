@@ -30,8 +30,38 @@ project.
 
 ## Testing
 
-To avoid breaking nft configuration, a large portion of tests should run in a
-network namespace. `make test` will create a network namespace and set an
-environment variable to enable these tests. You can check the
-[Makefile](../Makefile) and [test source code](../pkg/nftman/nftman_test.go) for
-details.
+`make test` builds the complete cgtproxy executable with coverage and runs the
+[end-to-end cases](../test/e2e/cases). Each case consists of `config.yaml` and
+`test.sh` and runs in isolated user, mount, network, PID, and cgroup namespaces.
+Every case runs with and without netlink socket reuse.
+
+Tests require Linux, cgroup v2, a working systemd user session, Go, Bash,
+iproute2, nftables, util-linux, and procps. `systemd-run --user` supplies a
+writable delegated cgroup. The system must allow unprivileged user namespaces;
+CI configures this permission.
+
+```sh
+make test
+make test E2E_CASE=gateway-proxy
+make test GO_TAGS=debug
+```
+
+The test network contains a simulated host, a client attached through a bridge,
+and a separate origin-server network namespace. The test proxy returns its
+identity, the original destination, and the request payload so clients can
+distinguish interception from direct access. Drop checks require both a timeout
+and no server receipt. Cases also verify dynamic cgroup changes and removal of
+nft tables, policy rules, and routes on graceful shutdown.
+
+Logs, server receipts, and network snapshots on failure are saved in
+`.test/results.*`; raw coverage is saved in `.test/coverage.*`. `GOCOVERDIR`
+collects coverage from the complete program, which is converted to the
+Codecov-compatible `coverage.txt`. Set `GO_COVERAGE_PROFILE` to change the
+output path. Tests stop cgtproxy using SIGTERM so shutdown cleanup and coverage
+writes can finish.
+
+To add a case, create a directory under `test/e2e/cases/` with a configuration
+and script. Shared network setup and helpers are in
+[common.sh](../test/e2e/common.sh); the test clients and transparent servers are
+in [fixture](../test/e2e/fixture/main.go). Cases do not import internal packages
+or mock component interfaces.
