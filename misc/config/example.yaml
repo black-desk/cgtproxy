@@ -12,9 +12,12 @@ version: 1
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
 route-table: 300
 
-# Apply the root cgroup target to forwarded traffic (for example, Docker bridge
-# containers). Disabled by default; local cgroup rules are independent of this.
-gateway: false
+# Apply the root cgroup target to traffic routed through this host, for example
+# from LAN devices, virtual machines, or Docker bridge containers.
+# Gateway mode is off by default; this daily-use example enables it.
+# Local cgroup rules are independent of this.
+# See docs/configuration.md#gateway-mode.
+gateway: true
 
 # This means any traffic send to 127.0.0.1 and ::1 will be directly send
 # without influenced by the following configuration.
@@ -36,6 +39,25 @@ tproxies:
     # Hijack all IPv4 traffic which destination port is 53
     # and redirect them to ip:port.
     # This field is optional.
+    # In gateway mode, hijacking forwarded DNS to this loopback address requires
+    # route_localnet on the host's incoming interface. After Docker creates
+    # docker0, check and enable it on the host:
+    #   sysctl net.ipv4.conf.docker0.route_localnet
+    #   sudo sysctl -w net.ipv4.conf.docker0.route_localnet=1
+    #
+    # To persist the setting, put this in /etc/sysctl.d/90-cgtproxy.conf:
+    #   net.ipv4.conf.docker0.route_localnet = 1
+    # With standard systemd udev rules, settings are applied when the interface
+    # appears, so this file can be saved before docker0 exists. If the interface
+    # already exists, apply the file immediately:
+    #   sudo sysctl --load=/etc/sysctl.d/90-cgtproxy.conf
+    # On systems without this mechanism, arrange to reload the setting after
+    # interface creation or recreation. See sysctl.d(5).
+    #
+    # Replace docker0 with the actual incoming interface for custom bridges.
+    # Alternatively, use a local non-loopback address where the DNS service
+    # listens and which is reachable from that interface.
+    # cgtproxy does not change these sysctls automatically.
     dns-hijack:
       ip: 127.0.0.1
       port: 53
