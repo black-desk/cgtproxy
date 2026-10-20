@@ -13,7 +13,7 @@ const (
 	TargetDirect                 //direct
 )
 
-//go:generate go run golang.org/x/tools/cmd/stringer@v0.45.0 -type=TargetOp -linecomment
+//go:generate go tool stringer -type=TargetOp -linecomment
 
 type Target struct {
 	Op    TargetOp
