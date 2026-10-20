@@ -18,12 +18,18 @@ en | [zh_CN](./configuration.zh_CN.md)
 You can refer to the [example configuration](../misc/config/example.yaml) and
 [configuration fields](../internal/cgtproxy/config/config.go).
 
-## Root cgroup and forwarded traffic
+## Root cgroup
 
 The path `/` is matched against `rules` in order. The first match selects the
 root cgroup target, used as the fallback for local traffic. It supports
 `direct`, `drop`, and `tproxy`. Explicit local cgroup decisions take precedence
 over the root fallback.
+
+## Gateway mode
+
+Gateway mode handles traffic routed through this host, for example when it
+serves as a router for LAN devices, forwards traffic for virtual machines, or
+proxies outbound traffic from Docker bridge containers.
 
 The top-level `gateway` setting defaults to `false`. When omitted or explicitly
 set to `false`, forwarded traffic stays direct, even if the root target selects
@@ -53,12 +59,12 @@ configured IPv4 DNS hijack still handles UDP 53. DNS DNAT runs before TPROXY and
 clears the proxy mark so the packet is routed to the DNS destination. Later
 packets skip marking only when their original port is 53 and their DNAT
 destination matches the selected proxy's DNS configuration. Other DNAT
-connections continue to follow their cgroup or root target. Redirecting
-forwarded DNS to `127.0.0.1` requires `route_localnet` on the incoming
-interface, for example `net.ipv4.conf.docker0.route_localnet=1`. Alternatively,
-use a DNS address reachable from that interface.
+connections continue to follow their cgroup or root target.
 
 cgtproxy does not change forwarding sysctls, interface settings, or other
 firewall rules. The network administrator supplies IP forwarding, firewall
 permissions, and any NAT needed for direct forwarding; Docker usually configures
 these.
+
+If containers experience DNS timeouts after enabling gateway mode, see
+[troubleshooting](./troubleshooting.md#docker-container-dns-times-out-in-gateway-mode).

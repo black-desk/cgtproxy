@@ -93,6 +93,16 @@ CGTPROXY_MONITOR_BUFFER_SIZE=2048 cgtproxy
 Environment=CGTPROXY_MONITOR_BUFFER_SIZE=2048
 ```
 
+## Docker 容器在启用网关模式后 DNS 超时
+
+如果启用了[网关模式](./configuration.zh_CN.md#网关模式)，且所选代理的
+`dns-hijack.ip` 是 `127.0.0.1`
+等 IPv4 回环地址，容器的 DNS 请求会被 DNAT 到宿主机的回环地址。内核默认不允许将从其他接口进入的报文路由到回环地址，因此 DNS 请求即使已经匹配劫持规则，也可能被丢弃。
+
+此时需要在宿主机的入接口上启用
+`route_localnet`。具体命令、持久化配置以及网桥创建时机的说明，见[示例配置](../misc/config/example.yaml)中
+`dns-hijack` 前的注释；自定义网桥需要将 `docker0` 替换为实际的入接口名称。
+
 ## DNS 解析未被重定向
 
 如果你发现某些程序（如 `curl`）的 DNS 请求没有被重定向，这可能是NSS (Name

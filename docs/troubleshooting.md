@@ -109,6 +109,21 @@ variable:
 Environment=CGTPROXY_MONITOR_BUFFER_SIZE=2048
 ```
 
+## Docker container DNS times out in gateway mode
+
+If [gateway mode](./configuration.md#gateway-mode) is enabled and the selected
+proxy's `dns-hijack.ip` is an IPv4 loopback address such as `127.0.0.1`,
+container DNS requests are DNATed to the host's loopback address. The kernel
+normally rejects routing packets arriving from other interfaces to loopback
+addresses, so DNS requests may be dropped even after they match the hijack
+rules.
+
+In this situation, enable `route_localnet` on the host's incoming interface. See
+the comments before `dns-hijack` in the
+[example configuration](../misc/config/example.yaml) for commands, persistence,
+and interface creation timing. For custom bridges, replace `docker0` with the
+actual incoming interface.
+
 ## DNS Resolution Not Being Redirected
 
 If you find that DNS requests from certain programs (such as `curl`) are not
