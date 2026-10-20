@@ -19,6 +19,7 @@ type NFTManager struct {
 	cgroupRoot config.CGroupRoot
 	bypassIPv4 []string
 	bypassIPv6 []string
+	gateway    bool
 	log        *zap.SugaredLogger
 
 	connector interfaces.NetlinkConnector
@@ -113,6 +114,13 @@ func WithBypass(bypass config.Bypass) Opt {
 		}
 
 		return table, nil
+	}
+}
+
+func WithGateway(enabled bool) Opt {
+	return func(nft *NFTManager) (*NFTManager, error) {
+		nft.gateway = enabled
+		return nft, nil
 	}
 }
 

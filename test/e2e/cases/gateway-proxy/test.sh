@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: MIT
 
 start_cgtproxy
+nft list chain inet cgtproxy forward-mangle >"$CASE_WORK/forward-mangle.nft"
+grep -q 'goto cgroup-root' "$CASE_WORK/forward-mangle.nft"
 for network in tcp4 udp4; do
 	probe forwarded "$network" 198.51.100.10:18080 proxy
 	probe forwarded "$network" 198.51.100.20:18080 origin

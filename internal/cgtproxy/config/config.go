@@ -10,6 +10,9 @@ type Config struct {
 	Version string `yaml:"version" validate:"required,eq=1"`
 
 	CgroupRoot CGroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
+	// Gateway applies the root cgroup target to forwarded traffic.
+	// Forwarded traffic is left unchanged unless this is enabled.
+	Gateway bool `yaml:"gateway"`
 	// Bypass describes the bypass rules apply to all the TPROXY servers.
 	// If the destination matched in Bypass, the traffic will not be touched.
 	Bypass   Bypass             `yaml:"bypass" validate:"dive,ipv4|cidrv4|ipv6|cidrv6"`

@@ -26,7 +26,8 @@ func injectedCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLog
 		return nil, err
 	}
 	bypass := provideBypass(configConfig)
-	nftManager, err := provideNFTManager(netlinkConnector, cGroupRoot, bypass, sugaredLogger)
+	bool2 := provideGateway(configConfig)
+	nftManager, err := provideNFTManager(netlinkConnector, cGroupRoot, bypass, bool2, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,8 @@ func injectedLastingCGTProxy(configConfig *config.Config, sugaredLogger *zap.Sug
 		return nil, err
 	}
 	bypass := provideBypass(configConfig)
-	nftManager, err := provideNFTManager(netlinkConnector, cGroupRoot, bypass, sugaredLogger)
+	bool2 := provideGateway(configConfig)
+	nftManager, err := provideNFTManager(netlinkConnector, cGroupRoot, bypass, bool2, sugaredLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +79,7 @@ var set = wire.NewSet(
 	provideCGroupEventChan,
 	provideCgrougMontior,
 	provideCgroupRoot,
+	provideGateway,
 	provideNFTManager,
 	provideNetlinkConnector,
 	provideRuleManager,
@@ -88,6 +91,7 @@ var lastingConnectorSet = wire.NewSet(
 	provideCGroupEventChan,
 	provideCgrougMontior,
 	provideCgroupRoot,
+	provideGateway,
 	provideLastringNetlinkConnector,
 	provideNFTManager,
 	provideRuleManager,
