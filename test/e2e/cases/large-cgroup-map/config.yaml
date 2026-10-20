@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+version: 1
+cgroup-root: AUTO
+route-table: 31300
+bypass:
+  - 127.0.0.0/8
+  - ::1
+tproxies:
+  proxy-with-a-long-chain-name-to-exercise-variable-length-verdict-encoding-and-netlink-attribute-alignment-when-splitting-large-cgroup-maps-without-changing-the-transaction-boundaries-or-dropping-elements:
+    port: 17893
+    mark: 42042
+rules:
+  - match: "/group-drop-[0-9]+$"
+    drop: true
+  - match: "/group-proxy-[0-9]+$"
+    tproxy: proxy-with-a-long-chain-name-to-exercise-variable-length-verdict-encoding-and-netlink-attribute-alignment-when-splitting-large-cgroup-maps-without-changing-the-transaction-boundaries-or-dropping-elements
+  - match: "/.*"
+    direct: true
