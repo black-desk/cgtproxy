@@ -17,18 +17,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func (m *RouteManager) initializeNftableRuels() (err error) {
+func (m *RouteManager) initializeNftableRules(paths []string) (err error) {
 	defer Wrap(&err, "initializing nftable rules")
-
-	err = m.nft.InitStructure()
-	if err != nil {
-		return
-	}
-
-	err = m.nft.AddChainAndRulesForTProxies(maps.Values(m.cfg.TProxies))
-	if err != nil {
-		return
-	}
 
 	for _, tp := range m.cfg.TProxies {
 		err = m.addRule(tp.Mark)
@@ -37,7 +27,7 @@ func (m *RouteManager) initializeNftableRuels() (err error) {
 		}
 	}
 
-	return m.nft.SetRootTarget(m.targetForPath("/"))
+	return m.nft.Initialize(maps.Values(m.cfg.TProxies), m.targetForPath("/"), m.routesForPaths(paths))
 }
 
 func (m *RouteManager) removeNftableRules() {
@@ -186,9 +176,7 @@ func (m *RouteManager) removeRoute() {
 	return
 }
 
-func (m *RouteManager) handleNewCgroups(paths []string) (err error) {
-	defer Wrap(&err, "handle %d new cgroups", len(paths))
-
+func (m *RouteManager) routesForPaths(paths []string) []types.Route {
 	routes := []types.Route{}
 
 	for i := range paths {
@@ -214,12 +202,7 @@ func (m *RouteManager) handleNewCgroups(paths []string) (err error) {
 		})
 	}
 
-	err = m.nft.AddRoutes(routes)
-	if err != nil {
-		return
-	}
-
-	return
+	return routes
 }
 
 func (m *RouteManager) targetForPath(path string) types.Target {
@@ -233,19 +216,4 @@ func (m *RouteManager) targetForPath(path string) types.Target {
 		}
 	}
 	return types.Target{}
-}
-
-func (m *RouteManager) handleDeleteCgroups(paths []string) (err error) {
-	defer Wrap(&err, "handle delete cgroup")
-
-	m.log.Debugw("Handling delete cgroups.",
-		"size", len(paths),
-	)
-
-	err = m.nft.RemoveRoutes(paths)
-	if err != nil {
-		return
-	}
-
-	return
 }

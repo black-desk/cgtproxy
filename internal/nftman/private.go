@@ -217,13 +217,6 @@ func (nft *NFTManager) initOutputMangleChain(conn *nftables.Conn) (err error) {
 		Policy:   &nft.policy,
 	})
 
-	err = nft.fillOutputMangleChain(conn, nft.outputMangleChain)
-	if err != nil {
-		return
-	}
-	// AddRoutes installs the fallback atomically with the first cgroup scan,
-	// after explicit proxy-daemon exclusions are available.
-
 	return
 }
 
@@ -898,11 +891,6 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 	path := route.Path
 	target := route.Target
 
-	if _, ok := nft.cgroupMapElement[path]; ok {
-		err = os.ErrExist
-		return
-	}
-
 	var fileInfo os.FileInfo
 	fileInfo, err = os.Stat(path)
 	if err != nil {
@@ -911,8 +899,7 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 
 	inode := fileInfo.Sys().(*syscall.Stat_t).Ino
 
-	route.Path = nft.removeCgroupRootFromPath(path)
-	path = route.Path
+	path = nft.removeCgroupRootFromPath(path)
 
 	nft.log.Debugw("Get inode of cgroup file using stat(2).",
 		"path", path,

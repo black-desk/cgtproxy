@@ -9,22 +9,14 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/types"
-	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
 )
 
-// SetRootTarget sets the fallback for local cgroups and, in gateway mode, forwarded traffic.
-// A separate chain lets OUTPUT and PREROUTING use exactly the same decision.
-func (nft *NFTManager) SetRootTarget(target types.Target) (err error) {
-	defer Wrap(&err, "set root cgroup target")
-	conn, err := nft.connector.Connect()
-	if err != nil {
-		return err
-	}
-	conn.FlushChain(nft.rootChain)
+// setRootTarget sets the shared fallback for local and forwarded traffic.
+func (nft *NFTManager) setRootTarget(conn *nftables.Conn, target types.Target) {
 	verdict := &expr.Verdict{Kind: expr.VerdictReturn}
 	switch target.Op {
 	case types.TargetDrop:
@@ -34,7 +26,6 @@ func (nft *NFTManager) SetRootTarget(target types.Target) (err error) {
 	}
 	conn.AddRule(&nftables.Rule{Table: nft.table, Chain: nft.rootChain,
 		Exprs: addDebugCounter([]expr.Any{verdict})})
-	return conn.Flush()
 }
 
 func (nft *NFTManager) addRootFallback(conn *nftables.Conn, chain *nftables.Chain) {

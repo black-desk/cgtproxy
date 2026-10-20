@@ -32,7 +32,7 @@ type receipt struct {
 
 func main() {
 	if len(os.Args) < 2 {
-		fail(errors.New("usage: fixture serve|client [flags]"))
+		fail(errors.New("usage: fixture serve|client|check-nft-init [flags]"))
 	}
 	var err error
 	switch os.Args[1] {
@@ -40,6 +40,8 @@ func main() {
 		err = serve(os.Args[2:])
 	case "client":
 		err = client(os.Args[2:])
+	case "check-nft-init":
+		err = checkNFTInit(os.Args[2:])
 	default:
 		err = fmt.Errorf("unknown command %q", os.Args[1])
 	}

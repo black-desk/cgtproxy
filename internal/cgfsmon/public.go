@@ -54,8 +54,11 @@ func (w *CGroupFSMonitor) RunCGroupMonitor(ctx context.Context) (err error) {
 	}
 
 	w.log.Info("Going through cgroupfs first time...")
-	var events types.CGroupEvents
+	events := types.CGroupEvents{Initial: true}
 	events.Events, err = w.walk(string(w.root))
+	if err != nil {
+		return
+	}
 	w.log.Info("Going through cgroupfs first time...Done.")
 	err = w.send(ctx, events)
 	if err != nil {
