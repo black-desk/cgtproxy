@@ -225,6 +225,28 @@ limitations:
 
 `cgtproxy` does not have these problems.
 
+## Disadvantages
+
+cgtproxy updates nft rules according to the configuration after receiving a
+cgroup creation event. The application startup process does not wait for this
+update, so an application may send network requests before its rules take
+effect. This window is always present and becomes more noticeable when cgtproxy
+responds slowly.
+
+To ensure an application follows the configuration from its first network
+request, the desktop environment or application launcher must cooperate: after
+creating the target cgroup, it must wait for cgtproxy to confirm that the
+corresponding nft rules have been successfully committed before allowing the
+application to run and establish network connections. The project does not
+currently implement this startup synchronization.
+
+On a ThinkPad L14 Gen 2, the observed race window was approximately 0.3–43 ms.
+
+TCP connections established directly during this window time out waiting for
+replies once DROP rules take effect, and are reset once TPROXY rules take
+effect. After reconnecting, clients follow the new rules; whether they retry
+automatically depends on the application.
+
 ## Differences from cgproxy
 
 1. `cgproxy` uses [iptables], while `cgtproxy` uses [nftables].

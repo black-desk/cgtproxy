@@ -21,6 +21,7 @@ cleanup() {
 		done
 	fi
 	if [[ -n $cgtproxy_pid ]]; then
+		kill -CONT "$cgtproxy_pid" 2>/dev/null || true
 		kill -TERM "$cgtproxy_pid" 2>/dev/null || true
 		wait "$cgtproxy_pid" 2>/dev/null || true
 	fi
