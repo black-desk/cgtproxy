@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// SetRootTarget sets the shared fallback for local cgroups and forwarded traffic.
+// SetRootTarget sets the fallback for local cgroups and, in gateway mode, forwarded traffic.
 // A separate chain lets OUTPUT and PREROUTING use exactly the same decision.
 func (nft *NFTManager) SetRootTarget(target types.Target) (err error) {
 	defer Wrap(&err, "set root cgroup target")
@@ -75,7 +75,9 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn) error {
 			&expr.Cmp{Op: filter.op, Register: 1, Data: binaryutil.NativeEndian.PutUint32(filter.typeID)},
 		)
 	}
-	nft.addRootFallback(conn, chain)
+	if nft.gateway {
+		nft.addRootFallback(conn, chain)
+	}
 
 	dnsChain := conn.AddChain(&nftables.Chain{
 		Table: nft.table, Name: "prerouting-nat", Type: nftables.ChainTypeNAT,

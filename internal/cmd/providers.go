@@ -38,6 +38,7 @@ func provideNFTManager(
 	connector interfaces.NetlinkConnector,
 	root config.CGroupRoot,
 	bypass config.Bypass,
+	gateway bool,
 	logger *zap.SugaredLogger,
 ) (
 	ret interfaces.NFTManager,
@@ -46,6 +47,7 @@ func provideNFTManager(
 	return nftman.New(
 		nftman.WithCgroupRoot(root),
 		nftman.WithBypass(bypass),
+		nftman.WithGateway(gateway),
 		nftman.WithLogger(logger),
 		nftman.WithConnFactory(connector),
 	)
@@ -85,6 +87,10 @@ func provideCgroupRoot(cfg *config.Config) config.CGroupRoot {
 
 func provideBypass(cfg *config.Config) config.Bypass {
 	return cfg.Bypass
+}
+
+func provideGateway(cfg *config.Config) bool {
+	return cfg.Gateway
 }
 
 func provideCGTProxy(

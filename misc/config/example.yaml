@@ -12,6 +12,10 @@ version: 1
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
 route-table: 300
 
+# Apply the root cgroup target to forwarded traffic (for example, Docker bridge
+# containers). Disabled by default; local cgroup rules are independent of this.
+gateway: false
+
 # This means any traffic send to 127.0.0.1 and ::1 will be directly send
 # without influenced by the following configuration.
 bypass:
@@ -37,8 +41,8 @@ tproxies:
       port: 53
 
 # Rules are matched in order.
-# The target selected for `/` is also used for forwarded traffic (including
-# Docker bridge containers) and as the fallback for local cgroups.
+# The target selected for `/` is used as the fallback for local cgroups.
+# With gateway: true, forwarded traffic also uses this target.
 # An explicit `match: '^/$'` rule can select this target independently.
 # `match` is an regex to match the cgroup path.
 # `direct` means the traffic will not be redirect to any TPROXY server;
