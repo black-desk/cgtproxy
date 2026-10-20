@@ -11,7 +11,6 @@ import (
 	"github.com/black-desk/cgtproxy/internal/interfaces"
 	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/internal/nftman/connector"
-	"github.com/black-desk/cgtproxy/internal/nftman/lastingconnector"
 	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"go.uber.org/zap"
@@ -28,10 +27,6 @@ func provideCGroupEventChan(mon interfaces.CGroupMonitor) <-chan types.CGroupEve
 
 func provideNetlinkConnector() (ret interfaces.NetlinkConnector, err error) {
 	return connector.New()
-}
-
-func provideLastringNetlinkConnector() (ret interfaces.NetlinkConnector, err error) {
-	return lastingconnector.New()
 }
 
 func provideNFTManager(

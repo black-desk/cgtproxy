@@ -10,7 +10,6 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	. "github.com/black-desk/lib/go/errwrap"
-	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -41,7 +40,12 @@ func checkConfigCmdRun() (err error) {
 
 	log := zap.NewNop().Sugar()
 	if checkFlags.EnableLogger {
-		log = logger.Get("cgtproxy")
+		var closeLog func()
+		log, closeLog, err = newCommandLogger(flags.logFile)
+		if err != nil {
+			return err
+		}
+		defer closeLog()
 	}
 
 	var content []byte

@@ -119,11 +119,11 @@ cgtproxy-exec proxy /some/command
 
 ## 工作原理
 
-Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]服务器。
+Netfilter可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]服务器。
 
 [按cgroup]: https://www.spinics.net/lists/netfilter/msg60360.html
 
-而[systemd的桌面环境文档]建议桌面环境等启动器应该在 systemd 管理的单元中启动应用程序：
+而[systemd的桌面环境文档]建议桌面环境等启动器应该在systemd管理的单元中启动应用程序：
 
 [systemd的桌面环境文档]: https://systemd.io/DESKTOP_ENVIRONMENTS/
 
@@ -140,7 +140,7 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 >
 > ...
 
-该文档并未直接规定“应用 ID”的内容，但目前各 Linux 桌面启动应用时均使用“[桌面文件ID]”。
+该文档并未直接规定“应用ID”的内容，但目前各Linux桌面启动应用时均使用“[桌面文件ID]”。
 
 [桌面文件ID]:
   https://specifications.freedesktop.org/desktop-entry-spec/latest/file-naming.html#desktop-file-id
@@ -162,7 +162,7 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 
 ## 优点
 
-在 Linux 上进行应用级代理配置的常见方法都有局限性：
+在Linux上进行应用级代理配置的常见方法都有局限性：
 
 1. 环境变量：
    - 没有简单的方法可以在应用层面配置。
@@ -173,9 +173,9 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
    Clash会在有应用程序创建了新套接字时[扫描procfs][clash-procfs]，来确定该链接实际上是由哪个二进制发起的，然后决定如何路由。
 
    [clash-procfs]:
-     https://github.com/Dreamacro/clash/blob/4d66da2277ddaf41f83bd889b064c0a584f7a8ad/component/process/process_linux.go#L129
+     https://github.com/MetaCubeX/mihomo/blob/4d66da2277ddaf41f83bd889b064c0a584f7a8ad/component/process/process_linux.go#L129
 
-   这个方案有以下问题：
+   这个方案有以下潜在问题：
    - 进程较多时可能会存在性能问题
    - 通过脚本编写的程序（如使用[pyqt]的编写的应用）无法被正确判断
    - 应用程序通过运行命令行工具联网时无法正确判断
@@ -185,8 +185,8 @@ Netfilter 可以[按cgroup]过滤网络流量，并将流量重定向到[TPROXY]
 3. 使用[cgproxy]：
 
    该方案存在严重的安全问题：
-   - cgproxy 会将进程从原始cgroup中移出
-   - 存在未授权的用户级进程逃逸到系统级cgroup
+   - cgproxy会将进程从原始cgroup中移出
+   - 使得用户级进程逃逸到系统级cgroup，绕过了系统管理员配置的资源限制。
 
    并且该方案破坏了systemd的[单一写入者规则]。
 
@@ -253,16 +253,7 @@ Netfilter 文档：
 
 ## 发布
 
-正式版和预发布版都由 `Makefile` 中的 `PROJECT_VERSION` 驱动。将版本修改（例如
-`0.3.4` 或 `0.3.4-rc.1`）提交到 `master` 后，CI 会在同一提交的 `pass`
-检查通过后调用可复用的
-`.github/workflows/cd.yaml`。GoReleaser 自动创建并推送对应的 `v`
-标签，再发布 GitHub Release； `release.prerelease: auto`
-会将 RC 版本标记为预发布，无需手动创建发布标签。
-
-发布任务串行运行。如果版本对应的标签已指向其他提交，则跳过发布。如果打标签后发布失败，在原 CI 运行中点击
-**Re-run failed
-jobs**，重试同一提交。PR 检查、定时检查和手动运行 CI 都不会发布。
+正式版和预发布版都由`Makefile`中的`PROJECT_VERSION`驱动。将版本修改（例如`0.3.4`或`0.3.4-rc.1`）提交到`master`后，`.github/workflows/cd.yaml`会自动完成release行为。
 
 ## 许可证
 

@@ -136,8 +136,8 @@ output_ready() {
 }
 
 start_cgtproxy() {
-	in_group manager "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" --reuse-netlink-socket="$REUSE_NETLINK" \
-		>"$CASE_WORK/cgtproxy.log" 2>&1 &
+	LOG_LEVEL=${LOG_LEVEL:-debug} in_group manager "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" \
+		--log-file "$CASE_WORK/cgtproxy.log" &
 	cgtproxy_pid=$!
 	wait_until output_ready
 }

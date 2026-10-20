@@ -12,8 +12,13 @@ en | [zh_CN](./development.zh_CN.md)
 
 > [!WARNING]
 >
-> This English documentation is translated from the Chinese version using AI and
-> may contain errors.
+> This English documentation is translated from the Chinese version using LLM
+> and may contain errors.
+
+## Building and Testing
+
+See the [build guide](./build.md) for compilation, debug builds, test
+environment requirements, commands, logs, and coverage.
 
 ## Project Structure
 
@@ -62,6 +67,10 @@ netlink socket, which helps you find out which structure in
 
 ## Logging
 
+- Use `--log-file /path/to/cgtproxy.log` to append JSON logs directly to a file
+  instead of stderr or journald. New files are created with permissions `0600`;
+  the parent directory must already exist.
+
 - When stderr is a terminal, log is written to stderr; otherwise, log is sent to
   journald.
 
@@ -73,11 +82,43 @@ netlink socket, which helps you find out which structure in
 
 [fmtjournal]: https://github.com/black-desk/fmtjournal
 
-## Build Tags
+## Testing
 
-Add go build tag `debug` by `make GO_TAGS=debug` to produce debug build binary,
-which:
+See the [testing section of the build guide](./build.md#testing) for
+instructions on running tests.
 
-1. Makes error carry more information like source position
-2. Calls `nft` to print ruleset in logs after we update it
-3. Adds debug counter to nft ruleset
+### How the Tests Work
+
+Each [end-to-end case](../test/e2e/cases) runs in isolated user, mount, network,
+PID, and cgroup namespaces and a delegated cgroup. The scripts create the
+network topology, proxy servers, and nftables rules within this environment.
+
+The test network contains a simulated host, a client attached through a bridge,
+and a separate origin-server network namespace. The test proxy returns its
+identity, the original destination, and the request payload so clients can
+distinguish interception from direct access. Drop checks require a timeout or
+local firewall rejection, along with no server receipt. Cases also verify
+dynamic cgroup changes and removal of nftables tables, policy rules, and routes
+on graceful shutdown.
+
+Tests stop cgtproxy using SIGTERM so shutdown cleanup and coverage writes can
+finish.
+
+### Adding Cases
+
+This project does not use unit tests.
+
+To add an end-to-end test case, create a directory under `test/e2e/cases/`
+containing a complete `config.yaml` and a `test.sh` script; the runner discovers
+it automatically. Shared network setup and helpers such as `start_cgtproxy`,
+`probe`, and `wait_until` are in [common.sh](../test/e2e/common.sh); the test
+clients and transparent servers are in [fixture](../test/e2e/fixture/main.go).
+Cases do not import internal packages or mock component interfaces.
+
+When adding or fixing routing behavior, verify the expected result with real
+traffic and add a regression scenario for the problem being fixed. Existing
+cases cover configuration validation, local cgroup routing and dynamic updates,
+gateway forwarding, DNS hijacking, protocol and address exclusions, and rule
+cleanup on exit. Run tests for both regular and `debug` builds before
+submitting. If a check cannot be run, document the reason and the validation
+completed in the commit description or PR.

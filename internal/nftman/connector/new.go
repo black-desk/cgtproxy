@@ -4,7 +4,11 @@
 
 package connector
 
-type Connector struct{}
+import "github.com/google/nftables"
+
+type Connector struct {
+	conn *nftables.Conn
+}
 
 type Opt = (func(*Connector) (*Connector, error))
 
