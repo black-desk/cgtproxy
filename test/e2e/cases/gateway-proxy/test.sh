@@ -16,3 +16,15 @@ for network in tcp6 udp6; do
 done
 probe forwarded tcp4 172.31.254.1:18081 host
 probe direct tcp4 198.51.100.10:18080 origin
+
+# Keep sending on one UDP connection to exercise established proxy and DNS sessions.
+for network in udp4 udp6; do
+	address=198.51.100.10:18080
+	if [[ $network == udp6 ]]; then address='[2001:db8::10]:18080'; fi
+	# shellcheck disable=SC2154
+	nsenter -t "$client_ns" -n "$FIXTURE_BIN" client -network "$network" \
+		-address "$address" -expect proxy -destination "$address" -count 256
+done
+# shellcheck disable=SC2154
+nsenter -t "$client_ns" -n "$FIXTURE_BIN" client -network udp4 \
+	-address 198.51.100.10:53 -expect dns -count 256
