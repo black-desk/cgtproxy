@@ -41,7 +41,7 @@ en | [zh_CN](README.zh_CN.md)
 
 > [!WARNING]
 >
-> This English README is translated from the Chinese version using AI and may
+> This English README is translated from the Chinese version using LLM and may
 > contain errors.
 
 `cgtproxy` is a transparent proxy **rule** manager written in Go, inspired by
@@ -200,10 +200,10 @@ limitations:
    route it.
 
    [clash-procfs]:
-     https://github.com/Dreamacro/clash/blob/4d66da2277ddaf41f83bd889b064c0a584f7a8ad/component/process/process_linux.go#L129
+     https://github.com/MetaCubeX/mihomo/blob/4d66da2277ddaf41f83bd889b064c0a584f7a8ad/component/process/process_linux.go#L129
 
-   This approach has the following issues:
-   - Performance issues when there are many processes
+   This approach has the following potential issues:
+   - Possible performance issues when there are many processes
    - Programs written with scripts (like applications written with [pyqt])
      cannot be correctly identified
    - Cannot correctly identify when applications connect to the network by
@@ -215,7 +215,8 @@ limitations:
 
    This approach has serious security issues:
    - cgproxy moves processes out of their original cgroups
-   - Unauthorized user-level processes can escape to system-level cgroups
+   - User-level processes can escape to system-level cgroups, bypassing resource
+     limits configured by the system administrator
 
    Additionally, this approach breaks systemd's [single-writer rule].
 
@@ -294,17 +295,10 @@ If you need any of the above features, pull requests are welcome.
 
 ## Releases
 
-`Makefile`'s `PROJECT_VERSION` drives both stable and prerelease versions.
-Commit a version change (for example, `0.3.4` or `0.3.4-rc.1`) to `master`.
-After the same commit passes CI's `pass` job, CI calls the reusable
-`.github/workflows/cd.yaml` workflow. GoReleaser creates and pushes the matching
-`v` tag and publishes a GitHub Release; `release.prerelease: auto` marks RC
-versions as prereleases. Do not create release tags manually.
-
-Release jobs run one at a time. An unchanged version tagged at another commit is
-skipped. If publication fails after tagging, use **Re-run failed jobs** on the
-original CI run to retry that commit. PR checks, scheduled checks, and manual CI
-runs do not publish releases.
+Both stable releases and prereleases are driven by `PROJECT_VERSION` in
+`Makefile`. After a version change (for example, `0.3.4` or `0.3.4-rc.1`) is
+committed to `master`, the `.github/workflows/cd.yaml` workflow automatically
+handles the release process.
 
 ## License
 

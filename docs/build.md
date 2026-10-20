@@ -12,8 +12,8 @@ en | [zh_CN](./build.zh_CN.md)
 
 > [!WARNING]
 >
-> This English documentation is translated from the Chinese version using AI and
-> may contain errors.
+> This English documentation is translated from the Chinese version using LLM
+> and may contain errors.
 
 The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**,
 **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and **OPTIONAL** in this
@@ -23,45 +23,84 @@ document are to be interpreted as described in [RFC 2119][rfc-2119].
 
 ---
 
+## Compilation
+
 You **SHOULD** use `make` to build cgtproxy.
 
 It is **NOT RECOMMENDED** to use `go build ./cmd/cgtproxy` to compile this
 project.
 
+## Debug Builds
+
+Add go build tag `debug` by `make GO_TAGS=debug` to produce debug build binary,
+which:
+
+1. Makes error carry more information like source position
+2. Calls `nft` to print ruleset in logs after we update it
+3. Adds debug counter to nft ruleset
+
 ## Testing
 
-`make test` builds the complete cgtproxy executable with coverage and runs the
-[end-to-end cases](../test/e2e/cases). Each case consists of `config.yaml` and
-`test.sh` and runs in isolated user, mount, network, PID, and cgroup namespaces.
-Every case runs with and without netlink socket reuse.
+Run the end-to-end tests from the repository root:
 
-Tests require Linux, cgroup v2, a working systemd user session, Go, Bash,
-iproute2, nftables, util-linux, and procps. `systemd-run --user` supplies a
-writable delegated cgroup. The system must allow unprivileged user namespaces;
-CI configures this permission.
-
-```sh
+```bash
 make test
-make test E2E_CASE=gateway-proxy
 make test GO_TAGS=debug
 ```
 
-The test network contains a simulated host, a client attached through a bridge,
-and a separate origin-server network namespace. The test proxy returns its
-identity, the original destination, and the request payload so clients can
-distinguish interception from direct access. Drop checks require both a timeout
-and no server receipt. Cases also verify dynamic cgroup changes and removal of
-nft tables, policy rules, and routes on graceful shutdown.
+CI tests both regular and `debug` builds. `make test` builds cgtproxy with
+coverage instrumentation, the test fixture, and a coverage tool. It then starts
+cgtproxy through its public command-line interface and verifies routing with
+real TCP/UDP traffic.
 
-Logs, server receipts, and network snapshots on failure are saved in
-`.test/results.*`; raw coverage is saved in `.test/coverage.*`. `GOCOVERDIR`
-collects coverage from the complete program, which is converted to the
-Codecov-compatible `coverage.txt`. Set `GO_COVERAGE_PROFILE` to change the
-output path. Tests stop cgtproxy using SIGTERM so shutdown cleanup and coverage
-writes can finish.
+### Environment Requirements
 
-To add a case, create a directory under `test/e2e/cases/` with a configuration
-and script. Shared network setup and helpers are in
-[common.sh](../test/e2e/common.sh); the test clients and transparent servers are
-in [fixture](../test/e2e/fixture/main.go). Cases do not import internal packages
-or mock component interfaces.
+- Use Linux with cgroup v2 and a working systemd user session. By default, tests
+  run as a regular user through `systemd-run --user -d -P -q` to obtain a
+  delegated cgroup.
+- Install a Go toolchain satisfying `go.mod`, Make, Bash, and the commands
+  provided by `iproute2`, `nftables`, `util-linux`, `coreutils`, and `procps`.
+- The system must allow unprivileged user namespaces and support the cgroup,
+  mount, network, and PID namespaces used by the tests. The kernel must also
+  support nftables, TPROXY, IPv4/IPv6, bridges, and veth devices.
+
+Traffic checks do not require an external proxy or internet connection; the
+first build may need to download the Go toolchain and modules.
+
+For errors such as `Operation not permitted`, unwritable cgroups, or failure to
+connect to the user bus, check user namespace policies, the systemd user
+session, and cgroup delegation first. On Ubuntu, CI also sets
+`kernel.apparmor_restrict_unprivileged_userns=0` to allow the tests to create
+user namespaces.
+
+### Debugging and Results
+
+Tests use `--log-file` to save application logs and default `LOG_LEVEL` to
+`debug` unless it is already set.
+
+Use `E2E_CASE` to select a single case directory under `test/e2e/cases/`:
+
+```bash
+make test E2E_CASE=local-routing
+make test GO_TAGS=debug E2E_CASE=local-routing
+```
+
+Build artifacts default to `.test/`. Logs and server receipts for each run are
+saved under `.test/results.*/<case-name>/`. Start with `case.log` and
+`cgtproxy.log`. On failure, the scripts also attempt to save nftables rules,
+policy routes, and neighbor tables for diagnosis.
+
+Tests collect coverage from the complete program using `GOCOVERDIR`. Raw data is
+saved in `.test/coverage.*` and converted to the Codecov-compatible
+`coverage.txt`. Inspect it with the Go tools:
+
+```bash
+go tool cover -func=coverage.txt
+go tool cover -html=coverage.txt
+```
+
+Override `TEST_BUILD_DIR` and `GO_COVERAGE_PROFILE` to change the artifact
+directory and coverage report path.
+
+See the [testing section of the development notes](./development.md#testing) for
+how the tests work and requirements for adding cases.

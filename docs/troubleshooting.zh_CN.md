@@ -93,20 +93,16 @@ CGTPROXY_MONITOR_BUFFER_SIZE=2048 cgtproxy
 Environment=CGTPROXY_MONITOR_BUFFER_SIZE=2048
 ```
 
-## Docker 容器在启用网关模式后 DNS 超时
+## Docker容器在启用网关模式后DNS超时
 
-如果启用了[网关模式](./configuration.zh_CN.md#网关模式)，且所选代理的
-`dns-hijack.ip` 是 `127.0.0.1`
-等 IPv4 回环地址，容器的 DNS 请求会被 DNAT 到宿主机的回环地址。内核默认不允许将从其他接口进入的报文路由到回环地址，因此 DNS 请求即使已经匹配劫持规则，也可能被丢弃。
+如果启用了[网关模式](./configuration.zh_CN.md#网关模式)，且所选代理的`dns-hijack.ip`是`127.0.0.1`等IPv4回环地址，容器的DNS请求会被DNAT到宿主机的回环地址。内核默认不允许将从其他接口进入的报文路由到回环地址，因此DNS请求即使已经匹配劫持规则，也可能被丢弃。
 
-此时需要在宿主机的入接口上启用
-`route_localnet`。具体命令、持久化配置以及网桥创建时机的说明，见[示例配置](../misc/config/example.yaml)中
-`dns-hijack` 前的注释；自定义网桥需要将 `docker0` 替换为实际的入接口名称。
+此时需要在宿主机的入接口上启用`route_localnet`。具体命令、持久化配置以及网桥创建时机的说明，见[示例配置](../misc/config/example.yaml)中`dns-hijack` 前的注释；自定义网桥需要将`docker0`替换为实际的入接口名称。
 
 ## DNS 解析未被重定向
 
-如果你发现某些程序（如 `curl`）的 DNS 请求没有被重定向，这可能是NSS (Name
-Service Switch) 机制导致的。
+如果你发现某些程序（如 `curl`）的DNS请求没有被重定向，这可能是NSS(Name Service
+Switch)机制导致的。
 
 当程序使用libc提供的NSS(Name Service
 Switch)功能进行域名解析时，会检查`/etc/nsswitch.conf`配置文件中的`hosts`行。在一些发行版中，这一行在`dns`之前包含一个`resolve`项：
@@ -115,8 +111,7 @@ Switch)功能进行域名解析时，会检查`/etc/nsswitch.conf`配置文件�
 hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
 ```
 
-这个`resolve`项对应`libnss-resolve.so`（由 systemd 提供的 NSS 插件），它**直接通过本地 socket 连接到
-`systemd-resolved`**，而不是通过网络栈发送DNS查询。因此，这些DNS请求完全绕过了nftables规则，无法被cgtproxy重定向。
+这个`resolve`项对应`libnss-resolve.so`（由systemd提供的NSS插件），它**直接通过本地socket连接到`systemd-resolved`**，而不是通过网络栈发送DNS查询。因此，这些DNS请求完全绕过了nftables规则，无法被cgtproxy重定向。
 
 > [!WARNING] 以下解决方案需要修改系统配置。除非你理解这样做的含义和潜在后果，否则不要进行此修改。
 

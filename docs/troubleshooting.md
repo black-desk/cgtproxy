@@ -12,8 +12,8 @@ en | [zh_CN](./troubleshooting.zh_CN.md)
 
 > [!WARNING]
 >
-> This English documentation is translated from the Chinese version using AI and
-> may contain errors.
+> This English documentation is translated from the Chinese version using LLM
+> and may contain errors.
 
 ## File exists
 

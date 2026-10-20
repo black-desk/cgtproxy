@@ -22,14 +22,6 @@ func injectedCGTProxy(
 	panic(wire.Build(set))
 }
 
-func injectedLastingCGTProxy(
-	*config.Config, *zap.SugaredLogger,
-) (
-	interfaces.CGTProxy, error,
-) {
-	panic(wire.Build(lastingConnectorSet))
-}
-
 var set = wire.NewSet(
 	provideBypass,
 	provideCGTProxy,
@@ -39,17 +31,5 @@ var set = wire.NewSet(
 	provideGateway,
 	provideNFTManager,
 	provideNetlinkConnector,
-	provideRuleManager,
-)
-
-var lastingConnectorSet = wire.NewSet(
-	provideBypass,
-	provideCGTProxy,
-	provideCGroupEventChan,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideGateway,
-	provideLastringNetlinkConnector,
-	provideNFTManager,
 	provideRuleManager,
 )

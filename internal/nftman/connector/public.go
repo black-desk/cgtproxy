@@ -10,10 +10,32 @@ import (
 )
 
 func (c *Connector) Connect() (ret *nftables.Conn, err error) {
-	defer Wrap(&err, "new netlink connection")
-	return nftables.New()
+	defer Wrap(&err, "new lasting netlink connection")
+
+	if c.conn != nil {
+		ret = c.conn
+		return
+	}
+
+	var conn *nftables.Conn
+	conn, err = nftables.New(nftables.AsLasting())
+	if err != nil {
+		return
+	}
+
+	c.conn = conn
+	ret = c.conn
+	return
 }
 
-func (c *Connector) Release() error {
-	return nil
+func (c *Connector) Release() (err error) {
+	defer Wrap(&err, "release lasting netlink connection")
+
+	if c.conn == nil {
+		return nil
+	}
+
+	err = c.conn.CloseLasting()
+	c.conn = nil
+	return
 }

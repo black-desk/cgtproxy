@@ -8,6 +8,10 @@ SPDX-License-Identifier: MIT
 
 [en](./development.md) | zh_CN
 
+## 编译与测试
+
+编译方法、调试构建、测试环境要求、运行命令、日志和覆盖率说明见[构建指南](./build.zh_CN.md)。
+
 ## 项目结构
 
 本项目使用[wire]来实践[依赖注入]。你需要查看[wire.go]文件来了解这个应用程序是如何构建的。
@@ -16,8 +20,7 @@ SPDX-License-Identifier: MIT
 [依赖注入]: https://en.wikipedia.org/wiki/Dependency_injection
 [wire.go]: ../internal/cmd/wire.go
 
-所有实现包位于
-`internal/`，仅供 cgtproxy 自身使用。内部接口用于组织组件，不作为公开的库 API。
+所有实现包位于`internal/`，仅供cgtproxy自身使用。内部接口用于组织组件，不作为公开的库API。
 
 cgtproxy的基本工作流程：
 
@@ -50,6 +53,8 @@ nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须
 
 ## 日志记录
 
+- 使用`--log-file /path/to/cgtproxy.log`将JSON日志直接追加到文件，替代stderr和journald输出。新文件的权限为`0600`，父目录必须已存在。
+
 - 当标准错误是终端时，日志写入标准错误；否则，日志会被发送到journald；
 
 - 你可以使用环境变量`LOG_LEVEL`控制日志级别，可选值为：`debug`、`info`、`warn`、`error`、`dpanic`、`panic`、`fatal`；
@@ -58,10 +63,22 @@ nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须
 
 [fmtjournal]: https://github.com/black-desk/fmtjournal
 
-## 构建标签
+## 测试
 
-通过`make GO_TAGS=debug`添加go构建标签`debug`来生成调试构建二进制文件，它具有以下特性：
+测试运行方法见[构建指南的测试章节](./build.zh_CN.md#测试)。
 
-1. 使错误携带更多信息，如源位置
-2. 在我们更新规则集后调用`nft`在日志中打印规则集
-3. 向nft规则集添加调试计数器
+### 测试原理
+
+每个[端到端用例](../test/e2e/cases)都在独立的用户、挂载、网络、PID和cgroup命名空间以及委托的cgroup中运行。测试脚本在其中创建网络拓扑、代理服务器和nftables规则。
+
+测试网络包含一个模拟宿主机、通过网桥连接的客户端，以及单独的原站网络命名空间。测试代理返回服务身份、原始目的地址和请求内容，客户端据此区分代理接管和直连；丢弃测试同时检查超时或本地防火墙拒绝，以及服务端没有收到报文。测试还验证cgroup动态变化和cgtproxy正常退出后的nftables表、策略规则及路由清理。
+
+测试通过SIGTERM正常停止cgtproxy，让退出清理和覆盖率写入都能完成。
+
+### 新增用例
+
+本项目不做单元测试。
+
+新增端到端测试用例时，在`test/e2e/cases/`下创建目录，提供完整的`config.yaml`和`test.sh`，测试运行器会自动发现该用例。公共网络搭建和`start_cgtproxy`、`probe`、`wait_until`等辅助函数见[common.sh](../test/e2e/common.sh)，测试客户端和透明代理实现见[fixture](../test/e2e/fixture/main.go)。用例无需导入内部包或模拟组件接口。
+
+新增或修复路由行为时，使用真实流量验证预期结果，并为修复的问题添加回归场景。现有用例覆盖配置校验、本地cgroup路由与动态更新、网关转发、DNS劫持、协议和地址排除，以及退出时的规则清理。提交前运行普通构建和`debug`构建的测试；如有无法运行的检查，请在提交说明或PR中记录原因和已完成的验证。

@@ -26,35 +26,62 @@ SPDX-License-Identifier: MIT
 
 ---
 
+## 编译
+
 你**应当**使用`make`构建cgtproxy。
 
 **不推荐**使用`go build ./cmd/cgtproxy`编译这个项目。
 
+## 调试构建
+
+通过`make GO_TAGS=debug`添加go构建标签`debug`来生成调试构建二进制文件，它具有以下特性：
+
+1. 使错误携带更多信息，如源位置
+2. 在我们更新规则集后调用`nft`在日志中打印规则集
+3. 向nft规则集添加调试计数器
+
 ## 测试
 
-`make test` 构建带覆盖率的完整 cgtproxy 可执行程序，并运行
-[端到端场景](../test/e2e/cases)。每个场景包含 `config.yaml` 和
-`test.sh`，在独立的用户、挂载、网络、PID 和 cgroup 命名空间中执行。每个场景分别测试复用和不复用 netlink 套接字。
+在仓库根目录运行端到端测试：
 
-运行环境需要 Linux、cgroup
-v2、可用的 systemd 用户会话、Go、Bash、iproute2、nftables、util-linux 和 procps。`systemd-run --user`
-提供可写的委托 cgroup；系统须允许非特权用户命名空间。CI 会配置所需的用户命名空间权限。
-
-```sh
+```bash
 make test
-make test E2E_CASE=gateway-proxy
 make test GO_TAGS=debug
 ```
 
-测试网络包含一个模拟宿主机、通过网桥连接的客户端，以及单独的原站网络命名空间。测试代理返回服务身份、原始目的地址和请求内容，客户端据此区分代理接管和直连；丢弃测试同时检查超时或本地防火墙拒绝，以及服务端没有收到报文。测试还验证 cgroup 动态变化和 cgtproxy 正常退出后的 nft、策略规则及路由清理。
+CI会测试普通构建和`debug`构建。`make test`会构建带覆盖率统计的cgtproxy、测试辅助程序和覆盖率工具，然后通过公开命令行接口启动cgtproxy，使用实际的TCP/UDP流量验证路由行为。
 
-日志、服务端收包记录和失败时的网络快照保存在 `.test/results.*`，原始覆盖率保存在
-`.test/coverage.*`。测试通过 `GOCOVERDIR`
-收集完整程序的覆盖率，并转换为 Codecov 可读取的 `coverage.txt`。可用
-`GO_COVERAGE_PROFILE`
-指定输出路径。测试通过 SIGTERM 正常停止 cgtproxy，让退出清理和覆盖率写入都能完成。
+### 环境要求
 
-新增场景时，在 `test/e2e/cases/`
-创建目录并添加配置与脚本；公共网络搭建和辅助函数见
-[common.sh](../test/e2e/common.sh)，测试客户端和透明代理实现见
-[fixture](../test/e2e/fixture/main.go)。场景无需导入内部包或模拟组件接口。
+- 使用Linux、cgroup
+  v2和可用的systemd用户会话。测试默认通过`systemd-run --user -d -P -q`获取委托的cgroup，以普通用户运行。
+- 安装满足`go.mod`要求的Go工具链、Make、Bash，以及`iproute2`、`nftables`、`util-linux`、`coreutils`和`procps`提供的命令。
+- 系统需要允许非特权用户创建用户命名空间，并支持测试使用的cgroup、挂载、网络和PID命名空间。内核还需支持nftables、TPROXY、IPv4/IPv6、网桥和veth。
+
+流量验证不依赖外部代理或互联网连接；首次构建可能需要下载Go工具链和模块。
+
+如果出现`Operation not permitted`、cgroup不可写或无法连接用户总线等错误，请先检查用户命名空间策略、systemd用户会话和cgroup委托。CI在Ubuntu上还会设置`kernel.apparmor_restrict_unprivileged_userns=0`以允许测试创建用户命名空间。
+
+### 调试与结果
+
+测试使用`--log-file`保存应用日志，未设置`LOG_LEVEL`时默认使用`debug`级别。
+
+通过`E2E_CASE`选择`test/e2e/cases/`下的单个用例目录，例如：
+
+```bash
+make test E2E_CASE=local-routing
+make test GO_TAGS=debug E2E_CASE=local-routing
+```
+
+测试产物默认位于`.test/`。每次运行的日志和服务端收包记录保存在`.test/results.*/<用例名>/`。优先查看`case.log`和`cgtproxy.log`；用例失败时还会尝试保存nftables规则、策略路由和邻居表，便于排查。
+
+测试通过`GOCOVERDIR`收集完整程序的覆盖率，原始数据保存在`.test/coverage.*`，再转换为Codecov可读取的`coverage.txt`。可以用Go工具查看：
+
+```bash
+go tool cover -func=coverage.txt
+go tool cover -html=coverage.txt
+```
+
+可以通过`TEST_BUILD_DIR`和`GO_COVERAGE_PROFILE`覆盖产物目录和覆盖率报告路径。
+
+测试原理和新增用例要求见[开发说明的测试章节](./development.zh_CN.md#测试)。

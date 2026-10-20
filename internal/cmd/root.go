@@ -20,7 +20,6 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/interfaces"
-	"github.com/black-desk/lib/go/logger"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 )
@@ -31,10 +30,10 @@ var (
 )
 
 var flags struct {
-	cfgPath            string
-	cpuProfile         string
-	blockProfile       string
-	lastingNetlinkConn bool
+	cfgPath      string
+	logFile      string
+	cpuProfile   string
+	blockProfile string
 }
 
 var rootCmd = &cobra.Command{
@@ -104,7 +103,11 @@ func createProfileFile(tmplStr string) (ret *os.File, err error) {
 }
 
 func rootCmdRun() (err error) {
-	log := logger.Get("cgtproxy")
+	log, closeLog, err := newCommandLogger(flags.logFile)
+	if err != nil {
+		return err
+	}
+	defer closeLog()
 
 	profiles := strings.Split(os.Getenv("CGTPROXY_PROFILE"), ",")
 
@@ -163,11 +166,7 @@ func rootCmdRun() (err error) {
 	}
 
 	var c interfaces.CGTProxy
-	if flags.lastingNetlinkConn {
-		c, err = injectedLastingCGTProxy(cfg, log)
-	} else {
-		c, err = injectedCGTProxy(cfg, log)
-	}
+	c, err = injectedCGTProxy(cfg, log)
 
 	if err != nil {
 		return
@@ -227,6 +226,12 @@ func init() {
 	)
 
 	rootCmd.PersistentFlags().StringVar(
+		&flags.logFile,
+		"log-file", "",
+		"append JSON logs to this file instead of stderr or journald",
+	)
+
+	rootCmd.PersistentFlags().StringVar(
 		&flags.cpuProfile,
 		"cpu-profile", "/tmp/io.github.black-desk.cgtproxy/profiles/{{.PID}}.cpuprofile",
 		""+
@@ -242,11 +247,5 @@ func init() {
 			"the template string use to create the block profile "+
 			"NOTE: this option only takes effect "+
 			"when $CGTPROXY_PROFILE=block",
-	)
-
-	rootCmd.PersistentFlags().BoolVar(
-		&flags.lastingNetlinkConn,
-		"reuse-netlink-socket", true,
-		"use lasting netlink socket",
 	)
 }

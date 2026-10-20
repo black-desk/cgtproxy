@@ -43,34 +43,6 @@ func injectedCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLog
 	return cgtProxy, nil
 }
 
-func injectedLastingCGTProxy(configConfig *config.Config, sugaredLogger *zap.SugaredLogger) (interfaces.CGTProxy, error) {
-	cGroupRoot := provideCgroupRoot(configConfig)
-	cGroupMonitor, err := provideCgrougMontior(cGroupRoot, sugaredLogger)
-	if err != nil {
-		return nil, err
-	}
-	netlinkConnector, err := provideLastringNetlinkConnector()
-	if err != nil {
-		return nil, err
-	}
-	bypass := provideBypass(configConfig)
-	bool2 := provideGateway(configConfig)
-	nftManager, err := provideNFTManager(netlinkConnector, cGroupRoot, bypass, bool2, sugaredLogger)
-	if err != nil {
-		return nil, err
-	}
-	v := provideCGroupEventChan(cGroupMonitor)
-	routeManager, err := provideRuleManager(nftManager, configConfig, v, sugaredLogger)
-	if err != nil {
-		return nil, err
-	}
-	cgtProxy, err := provideCGTProxy(cGroupMonitor, routeManager, sugaredLogger, configConfig)
-	if err != nil {
-		return nil, err
-	}
-	return cgtProxy, nil
-}
-
 // wire.go:
 
 var set = wire.NewSet(
@@ -82,17 +54,5 @@ var set = wire.NewSet(
 	provideGateway,
 	provideNFTManager,
 	provideNetlinkConnector,
-	provideRuleManager,
-)
-
-var lastingConnectorSet = wire.NewSet(
-	provideBypass,
-	provideCGTProxy,
-	provideCGroupEventChan,
-	provideCgrougMontior,
-	provideCgroupRoot,
-	provideGateway,
-	provideLastringNetlinkConnector,
-	provideNFTManager,
 	provideRuleManager,
 )
