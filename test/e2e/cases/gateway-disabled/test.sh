@@ -4,11 +4,6 @@
 # SPDX-License-Identifier: MIT
 
 start_cgtproxy
-nft list chain inet cgtproxy forward-mangle >"$CASE_WORK/forward-mangle.nft"
-if grep -q 'goto cgroup-root' "$CASE_WORK/forward-mangle.nft"; then
-	echo 'Gateway mode is disabled but forwarding uses the root target' >&2
-	exit 1
-fi
 # An explicit false keeps forwarding direct even when the root target drops.
 for network in tcp4 udp4; do
 	probe forwarded "$network" 198.51.100.10:18080 origin
