@@ -150,11 +150,26 @@ func serve(args []string) error {
 		if err != nil {
 			return err
 		}
-		err = json.NewEncoder(reply).Encode(value)
-		_ = reply.Close()
-		if err != nil {
-			return err
-		}
+		// The connected reply socket can receive the next request before the
+		// wildcard listener. Keep it open and serve that tuple; closing it
+		// after sending a reply can discard the client's next datagram.
+		go func(reply net.Conn, value receipt) {
+			defer reply.Close()
+			encoder := json.NewEncoder(reply)
+			buf := make([]byte, 4096)
+			for {
+				_ = reply.SetDeadline(time.Now().Add(5 * time.Second))
+				if err := encoder.Encode(value); err != nil {
+					return
+				}
+				n, err := reply.Read(buf)
+				if err != nil {
+					return
+				}
+				value.Payload = strings.TrimSuffix(string(buf[:n]), "\n")
+				record(value)
+			}
+		}(reply, value)
 	}
 }
 
