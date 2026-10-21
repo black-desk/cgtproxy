@@ -25,7 +25,7 @@ SPDX-License-Identifier: MIT
 cgtproxy的基本工作流程：
 
 ```text
-文件系统通知器 [github.com/rjeczalik/notify]
+文件系统通知器 [github.com/fsnotify/fsnotify]
 |
 | 新的inotify事件
 v
@@ -41,10 +41,6 @@ v
 ```
 
 ## 更新NFTables规则
-
-启动时先注册cgroup监听，再扫描现有cgroup。路由管理器收到首次扫描结果后，准备策略路由，并通过`NFTManager.Initialize`构建表、集合、代理目标链、根规则和cgroup映射，最后调用一次`Flush`原子提交完整的nftables规则。首次扫描没有匹配的路由时也要完成初始化。策略路由不属于nftables事务。
-
-扫描和提交期间收到的cgroup事件排队等待，初始化成功后再增量更新。更新时重新检查cgroup是否存在及其inode，以处理重复创建通知、已删除的cgroup和同路径重建；这些变化可能在首次提交后的增量更新中才生效。监听缓冲区仍然有容量限制，`notify`在缓冲区满时可能丢失事件；当前没有周期性全量扫描来恢复这些事件。初始化构建或提交失败时启动失败，未提交的命令会被丢弃，清理时仅删除本次成功创建的表。
 
 与用C语言编写的`nft`用户空间工具不同，Google的golang
 nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须找出`nft`向netlink套接字写入的底层表达式。

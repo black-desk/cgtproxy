@@ -57,42 +57,6 @@ running filesystem watcher: context canceled
       sudo nft delete table inet cgtproxy
       ```
 
-## 事件丢失
-
-如果你注意到某些cgroup事件没有被cgtproxy捕获，可能是由于文件系统监视器中的事件丢失。当事件接收器处理事件的速度太慢时就会发生这种情况。
-
-你可能会观察到以下症状：
-
-1. 对于创建事件丢失：某些cgroup存在但在nftables中没有对应的规则。
-
-2. 对于删除事件丢失：当运行`nft list ruleset`时，你可能会发现nftables中的规则引用了具有inode号码而不是路径的cgroup。这是因为当cgroup路径在文件系统中不再存在时，内核只能提供inode号码。
-
-要检查是否遇到事件丢失：
-
-```bash
-# 列出目标路径下的所有cgroup
-find /sys/fs/cgroup/user.slice -type d
-
-# 检查nft规则
-# 如果你在"meta cgroup"表达式中看到inode号码而不是路径，
-# 这意味着那些cgroup已被删除，但cgtproxy错过了删除事件
-sudo nft list ruleset | grep cgroup
-```
-
-要**缓解**这个问题，你可以通过设置`CGTPROXY_MONITOR_BUFFER_SIZE`环境变量来增加事件缓冲区大小。例如：
-
-```bash
-# 将缓冲区大小增加到2048（默认为1024）
-CGTPROXY_MONITOR_BUFFER_SIZE=2048 cgtproxy
-```
-
-你也可以在systemd服务文件中设置此环境变量：
-
-```ini
-[Service]
-Environment=CGTPROXY_MONITOR_BUFFER_SIZE=2048
-```
-
 ## Docker容器在启用网关模式后DNS超时
 
 如果启用了[网关模式](./configuration.zh_CN.md#网关模式)，且所选代理的`dns-hijack.ip`是`127.0.0.1`等IPv4回环地址，容器的DNS请求会被DNAT到宿主机的回环地址。内核默认不允许将从其他接口进入的报文路由到回环地址，因此DNS请求即使已经匹配劫持规则，也可能被丢弃。

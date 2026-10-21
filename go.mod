@@ -8,11 +8,11 @@ go 1.27.0
 
 require (
 	github.com/black-desk/lib/go v0.0.0-20240826013949-6a950e6b19a1
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/google/nftables v0.3.0
 	github.com/google/wire v0.7.0
 	github.com/mdlayher/netlink v1.7.3-0.20250113171957-fbb4dce95f42
-	github.com/rjeczalik/notify v0.9.3
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.10.2
 	github.com/vishvananda/netlink v1.3.1

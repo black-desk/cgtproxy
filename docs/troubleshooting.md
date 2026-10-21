@@ -65,50 +65,6 @@ The "file exists" is error message of EEXIST, which means that:
       sudo nft delete table inet cgtproxy
       ```
 
-## Event Loss
-
-If you notice that some cgroup events are not being captured by cgtproxy, it
-might be due to event dropping in the filesystem monitor. This can happen when
-the event receiver is too slow to process events.
-
-You may observe the following symptoms:
-
-1. For creation events loss: Some cgroups exist but have no corresponding rules
-   in nftables.
-
-2. For deletion events loss: You may find rules in nftables referencing cgroups
-   with inode numbers instead of paths when running `nft list ruleset`. This
-   happens because the kernel can only provide the inode number when the cgroup
-   path no longer exists in the filesystem.
-
-To check if you are experiencing event loss:
-
-```bash
-# List all cgroups under your target path
-find /sys/fs/cgroup/user.slice -type d
-
-# Check nft rules
-# If you see inode numbers in "meta cgroup" expressions instead of paths,
-# it means those cgroups have been deleted but cgtproxy missed the deletion events
-sudo nft list ruleset | grep cgroup
-```
-
-To mitigate this issue, you can increase the event buffer size by setting the
-`CGTPROXY_MONITOR_BUFFER_SIZE` environment variable. For example:
-
-```bash
-# Increase buffer size to 2048 (default is 1024)
-CGTPROXY_MONITOR_BUFFER_SIZE=2048 cgtproxy
-```
-
-You can also set this in the systemd service file by adding the environment
-variable:
-
-```ini
-[Service]
-Environment=CGTPROXY_MONITOR_BUFFER_SIZE=2048
-```
-
 ## Docker container DNS times out in gateway mode
 
 If [gateway mode](./configuration.md#gateway-mode) is enabled and the selected

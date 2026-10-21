@@ -7,12 +7,10 @@ package cgfsmon
 import (
 	"context"
 	"errors"
-	"io/fs"
-	"time"
 
 	"github.com/black-desk/cgtproxy/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
-	"github.com/rjeczalik/notify"
+	"github.com/fsnotify/fsnotify"
 )
 
 func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvents {
@@ -22,81 +20,73 @@ func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvents {
 func (w *CGroupFSMonitor) RunCGroupMonitor(ctx context.Context) (err error) {
 	defer Wrap(&err, "running filesystem watcher")
 	defer close(w.eventsOut)
-	defer notify.Stop(w.eventsIn)
-	defer close(w.eventsIn)
 
-	// FIXME(workaround): during system startup, transient service cgroups
-	// (e.g. lm-sensors.service) may disappear while rjeczalik/notify's
-	// internal AddDir traverses the tree. The library does not tolerate
-	// this (see its TODO in node.go AddDir). Retrying gives the system
-	// time to settle.
-	const maxRetries = 3
-	for i := range maxRetries {
-		err = notify.Watch(string(w.root)+"/...", w.eventsIn, notify.Create, notify.Remove)
-		if err == nil {
-			break
-		}
-		if !errors.Is(err, fs.ErrNotExist) {
-			return
-		}
-		w.log.Infow("notify.Watch failed, retrying...",
-			"attempt", i+1,
-			"error", err,
-		)
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(time.Second):
-		}
-	}
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return
+		return err
 	}
+	defer func() {
+		if watcher != nil {
+			_ = watcher.Close()
+		}
+	}()
 
+	known := make(map[string]struct{})
 	w.log.Info("Going through cgroupfs first time...")
-	events := types.CGroupEvents{Initial: true}
-	events.Events, err = w.walk(string(w.root))
+	events, err := w.reconcile(ctx, watcher, string(w.root), known)
 	if err != nil {
-		return
+		return err
 	}
 	w.log.Info("Going through cgroupfs first time...Done.")
-	err = w.send(ctx, events)
-	if err != nil {
-		return
+	if err = w.send(ctx, types.CGroupEvents{Initial: true, Events: events}); err != nil {
+		return err
 	}
 
-LOOP:
 	for {
+		var path string
 		select {
 		case <-ctx.Done():
-			break LOOP
-		case eventInfo := <-w.eventsIn:
-
-			event := eventInfo.Event()
-			path := eventInfo.Path()
-
-			w.log.Debugw(
-				"New filesystem notify arrived.",
-				"event", event.String(),
-				"path", path,
-			)
-			eventType := types.CgroupEventTypeNew
-			if event == notify.Remove {
-				eventType = types.CgroupEventTypeDelete
+			return context.Cause(ctx)
+		case watchErr, ok := <-watcher.Errors:
+			if !ok {
+				return errors.New("filesystem watcher closed unexpectedly")
 			}
+			if !errors.Is(watchErr, fsnotify.ErrEventOverflow) {
+				return watchErr
+			}
+			w.log.Warn("Filesystem event queue overflowed; rebuilding watches and rescanning cgroupfs.")
+			// Overflow may also lose watch-removal events. Rebuild the watcher
+			// rather than trusting its bookkeeping for deleted/recreated paths.
+			if err = watcher.Close(); err != nil {
+				return err
+			}
+			watcher, err = fsnotify.NewWatcher()
+			if err != nil {
+				return err
+			}
+			path = string(w.root)
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return errors.New("filesystem watcher closed unexpectedly")
+			}
+			if !event.Has(fsnotify.Create | fsnotify.Remove | fsnotify.Rename) {
+				continue
+			}
+			w.log.Debugw("New filesystem notification arrived.", "event", event.Op.String(), "path", event.Name)
+			path = event.Name
+		}
 
-			err = w.send(ctx, types.CGroupEvents{Events: []types.CGroupEvent{{
-				Path:      path,
-				EventType: eventType,
-			}}})
+		// Events can be stale: scan the current subtree even on removal, so
+		// deleting and recreating a path cannot leave its children unwatched.
+		events, err = w.reconcile(ctx, watcher, path, known)
+		if err != nil {
+			return err
+		}
+		if len(events) == 0 {
+			continue
+		}
+		if err = w.send(ctx, types.CGroupEvents{Events: events}); err != nil {
+			return err
 		}
 	}
-
-	<-ctx.Done()
-	err = context.Cause(ctx)
-	if err != nil {
-		return
-	}
-
-	return
 }

@@ -35,7 +35,7 @@ Internal interfaces organize components and do not form a public library API.
 The basic workflow of cgtproxy:
 
 ```text
-fs notifier [github.com/rjeczalik/notify]
+fs notifier [github.com/fsnotify/fsnotify]
 |
 | new inotify event
 v
@@ -51,22 +51,6 @@ netfilter framework in kernel
 ```
 
 ## Update NFTables Rule
-
-Startup registers the cgroup watch before scanning existing cgroups. After
-receiving the initial scan, the route manager prepares policy routing and calls
-`NFTManager.Initialize` to build the table, sets, proxy target chains, root
-rule, and cgroup map. A single `Flush` commits the complete nftables ruleset
-atomically, even if the scan has no matching routes. Policy routing is outside
-this nftables transaction.
-
-Cgroup events received during scanning and commit queue for incremental updates
-after initialization. Updates check each cgroup's current existence and inode to
-handle duplicate creation notifications, removed cgroups, and recreation at the
-same path. These changes may take effect in updates after the initial commit.
-The watch buffer remains bounded: `notify` may drop events when it is full, and
-there is currently no periodic rescan to recover them. Initialization build or
-commit errors fail startup and discard pending commands; cleanup only deletes a
-table that this instance successfully created.
 
 Unlike the `nft` userspace util written in C, the golang implementation of
 nftables by Google cannot execute nft scripts as `nft -f ...`, which makes us
