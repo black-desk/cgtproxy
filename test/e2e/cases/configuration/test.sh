@@ -40,5 +40,46 @@ for table in 1 252 256 31300; do
 	sed "s/^route-table:.*/route-table: $table/" "$CASE_DIR/config.yaml" >"$path"
 	"$CGTPROXY_BIN" --config "$path" check config
 done
+# Proxy names share a namespace with all generated and internal chains.
+for name in cgroup-root output-mangle output-nat prerouting forward-mangle prerouting-nat; do
+	path=$CASE_WORK/proxy-name-$name.yaml
+	cat "$CASE_DIR/config.yaml" >"$path"
+	cat >>"$path" <<YAML
+tproxies:
+  $name:
+    port: 17893
+    mark: 42042
+YAML
+	check_invalid_config "proxy-name-$name" "$path"
+done
+for suffix in MARK DNS; do
+	path=$CASE_WORK/proxy-collision-$suffix.yaml
+	cat "$CASE_DIR/config.yaml" >"$path"
+	cat >>"$path" <<YAML
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+    dns-hijack:
+      port: 15353
+  proxy-$suffix:
+    port: 17894
+    mark: 42043
+YAML
+	check_invalid_config "proxy-collision-$suffix" "$path"
+done
+
+# The suffixes themselves are valid when no generated names collide.
+for name in proxy-MARK proxy-DNS; do
+	path=$CASE_WORK/proxy-valid-$name.yaml
+	cat "$CASE_DIR/config.yaml" >"$path"
+	cat >>"$path" <<YAML
+tproxies:
+  $name:
+    port: 17893
+    mark: 42042
+YAML
+	"$CGTPROXY_BIN" --config "$path" check config
+done
 start_cgtproxy
 probe forwarded tcp4 198.51.100.10:18080 origin

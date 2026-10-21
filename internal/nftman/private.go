@@ -133,7 +133,7 @@ func (nft *NFTManager) initOutputMangleChain(conn *nftables.Conn) (err error) {
 	// type route hook output priority mangle; policy accept;
 	nft.outputMangleChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
-		Name:     "output-mangle",
+		Name:     types.ChainOutputMangle,
 		Type:     nftables.ChainTypeRoute,
 		Hooknum:  nftables.ChainHookOutput,
 		Priority: nftables.ChainPriorityMangle,
@@ -285,7 +285,7 @@ func (nft *NFTManager) initOutputNATChain(conn *nftables.Conn) (err error) {
 	// type nat hook prerouting priority -100; policy accept;
 	nft.outputNATChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
-		Name:     "output-nat",
+		Name:     types.ChainOutputNAT,
 		Type:     nftables.ChainTypeNAT,
 		Hooknum:  nftables.ChainHookOutput,
 		Priority: nftables.ChainPriorityNATDest,
@@ -322,7 +322,7 @@ func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
 	priority := nftables.ChainPriority(*nftables.ChainPriorityNATDest + 1)
 	nft.preroutingChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,
-		Name:     "prerouting",
+		Name:     types.ChainPrerouting,
 		Type:     nftables.ChainTypeFilter,
 		Hooknum:  nftables.ChainHookPrerouting,
 		Priority: &priority,

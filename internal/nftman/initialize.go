@@ -158,7 +158,7 @@ func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
 	}
 
 	nft.policy = nftables.ChainPolicyAccept
-	nft.rootChain = conn.AddChain(&nftables.Chain{Table: nft.table, Name: "cgroup-root"})
+	nft.rootChain = conn.AddChain(&nftables.Chain{Table: nft.table, Name: types.ChainCgroupRoot})
 
 	err = nft.initOutputMangleChain(conn)
 	if err != nil {
