@@ -81,5 +81,33 @@ tproxies:
 YAML
 	"$CGTPROXY_BIN" --config "$path" check config
 done
+# A configured DNS hijack requires an explicit, nonzero destination port.
+for port in missing 0 65536; do
+	path=$CASE_WORK/dns-port-$port.yaml
+	cat "$CASE_DIR/config.yaml" >"$path"
+	cat >>"$path" <<'YAML'
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+    dns-hijack:
+      ip: 127.0.0.1
+YAML
+	if [[ $port != missing ]]; then printf '      port: %s\n' "$port" >>"$path"; fi
+	check_invalid_config "dns-port-$port" "$path"
+done
+for port in 53 65535; do
+	path=$CASE_WORK/dns-port-$port.yaml
+	cat "$CASE_DIR/config.yaml" >"$path"
+	cat >>"$path" <<YAML
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+    dns-hijack:
+      port: $port
+YAML
+	"$CGTPROXY_BIN" --config "$path" check config
+done
 start_cgtproxy
 probe forwarded tcp4 198.51.100.10:18080 origin

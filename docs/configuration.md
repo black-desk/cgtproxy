@@ -20,9 +20,9 @@ You can refer to the [example configuration](../misc/config/example.yaml) and
 
 ## Route table
 
-`route-table` must be a positive 32-bit table ID. The system-reserved IDs
-`253` (default), `254` (main), and `255` (local) are rejected. Use a dedicated
-table: cgtproxy adds local default routes to it and removes those routes on exit.
+`route-table` must be a positive 32-bit table ID. The system-reserved IDs `253`
+(default), `254` (main), and `255` (local) are rejected. Use a dedicated table:
+cgtproxy adds local default routes to it and removes those routes on exit.
 
 ## Proxy names
 
@@ -30,6 +30,12 @@ Proxy names must be nonempty. The generated nftables chain names (`<name>`,
 `<name>-MARK`, and `<name>-DNS` when DNS hijacking is configured) must be
 distinct from each other and the internal chains. Each generated name must
 contain at most 255 bytes and no NUL characters.
+
+## DNS hijack port
+
+When `dns-hijack` is configured, `port` is required and must be between 1
+and 65535. Set `port: 53` explicitly for a resolver listening on the standard
+DNS port.
 
 ## Root cgroup
 
