@@ -18,6 +18,12 @@ en | [zh_CN](./configuration.zh_CN.md)
 You can refer to the [example configuration](../misc/config/example.yaml) and
 [configuration fields](../internal/cgtproxy/config/config.go).
 
+## Route table
+
+`route-table` must be a positive 32-bit table ID. The system-reserved IDs
+`253` (default), `254` (main), and `255` (local) are rejected. Use a dedicated
+table: cgtproxy adds local default routes to it and removes those routes on exit.
+
 ## Root cgroup
 
 The path `/` is matched against `rules` in order. The first match selects the

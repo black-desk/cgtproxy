@@ -10,6 +10,12 @@ SPDX-License-Identifier: MIT
 
 你可以参考[示例配置](../misc/config/example.yaml)以及[配置字段定义](../internal/cgtproxy/config/config.go)。
 
+## 路由表
+
+`route-table` 必须是正的 32 位路由表编号，不能使用系统保留的 `253`（default）、
+`254`（main）和 `255`（local）。请使用专用路由表：cgtproxy 会向其中添加本地默认路由，
+并在退出时删除这些路由。
+
 ## 根 cgroup
 
 路径 `/` 按照 `rules`

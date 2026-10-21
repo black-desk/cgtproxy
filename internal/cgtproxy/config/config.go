@@ -20,7 +20,8 @@ type Config struct {
 	Rules    []Rule             `yaml:"rules" validate:"dive"`
 	// The route table number cgtproxy will create to route TPROXY traffic.
 	// This table will be removed when cgtproxy stopped.
-	RouteTable int `yaml:"route-table" validate:"required"`
+	// Use a positive 32-bit ID other than the system default/main/local tables.
+	RouteTable int `yaml:"route-table" validate:"gt=0,lte=4294967295,ne=253,ne=254,ne=255"`
 
 	log *zap.SugaredLogger `yaml:"-"`
 	raw []byte
