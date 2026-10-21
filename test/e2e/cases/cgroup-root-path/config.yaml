@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+version: 1
+cgroup-root: /sys/fs/cgroup/.
+route-table: 31300
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+rules:
+  - match: "^/proxied(/.*)?$"
+    tproxy: proxy
+  - match: "^/blocked$"
+    drop: true
+  - match: "/.*"
+    direct: true
