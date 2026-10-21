@@ -5,19 +5,16 @@
 package cgfsmon
 
 import (
-	"os"
-	"strconv"
+	"path/filepath"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
-	"github.com/rjeczalik/notify"
 	"go.uber.org/zap"
 )
 
 type CGroupFSMonitor struct {
 	eventsOut chan types.CGroupEvents
-	eventsIn  chan notify.EventInfo
 	root      config.CGroupRoot
 	log       *zap.SugaredLogger
 }
@@ -46,43 +43,11 @@ func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 		err = ErrCGroupRootNotFound
 		return
 	}
-
-	// FIXME:
-	// github.com/rjeczalik/notify may drop events when the receiver is too slow
-	// Related issues:
-	// - https://github.com/rjeczalik/notify/issues/85
-	// - https://github.com/rjeczalik/notify/issues/98
-	//
-	// To mitigate this issue, we use a buffered channel to receive events.
-	// The buffer size can be configured via CGTPROXY_MONITOR_BUFFER_SIZE environment variable.
-	// A larger buffer can handle more events in a short period but consumes more memory.
-	// If you notice event loss, try increasing this value.
-
-	// Get buffer size from environment variable, default to 1024
-	bufferSize := 1024
-	if envSize := os.Getenv("CGTPROXY_MONITOR_BUFFER_SIZE"); envSize != "" {
-		size, err := strconv.Atoi(envSize)
-		if err != nil {
-			w.log.Warnw("Invalid buffer size in CGTPROXY_MONITOR_BUFFER_SIZE, using default",
-				"value", envSize,
-				"error", err,
-			)
-		} else if size < 1 {
-			w.log.Warnw("Buffer size must be greater than 0, using default",
-				"value", size,
-			)
-		} else {
-			bufferSize = size
-		}
-	}
-
-	w.eventsIn = make(chan notify.EventInfo, bufferSize)
+	w.root = config.CGroupRoot(filepath.Clean(string(w.root)))
 
 	ret = w
 
-	w.log.Debugw("Create a cgroupv2 filesystem monitor.",
-		"buffer_size", bufferSize,
-	)
+	w.log.Debug("Create a cgroupv2 filesystem monitor.")
 
 	return
 }

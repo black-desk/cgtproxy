@@ -297,9 +297,9 @@ Netfilter documentation:
 - [ ] ~~Optional cgroup monitoring implementation that listens to D-Bus instead
       of filesystem~~
 
-  [notify](https://github.com/rjeczalik/notify) makes filesystem monitoring more
-  stable. For my personal use, there's no need to implement another monitoring
-  mechanism.
+  [fsnotify](https://github.com/fsnotify/fsnotify) makes filesystem monitoring
+  more stable. For my personal use, there's no need to implement another
+  monitoring mechanism.
 
 - [ ] DNS hijacking for fake-ip:
   - [x] IPv4

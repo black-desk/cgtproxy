@@ -12,47 +12,72 @@ import (
 	"strings"
 
 	"github.com/black-desk/cgtproxy/internal/types"
+	"github.com/fsnotify/fsnotify"
+	"golang.org/x/sys/unix"
 )
 
-func (m *CGroupFSMonitor) walkFn(events *[]types.CGroupEvent) func(path string, d fs.DirEntry, err error) error {
-	return func(path string, d fs.DirEntry, err error) error {
-		if errors.Is(err, fs.ErrNotExist) {
+func (m *CGroupFSMonitor) walk(ctx context.Context, watcher *fsnotify.Watcher, root string) ([]types.CGroupEvent, error) {
+	var events []types.CGroupEvent
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if ctx.Err() != nil {
+			return context.Cause(ctx)
+		}
+		if errors.Is(err, fs.ErrNotExist) && path != string(m.root) {
 			m.log.Debugw("Cgroup had been removed.", "path", path)
 			return nil
 		}
 		if err != nil {
 			return err
 		}
-
 		if !d.IsDir() {
 			return nil
 		}
 
-		path = strings.TrimRight(path, "/")
-
-		if path == string(m.root) {
-			return nil
+		// WalkDir invokes this callback before reading the directory. Add
+		// synchronously installs its watch: existing children are found by
+		// the scan, and children created after that are covered by events.
+		if err = watcher.Add(path); err != nil {
+			if errors.Is(err, fs.ErrNotExist) && path != string(m.root) {
+				return filepath.SkipDir
+			}
+			return err
 		}
-
-		*events = append(*events, types.CGroupEvent{
-			Path:      path,
-			EventType: types.CgroupEventTypeNew,
-		})
-
+		if path != string(m.root) {
+			events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeNew})
+		}
 		return nil
-	}
+	})
+	return events, err
 }
 
-func (m *CGroupFSMonitor) walk(path string) (ret []types.CGroupEvent, err error) {
-	events := []types.CGroupEvent{}
-
-	err = filepath.WalkDir(path, m.walkFn(&events))
+func (m *CGroupFSMonitor) reconcile(ctx context.Context, watcher *fsnotify.Watcher, root string, known map[string]struct{}) ([]types.CGroupEvent, error) {
+	events, err := m.walk(ctx, watcher, root)
 	if err != nil {
-		return
+		return nil, err
 	}
-
-	ret = events
-	return
+	seen := make(map[string]struct{}, len(events))
+	for _, event := range events {
+		seen[event.Path] = struct{}{}
+	}
+	for path := range known {
+		if path != root && !strings.HasPrefix(path, strings.TrimRight(root, "/")+"/") {
+			continue
+		}
+		if _, exists := seen[path]; exists {
+			continue
+		}
+		// The kernel may have already removed a deleted directory's watch,
+		// before fsnotify has consumed the corresponding notification.
+		if err = watcher.Remove(path); err != nil && !errors.Is(err, fsnotify.ErrNonExistentWatch) && !errors.Is(err, unix.EINVAL) {
+			return nil, err
+		}
+		events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeDelete})
+		delete(known, path)
+	}
+	for path := range seen {
+		known[path] = struct{}{}
+	}
+	return events, nil
 }
 
 func (m *CGroupFSMonitor) send(ctx context.Context, cgEvents types.CGroupEvents) (err error) {
@@ -61,21 +86,12 @@ func (m *CGroupFSMonitor) send(ctx context.Context, cgEvents types.CGroupEvents)
 		cgEvents.Events[i].Path = path
 	}
 
-	m.log.Debugw("New cgroup envents.",
-		"size", len(cgEvents.Events),
-	)
-
-	cnt := len(cgEvents.Events)
-
+	m.log.Debugw("New cgroup events.", "size", len(cgEvents.Events))
 	select {
 	case <-ctx.Done():
-		err = ctx.Err()
-		return
+		return ctx.Err()
 	case m.eventsOut <- cgEvents:
-		m.log.Debugw("Cgroup events sent.",
-			"size", cnt,
-		)
+		m.log.Debugw("Cgroup events sent.", "size", len(cgEvents.Events))
 	}
-
-	return
+	return nil
 }

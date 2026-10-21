@@ -246,7 +246,7 @@ Netfilter 文档：
 
 - [ ] ~~可选的cgroup监控实现，监听D-Bus而不是文件系统；~~
 
-  [notify](https://github.com/rjeczalik/notify)使文件系统监控更加稳定，对于我个人使用来说，已经没有必要实现另一种监控机制了。
+  [fsnotify](https://github.com/fsnotify/fsnotify)使文件系统监控更加稳定，对于我个人使用来说，已经没有必要实现另一种监控机制了。
 
 - [ ] 为fake-ip劫持DNS；
   - [x] ipv4；
