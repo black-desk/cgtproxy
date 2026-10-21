@@ -15,6 +15,7 @@ import (
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
 	"github.com/google/nftables/expr"
+	"github.com/mdlayher/netlink"
 )
 
 // Observe transaction boundaries through the kernel's generation notifications.
@@ -32,7 +33,14 @@ func checkNFTInit(args []string) error {
 		}
 		key = binaryutil.NativeEndian.PutUint64(info.Sys().(*syscall.Stat_t).Ino)
 	}
-	conn := &nftables.Conn{}
+	// A large initial transaction emits many multicast notifications at once.
+	// Allow the observer to retain them until its monitor goroutine drains them.
+	conn, err := nftables.New(nftables.WithSockOptions(func(conn *netlink.Conn) error {
+		return conn.SetReadBuffer(4 << 20)
+	}))
+	if err != nil {
+		return err
+	}
 	monitor := nftables.NewMonitor()
 	transactions, err := conn.AddGenerationalMonitor(monitor)
 	if err != nil {
