@@ -18,9 +18,9 @@ type Config struct {
 	Bypass   Bypass             `yaml:"bypass" validate:"dive,ipv4|cidrv4|ipv6|cidrv6"`
 	TProxies map[string]*TProxy `yaml:"tproxies" validate:"dive"`
 	Rules    []Rule             `yaml:"rules" validate:"dive"`
-	// The route table number cgtproxy will create to route TPROXY traffic.
-	// This table will be removed when cgtproxy stopped.
-	// Use a positive 32-bit ID other than the system default/main/local tables.
+	// RouteTable identifies a dedicated table for TPROXY local default routes.
+	// Valid IDs are 1-4294967295, excluding 253 (default), 254 (main), and 255 (local).
+	// cgtproxy removes the routes it installs when it stops.
 	RouteTable int `yaml:"route-table" validate:"gt=0,lte=4294967295,ne=253,ne=254,ne=255"`
 
 	log *zap.SugaredLogger `yaml:"-"`
@@ -48,6 +48,10 @@ type Rule struct {
 
 // TProxy describes a TPROXY server.
 type TProxy struct {
+	// Name is the nonempty tproxies map key. It generates nftables chains named
+	// Name and Name+"-MARK", plus Name+"-DNS" when DNSHijack is configured.
+	// Each generated name must be unique across proxies, differ from the internal
+	// chain names in internal/types/chains.go, contain no NUL, and fit in 255 bytes.
 	Name   string `yaml:"-"`
 	NoUDP  bool   `yaml:"no-udp"`
 	NoIPv6 bool   `yaml:"no-ipv6"`
@@ -71,8 +75,10 @@ type TProxy struct {
 type FireWallMark uint32
 
 type DNSHijack struct {
-	IP   *string `yaml:"ip" validate:"omitempty,ip4_addr"`
-	Port uint16  `yaml:"port" validate:"required"`
+	IP *string `yaml:"ip" validate:"omitempty,ip4_addr"`
+	// Port is required when DNS hijacking is configured; valid range: 1-65535.
+	// Set 53 explicitly for a resolver listening on the standard DNS port.
+	Port uint16 `yaml:"port" validate:"required"`
 	// If TCP is set to true,
 	// tcp traffic will be hijacked, too,
 	// when it's destination port is 53.

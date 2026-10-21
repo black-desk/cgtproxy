@@ -10,23 +10,6 @@ SPDX-License-Identifier: MIT
 
 你可以参考[示例配置](../misc/config/example.yaml)以及[配置字段定义](../internal/cgtproxy/config/config.go)。
 
-## 路由表
-
-`route-table` 必须是正的 32 位路由表编号，不能使用系统保留的 `253`（default）、
-`254`（main）和
-`255`（local）。请使用专用路由表：cgtproxy 会向其中添加本地默认路由，并在退出时删除这些路由。
-
-## 代理名称
-
-代理名称不能为空。生成的 nftables 链名（`<name>`、`<name>-MARK`，以及配置 DNS 劫持时的
-`<name>-DNS`）不能相互冲突，也不能与内置链名冲突。每个生成的链名最多为 255 字节，且不能包含 NUL 字符。
-
-## DNS 劫持端口
-
-配置 `dns-hijack` 时必须指定
-`port`，有效范围为 1 到 65535。解析器监听标准 DNS 端口时，请显式配置
-`port: 53`。
-
 ## 根 cgroup
 
 路径 `/` 按照 `rules`
