@@ -72,7 +72,7 @@ type FireWallMark uint32
 
 type DNSHijack struct {
 	IP   *string `yaml:"ip" validate:"omitempty,ip4_addr"`
-	Port uint16  `yaml:"port"`
+	Port uint16  `yaml:"port" validate:"required"`
 	// If TCP is set to true,
 	// tcp traffic will be hijacked, too,
 	// when it's destination port is 53.
