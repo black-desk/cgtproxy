@@ -56,12 +56,12 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 	}
 	defer nft.discardOnError(&err)
 	if len(removed) != 0 {
-		if err = queueCgroupElements(nft.cgroupMap, removed, conn.SetDeleteElements); err != nil {
+		if err = queueSetElements(nft.cgroupMap, removed, conn.SetDeleteElements); err != nil {
 			return err
 		}
 	}
 	if len(added) != 0 {
-		if err = queueCgroupElements(nft.cgroupMap, added, conn.SetAddElements); err != nil {
+		if err = queueSetElements(nft.cgroupMap, added, conn.SetAddElements); err != nil {
 			return err
 		}
 	}

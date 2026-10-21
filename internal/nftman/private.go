@@ -32,10 +32,11 @@ func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 		Interval:     true,
 	}
 
-	err = conn.AddSet(nft.ipv4BypassSet, bypassSetElements(nft.bypassIPv4))
+	err = conn.AddSet(nft.ipv4BypassSet, nil)
 	if err != nil {
 		return
 	}
+	err = queueSetElements(nft.ipv4BypassSet, bypassSetElements(nft.bypassIPv4), conn.SetAddElements)
 
 	return
 }
@@ -49,10 +50,11 @@ func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 		Interval:     true,
 	}
 
-	err = conn.AddSet(nft.ipv6BypassSet, bypassSetElements(nft.bypassIPv6))
+	err = conn.AddSet(nft.ipv6BypassSet, nil)
 	if err != nil {
 		return
 	}
+	err = queueSetElements(nft.ipv6BypassSet, bypassSetElements(nft.bypassIPv6), conn.SetAddElements)
 
 	return
 }

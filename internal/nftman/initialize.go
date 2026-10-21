@@ -43,7 +43,7 @@ func (nft *NFTManager) Initialize(tps []*config.TProxy, rootTarget types.Target,
 		for _, element := range next.cgroupMapElement {
 			elements = append(elements, element)
 		}
-		if err = queueCgroupElements(next.cgroupMap, elements, conn.SetAddElements); err != nil {
+		if err = queueSetElements(next.cgroupMap, elements, conn.SetAddElements); err != nil {
 			return err
 		}
 	}
