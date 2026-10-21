@@ -23,7 +23,7 @@ func (m *RouteManager) initializeNftableRules(paths []string) (err error) {
 	defer Wrap(&err, "initializing nftable rules")
 
 	for _, tp := range m.cfg.TProxies {
-		err = m.addRule(tp.Mark)
+		err = m.addRule(tp)
 		if err != nil {
 			return
 		}
@@ -88,8 +88,9 @@ func (m *RouteManager) addRuleWithFamily(
 	return
 }
 
-func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
+func (m *RouteManager) addRule(tp *config.TProxy) (err error) {
 	defer Wrap(&err, "add route rule")
+	mark := tp.Mark
 
 	m.log.Infow("Adding route rule.",
 		"mark", mark,
@@ -102,6 +103,10 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 		return
 	}
 
+	if tp.NoIPv6 {
+		return nil
+	}
+
 	// ip -6 rule add fwmark <mark> lookup <table>
 	err = m.addRuleWithFamily(mark, netlink.FAMILY_V6)
 	if err != nil {
@@ -111,9 +116,6 @@ func (m *RouteManager) addRule(mark config.FireWallMark) (err error) {
 			"table", m.cfg.RouteTable,
 			"error", err,
 		)
-
-		// TODO: It seems OK to not add this rule fail. But why?
-		err = nil
 	}
 
 	return
@@ -134,7 +136,13 @@ func (m *RouteManager) addRoute() (err error) {
 		return
 	}
 
-	cidrStrs := []string{"0.0.0.0/0", "0::0/0"}
+	cidrStrs := []string{"0.0.0.0/0"}
+	for _, tp := range m.cfg.TProxies {
+		if !tp.NoIPv6 {
+			cidrStrs = append(cidrStrs, "::/0")
+			break
+		}
+	}
 
 	for _, cidrStr := range cidrStrs {
 		var cidr *net.IPNet
