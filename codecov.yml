@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+# E2E fixtures exercise the application; measure coverage of product code.
+ignore:
+  - "test/e2e/fixture/**"
