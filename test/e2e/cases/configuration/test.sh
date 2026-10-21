@@ -18,8 +18,9 @@ check_invalid_config() {
 
 	status=0
 	timeout 5s "$CGTPROXY_BIN" --config "$path" \
-		--log-file "$CASE_WORK/$invalid.log" || status=$?
+		--log-file "$CASE_WORK/$invalid.log" >"$CASE_WORK/$invalid.stderr" 2>&1 || status=$?
 	if [[ $status != 1 ]]; then
+		cat "$CASE_WORK/$invalid.stderr" >&2
 		echo "Expected startup configuration error for $invalid, got status $status" >&2
 		exit 1
 	fi
@@ -27,6 +28,22 @@ check_invalid_config() {
 
 for invalid in wrong_type validation_fail undefined_proxy null_proxy invalid_regex duplicate_mark; do
 	check_invalid_config "$invalid" "$repo/test/data/$invalid.yaml"
+done
+
+# Reject the removed target even when another valid target is present.
+for value in true false; do
+	path=$CASE_WORK/removed-drop-$value.yaml
+	cat >"$path" <<YAML
+version: 1
+cgroup-root: AUTO
+route-table: 31300
+rules:
+  - match: "/.*"
+    direct: true
+    drop: $value
+YAML
+	check_invalid_config "removed-drop-$value" "$path"
+	grep -q 'field drop not found' "$CASE_WORK/removed-drop-$value.stderr"
 done
 
 # Invalid table IDs must fail validation before any network state is changed.
@@ -41,7 +58,7 @@ for table in 1 252 256 31300; do
 	"$CGTPROXY_BIN" --config "$path" check config
 done
 # Proxy names share a namespace with all generated and internal chains.
-for name in cgroup-root output-mangle output-nat prerouting forward-mangle prerouting-nat; do
+for name in cgroup-root output-mangle output-nat output-bypass prerouting forward-mangle prerouting-nat; do
 	path=$CASE_WORK/proxy-name-$name.yaml
 	cat "$CASE_DIR/config.yaml" >"$path"
 	cat >>"$path" <<YAML

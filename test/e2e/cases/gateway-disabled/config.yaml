@@ -25,4 +25,4 @@ rules:
   - match: "/proxied$"
     tproxy: proxy
   - match: "^/$"
-    drop: true
+    tproxy: proxy

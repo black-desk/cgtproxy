@@ -13,8 +13,9 @@ type Config struct {
 	// Gateway applies the root cgroup target to forwarded traffic.
 	// Forwarded traffic is left unchanged unless this is enabled.
 	Gateway bool `yaml:"gateway"`
-	// Bypass describes the bypass rules apply to all the TPROXY servers.
-	// If the destination matched in Bypass, the traffic will not be touched.
+	// Bypass lists destinations excluded from all TPROXY targets. When DNAT
+	// changes a destination to one of these addresses, clear our proxy mark
+	// so the packet follows normal routing.
 	Bypass   Bypass             `yaml:"bypass" validate:"dive,ipv4|cidrv4|ipv6|cidrv6"`
 	TProxies map[string]*TProxy `yaml:"tproxies" validate:"dive"`
 	Rules    []Rule             `yaml:"rules" validate:"dive"`
@@ -39,11 +40,9 @@ type Rule struct {
 
 	// TProxy means that the traffic comes from this cgroup
 	// should be redirected to a TPROXY server.
-	TProxy string `yaml:"tproxy" validate:"required_without_all=Drop Direct,excluded_with=Drop Direct"`
-	// Drop means that the traffic comes from this cgroup will be dropped.
-	Drop bool `yaml:"drop" validate:"required_without_all=TProxy Direct,excluded_with=TProxy Direct"`
+	TProxy string `yaml:"tproxy" validate:"required_without=Direct,excluded_with=Direct"`
 	// Direct means that the traffic comes from this cgroup will not be touched.
-	Direct bool `yaml:"direct" validate:"required_without_all=TProxy Drop,excluded_with=TProxy Drop"`
+	Direct bool `yaml:"direct" validate:"required_without=TProxy,excluded_with=TProxy"`
 }
 
 // TProxy describes a TPROXY server.

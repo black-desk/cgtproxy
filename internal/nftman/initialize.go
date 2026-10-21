@@ -11,6 +11,7 @@ import (
 	"github.com/black-desk/cgtproxy/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
+	"github.com/google/nftables/binaryutil"
 )
 
 // Initialize installs the complete ruleset, including the first cgroup scan,
@@ -82,6 +83,11 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 		nft.log.Debugw("Generating chain and rules for tproxy.",
 			"tproxy", tp,
 		)
+		if err = conn.SetAddElements(nft.proxyMarkSet, []nftables.SetElement{
+			{Key: binaryutil.NativeEndian.PutUint32(uint32(tp.Mark))},
+		}); err != nil {
+			return err
+		}
 
 		_, err = nft.addMarkChainForTProxy(conn, tp)
 		if err != nil {
@@ -156,6 +162,10 @@ func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
 	if err != nil {
 		return
 	}
+	err = nft.initProxyMarkSet(conn)
+	if err != nil {
+		return
+	}
 
 	nft.policy = nftables.ChainPolicyAccept
 	nft.rootChain = conn.AddChain(&nftables.Chain{Table: nft.table, Name: types.ChainCgroupRoot})
@@ -169,6 +179,7 @@ func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
 	if err != nil {
 		return
 	}
+	nft.initOutputBypassChain(conn)
 
 	err = nft.initPreroutingChain(conn)
 	if err != nil {

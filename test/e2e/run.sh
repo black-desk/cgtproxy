@@ -12,7 +12,7 @@ delegated=/sys/fs/cgroup$(sed -n 's/^0:://p' /proc/self/cgroup)
 failed=0
 cases=0
 
-for command in ip nft nsenter unshare timeout mount sysctl; do
+for command in ip nft nsenter unshare timeout mount sysctl setpriv; do
 	command -v "$command" >/dev/null || {
 		echo "Missing test dependency: $command" >&2
 		exit 1

@@ -43,6 +43,7 @@ type NFTManager struct {
 
 	markTproxyMap *nftables.Set
 	markDNSMap    *nftables.Set
+	proxyMarkSet  *nftables.Set
 
 	outputMangleChain *nftables.Chain
 	outputNATChain    *nftables.Chain

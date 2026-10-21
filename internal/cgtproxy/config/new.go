@@ -5,6 +5,8 @@
 package config
 
 import (
+	"bytes"
+
 	. "github.com/black-desk/lib/go/errwrap"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -27,7 +29,9 @@ func New(opts ...Opt) (ret *Config, err error) {
 		c.log = zap.NewNop().Sugar()
 	}
 
-	err = yaml.Unmarshal(c.raw, c)
+	decoder := yaml.NewDecoder(bytes.NewReader(c.raw))
+	decoder.KnownFields(true)
+	err = decoder.Decode(c)
 	if err != nil {
 		Wrap(&err, "unmarshal configuration")
 		return

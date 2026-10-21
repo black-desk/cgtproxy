@@ -173,78 +173,7 @@ func (nft *NFTManager) fillOutputMangleChain(
 		Exprs: exprs,
 	})
 
-	// ip daddr @bypass return
-	exprs = []expr.Any{
-		&expr.Meta{ // meta load nfproto => reg 1
-			Key:      expr.MetaKeyNFPROTO,
-			Register: 1,
-		},
-		&expr.Cmp{ // cmp eq reg 1 0x00000002
-			Op:       expr.CmpOpEq,
-			Register: 1,
-			Data:     []byte{0x00000002},
-		},
-		&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
-			OperationType: expr.PayloadLoad,
-			DestRegister:  1,
-			Base:          expr.PayloadBaseNetworkHeader,
-			Offset:        16,
-			Len:           4,
-		},
-		&expr.Lookup{ // lookup reg 1 set bypass
-			SourceRegister: 1,
-			SetID:          nft.ipv4BypassSet.ID,
-			SetName:        nft.ipv4BypassSet.Name,
-		},
-		&expr.Verdict{ // immediate reg 0 return
-			Kind: expr.VerdictReturn,
-		},
-	}
-
-	exprs = addDebugCounter(exprs)
-
-	conn.AddRule(&nftables.Rule{
-		Table: nft.table,
-		Chain: chain,
-		Exprs: exprs,
-	})
-
-	// ip6 daddr @bypass6 return
-
-	exprs = []expr.Any{
-		&expr.Meta{ // meta load nfproto => reg 1
-			Key:      expr.MetaKeyNFPROTO,
-			Register: 1,
-		},
-		&expr.Cmp{ // cmp eq reg 1 0x0000000a
-			Op:       expr.CmpOpEq,
-			Register: 1,
-			Data:     []byte{0x0000000a},
-		},
-		&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
-			OperationType: expr.PayloadLoad,
-			DestRegister:  1,
-			Base:          expr.PayloadBaseNetworkHeader,
-			Offset:        24,
-			Len:           16,
-		},
-		&expr.Lookup{ // lookup reg 1 set bypass
-			SourceRegister: 1,
-			SetID:          nft.ipv6BypassSet.ID,
-			SetName:        nft.ipv6BypassSet.Name,
-		},
-		&expr.Verdict{ // immediate reg 0 return
-			Kind: expr.VerdictReturn,
-		},
-	}
-
-	exprs = addDebugCounter(exprs)
-
-	conn.AddRule(&nftables.Rule{
-		Table: nft.table,
-		Chain: chain,
-		Exprs: exprs,
-	})
+	nft.addBypassRules(conn, chain, false)
 
 	// meta l4proto != { tcp, udp } return
 
@@ -329,80 +258,10 @@ func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
 		Policy:   &nft.policy,
 	})
 
-	// ip daddr @bypass return
-	exprs := []expr.Any{
-		&expr.Meta{ // meta load nfproto => reg 1
-			Key:      expr.MetaKeyNFPROTO,
-			Register: 1,
-		},
-		&expr.Cmp{ // cmp eq reg 1 0x00000002
-			Op:       expr.CmpOpEq,
-			Register: 1,
-			Data:     []byte{0x00000002},
-		},
-		&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
-			OperationType: expr.PayloadLoad,
-			DestRegister:  1,
-			Base:          expr.PayloadBaseNetworkHeader,
-			Offset:        16,
-			Len:           4,
-		},
-		&expr.Lookup{ // lookup reg 1 set bypass
-			SourceRegister: 1,
-			SetID:          nft.ipv4BypassSet.ID,
-			SetName:        nft.ipv4BypassSet.Name,
-		},
-		&expr.Verdict{ // immediate reg 0 return
-			Kind: expr.VerdictReturn,
-		},
-	}
-
-	exprs = addDebugCounter(exprs)
-
-	conn.AddRule(&nftables.Rule{
-		Table: nft.table,
-		Chain: nft.preroutingChain,
-		Exprs: exprs,
-	})
-
-	// ip6 daddr @bypass6 return
-	exprs = []expr.Any{
-		&expr.Meta{ // meta load nfproto => reg 1
-			Key:      expr.MetaKeyNFPROTO,
-			Register: 1,
-		},
-		&expr.Cmp{ // cmp eq reg 1 0x0000000a
-			Op:       expr.CmpOpEq,
-			Register: 1,
-			Data:     []byte{0x0000000a},
-		},
-		&expr.Payload{ // payload load 4b @ network header + 16 => reg 1
-			OperationType: expr.PayloadLoad,
-			DestRegister:  1,
-			Base:          expr.PayloadBaseNetworkHeader,
-			Offset:        24,
-			Len:           16,
-		},
-		&expr.Lookup{ // lookup reg 1 set bypass
-			SourceRegister: 1,
-			SetID:          nft.ipv6BypassSet.ID,
-			SetName:        nft.ipv6BypassSet.Name,
-		},
-		&expr.Verdict{ // immediate reg 0 return
-			Kind: expr.VerdictReturn,
-		},
-	}
-
-	exprs = addDebugCounter(exprs)
-
-	conn.AddRule(&nftables.Rule{
-		Table: nft.table,
-		Chain: nft.preroutingChain,
-		Exprs: exprs,
-	})
+	nft.addBypassRules(conn, nft.preroutingChain, true)
 
 	// meta mark vmap @mark-vmap
-	exprs = []expr.Any{
+	exprs := []expr.Any{
 		&expr.Meta{
 			Key:      expr.MetaKeyMARK,
 			Register: 1,
@@ -811,11 +670,6 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 		setElement.VerdictData = &expr.Verdict{
 			Kind:  expr.VerdictGoto,
 			Chain: target.Chain,
-		}
-
-	case types.TargetDrop:
-		setElement.VerdictData = &expr.Verdict{
-			Kind: expr.VerdictDrop,
 		}
 	}
 

@@ -9,6 +9,7 @@ const (
 	ChainCgroupRoot    = "cgroup-root"
 	ChainOutputMangle  = "output-mangle"
 	ChainOutputNAT     = "output-nat"
+	ChainOutputBypass  = "output-bypass"
 	ChainPrerouting    = "prerouting"
 	ChainForwardMangle = "forward-mangle"
 	ChainPreroutingNAT = "prerouting-nat"

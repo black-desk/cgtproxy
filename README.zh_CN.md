@@ -48,7 +48,6 @@ SPDX-License-Identifier: MIT
 目前支持的目标包括：
 
 - `DIRECT`（直连）
-- `DROP`（丢弃）
 - [`TPROXY`][TPROXY]
 
 [TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
@@ -100,19 +99,15 @@ function cgtproxy-exec() {
 # 不使用代理运行
 cgtproxy-exec direct /some/command
 
-# 禁用网络运行
-cgtproxy-exec drop /some/command
-
 # 使用代理运行
 cgtproxy-exec proxy /some/command
 ```
 
-该函数使用`systemd-run`在`cgtproxy-direct`、`cgtproxy-drop`和`cgtproxy-proxy`这三个`slice`中运行命令。
+该函数使用`systemd-run`在`cgtproxy-direct`和`cgtproxy-proxy`这两个`slice`中运行命令。
 
 在[示例配置]中，我们：
 
 - 不修改来自 cgroup `cgtproxy-direct.slice`的流量;
-- 丢弃来自 cgroup `cgtproxy-drop.slice`的流量；
 - 透明地代理了来自 cgroup `cgtproxy-proxy.slice`的流量。
 
 [示例配置]: ./misc/config/example.yaml
@@ -202,7 +197,7 @@ cgtproxy在收到cgroup创建事件后，才根据配置更新nft规则。应用
 
 在Thinkpad L14 Gen2上，观察到的竞争窗口约为0.3～43毫秒。
 
-窗口内已直连建立的TCP连接在DROP规则生效后等待回包超时，在TPROXY规则生效后被重置。客户端重新连接后会按新规则处理，是否自动重试取决于应用。
+窗口内已直连建立的TCP连接在TPROXY规则生效后被重置。客户端重新连接后会按新规则处理，是否自动重试取决于应用。
 
 ## 与cgproxy的区别
 

@@ -148,6 +148,10 @@ stop_cgtproxy() {
 	kill -TERM "$cgtproxy_pid"
 	wait "$cgtproxy_pid"
 	cgtproxy_pid=
+	assert_network_cleanup
+}
+
+assert_network_cleanup() {
 	if nft list table inet cgtproxy >/dev/null 2>&1; then
 		echo 'cgtproxy left its nft table behind' >&2
 		return 1
@@ -166,17 +170,13 @@ stop_cgtproxy() {
 }
 
 probe() {
-	local source=$1 network=$2 address=$3 expect=$4 before
+	local source=$1 network=$2 address=$3 expect=$4
 	local command=("$FIXTURE_BIN" client -network "$network" -address "$address" -expect "$expect")
 	if [[ $expect == proxy || $expect == second || -n ${5:-} ]]; then command+=(-destination "${5:-$address}"); fi
-	if [[ $expect == drop ]]; then before=$(cat "$CASE_WORK"/*.receipts | wc -l); fi
 	if [[ $source == forwarded ]]; then
 		nsenter -t "$client_ns" -n "${command[@]}"
 	else
 		(in_group "$source" "${command[@]}")
-	fi
-	if [[ $expect == drop ]]; then
-		[[ $before == "$(cat "$CASE_WORK"/*.receipts | wc -l)" ]]
 	fi
 }
 

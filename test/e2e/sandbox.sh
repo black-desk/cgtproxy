@@ -16,7 +16,7 @@ suite=$(cd -- "$(dirname -- "$0")" && pwd)
 source "$suite/common.sh"
 trap cleanup EXIT
 
-mkdir /sys/fs/cgroup/{servers,manager,direct,proxied,blocked,unmatched}
+mkdir /sys/fs/cgroup/{servers,manager,direct,proxied,unmatched}
 setup_network
 start_servers
 # Each case is a complete configuration and a script exercising the public CLI.

@@ -74,7 +74,7 @@ func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 			close(events.Result)
 		}
 		if eventsErr != nil {
-			m.log.Errorw("Failed to update cgroup routes.", "error", eventsErr)
+			return eventsErr
 		}
 	}
 }

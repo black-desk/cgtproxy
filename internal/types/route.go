@@ -8,7 +8,6 @@ type TargetOp uint32
 
 const (
 	TargetNoop   TargetOp = iota // noop
-	TargetDrop                   // drop
 	TargetTProxy                 //tproxy
 	TargetDirect                 //direct
 )

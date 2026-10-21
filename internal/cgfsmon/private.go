@@ -7,6 +7,7 @@ package cgfsmon
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -27,7 +28,7 @@ func (m *CGroupFSMonitor) walk(ctx context.Context, watcher *fsnotify.Watcher, r
 			return nil
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("scan cgroup %q: %w", path, err)
 		}
 		if !d.IsDir() {
 			return nil
@@ -40,7 +41,7 @@ func (m *CGroupFSMonitor) walk(ctx context.Context, watcher *fsnotify.Watcher, r
 			if errors.Is(err, fs.ErrNotExist) && path != string(m.root) {
 				return filepath.SkipDir
 			}
-			return err
+			return fmt.Errorf("watch cgroup %q: %w", path, err)
 		}
 		if path != string(m.root) {
 			events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeNew})
@@ -69,7 +70,7 @@ func (m *CGroupFSMonitor) reconcile(ctx context.Context, watcher *fsnotify.Watch
 		// The kernel may have already removed a deleted directory's watch,
 		// before fsnotify has consumed the corresponding notification.
 		if err = watcher.Remove(path); err != nil && !errors.Is(err, fsnotify.ErrNonExistentWatch) && !errors.Is(err, unix.EINVAL) {
-			return nil, err
+			return nil, fmt.Errorf("unwatch cgroup %q: %w", path, err)
 		}
 		events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeDelete})
 		delete(known, path)

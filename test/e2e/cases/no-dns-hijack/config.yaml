@@ -26,10 +26,6 @@ rules:
     direct: true
   - match: "/direct$"
     direct: true
-  - match: "/blocked$"
-    drop: true
-  - match: "/proxied/drop$"
-    drop: true
   - match: "/proxied/second$"
     tproxy: second
   - match: "/proxied(/.*)?$"
