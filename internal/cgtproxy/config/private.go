@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+// SPDX-FileCopyrightText: 2025-2026 Chen Linxuan <me@black-desk.cn>
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -7,6 +7,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"regexp"
 
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/go-playground/validator/v10"
@@ -20,6 +21,28 @@ func (c *Config) check() (err error) {
 	if err != nil {
 		err = fmt.Errorf("validator: %w", err)
 		return
+	}
+
+	marks := make(map[FireWallMark]string, len(c.TProxies))
+	for name, tp := range c.TProxies {
+		if tp == nil {
+			return fmt.Errorf("tproxies[%q]: must not be null", name)
+		}
+		if previous, exists := marks[tp.Mark]; exists {
+			return fmt.Errorf("tproxies[%q].mark: %d is also used by tproxies[%q].mark", name, tp.Mark, previous)
+		}
+		marks[tp.Mark] = name
+	}
+
+	for i, rule := range c.Rules {
+		if _, err := regexp.Compile(rule.Match); err != nil {
+			return fmt.Errorf("rules[%d].match: %w", i, err)
+		}
+		if rule.TProxy != "" {
+			if _, exists := c.TProxies[rule.TProxy]; !exists {
+				return fmt.Errorf("rules[%d].tproxy: undefined proxy %q", i, rule.TProxy)
+			}
+		}
 	}
 
 	if c.CgroupRoot == "AUTO" {
