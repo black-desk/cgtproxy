@@ -9,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
+	"github.com/black-desk/cgtproxy/internal/types"
 	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/go-playground/validator/v10"
 )
@@ -25,6 +27,14 @@ func (c *Config) check() (err error) {
 	}
 
 	marks := make(map[FireWallMark]string, len(c.TProxies))
+	chains := map[string]string{
+		types.ChainCgroupRoot:    "internal chain",
+		types.ChainOutputMangle:  "internal chain",
+		types.ChainOutputNAT:     "internal chain",
+		types.ChainPrerouting:    "internal chain",
+		types.ChainForwardMangle: "internal chain",
+		types.ChainPreroutingNAT: "internal chain",
+	}
 	for name, tp := range c.TProxies {
 		if tp == nil {
 			return fmt.Errorf("tproxies[%q]: must not be null", name)
@@ -33,6 +43,26 @@ func (c *Config) check() (err error) {
 			return fmt.Errorf("tproxies[%q].mark: %d is also used by tproxies[%q].mark", name, tp.Mark, previous)
 		}
 		marks[tp.Mark] = name
+		if tp.Name == "" {
+			tp.Name = name
+		}
+		if tp.Name == "" {
+			return fmt.Errorf("tproxies[%q]: proxy name must not be empty", name)
+		}
+		proxyChains := []string{tp.Name, tp.Name + "-MARK"}
+		if tp.DNSHijack != nil {
+			proxyChains = append(proxyChains, tp.Name+"-DNS")
+		}
+		for _, chain := range proxyChains {
+			// NFT_NAME_MAXLEN includes the terminating NUL byte.
+			if len(chain) > 255 || strings.ContainsRune(chain, '\x00') {
+				return fmt.Errorf("tproxies[%q]: generated chain name must be at most 255 bytes without NUL", name)
+			}
+			if owner, exists := chains[chain]; exists {
+				return fmt.Errorf("tproxies[%q]: generated chain %q conflicts with %s", name, chain, owner)
+			}
+			chains[chain] = fmt.Sprintf("tproxies[%q]", name)
+		}
 	}
 
 	for i, rule := range c.Rules {
@@ -75,9 +105,6 @@ func (c *Config) check() (err error) {
 
 	for name := range c.TProxies {
 		tp := c.TProxies[name]
-		if tp.Name == "" {
-			tp.Name = name
-		}
 		if tp.DNSHijack != nil && tp.DNSHijack.IP == nil {
 			addr := IPv4LocalhostStr
 			tp.DNSHijack.IP = &addr

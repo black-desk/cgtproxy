@@ -43,7 +43,7 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn) error {
 	// NAT; TPROXY dispatch runs after NAT so the DNS mark can be cleared first.
 	markPriority := nftables.ChainPriority(*nftables.ChainPriorityMangle - 2)
 	chain := conn.AddChain(&nftables.Chain{
-		Table: nft.table, Name: "forward-mangle", Type: nftables.ChainTypeFilter,
+		Table: nft.table, Name: types.ChainForwardMangle, Type: nftables.ChainTypeFilter,
 		Hooknum: nftables.ChainHookPrerouting, Priority: &markPriority, Policy: &nft.policy,
 	})
 	if err := nft.fillOutputMangleChain(conn, chain); err != nil {
@@ -71,7 +71,7 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn) error {
 	}
 
 	dnsChain := conn.AddChain(&nftables.Chain{
-		Table: nft.table, Name: "prerouting-nat", Type: nftables.ChainTypeNAT,
+		Table: nft.table, Name: types.ChainPreroutingNAT, Type: nftables.ChainTypeNAT,
 		Hooknum: nftables.ChainHookPrerouting, Priority: nftables.ChainPriorityNATDest, Policy: &nft.policy,
 	})
 	conn.AddRule(&nftables.Rule{Table: nft.table, Chain: dnsChain,
