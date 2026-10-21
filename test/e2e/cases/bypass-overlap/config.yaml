@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+version: 1
+cgroup-root: AUTO
+route-table: 31300
+gateway: true
+bypass:
+  - 198.51.100.20
+  - ::ffff:198.51.100.20
+  - ::ffff:198.51.100.20/126
+  - 198.51.100.22/31
+  - 198.51.100.20/31
+  - 198.51.100.21
+  - 198.51.100.20/30
+  - 198.51.100.20/30
+  - 2001:db8::20
+  - 2001:db8::22/127
+  - 2001:db8::20/127
+  - 2001:db8::21
+  - 2001:db8::20/126
+  - 2001:db8::20/126
+  - 0.0.0.0
+  - 0.0.0.1
+  - 255.255.255.254/31
+  - 255.255.255.255
+  - "::"
+  - ::/80
+  - ::1
+  - ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe/127
+  - ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+    dns-hijack:
+      ip: 172.31.254.1
+      port: 15353
+      tcp: true
+  second:
+    port: 17894
+    mark: 42043
+rules:
+  - match: "/servers$"
+    direct: true
+  - match: "/manager$"
+    direct: true
+  - match: "/direct$"
+    direct: true
+  - match: "^/blocked$"
+    drop: true
+  - match: "/proxied/drop$"
+    drop: true
+  - match: "/proxied/second$"
+    tproxy: second
+  - match: "^/proxied(/.*)?$"
+    tproxy: proxy
+  - match: "^/$"
+    tproxy: proxy
