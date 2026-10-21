@@ -8,6 +8,8 @@ import (
 	"errors"
 	"net"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/types"
@@ -178,6 +180,7 @@ func (m *RouteManager) removeRoute() {
 
 func (m *RouteManager) routesForPaths(paths []string) []types.Route {
 	routes := []types.Route{}
+	root := filepath.Clean(string(m.cfg.CgroupRoot))
 
 	for i := range paths {
 		path := paths[i]
@@ -186,7 +189,11 @@ func (m *RouteManager) routesForPaths(paths []string) []types.Route {
 			"path", path,
 		)
 
-		target := m.targetForPath(path)
+		// Match cgroup paths relative to cgroupfs, retaining the filesystem
+		// path in the route for stat(2) and deletion handling.
+		matchPath := strings.TrimPrefix(filepath.Clean(path), root)
+		matchPath = "/" + strings.TrimPrefix(matchPath, "/")
+		target := m.targetForPath(matchPath)
 
 		if target.Op == types.TargetNoop {
 			m.log.Debugw("No rule match this cgroup",
