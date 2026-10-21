@@ -8,9 +8,19 @@
 repo=$(cd -- "$CASE_DIR/../../../.." && pwd)
 "$CGTPROXY_BIN" --config "$repo/misc/config/example.yaml" check config
 "$CGTPROXY_BIN" --config "$repo/test/data/example_config.yaml" check config
-for invalid in wrong_type validation_fail; do
-	if "$CGTPROXY_BIN" --config "$repo/test/data/$invalid.yaml" check config; then
-		echo "Accepted invalid configuration: $invalid" >&2
+for invalid in wrong_type validation_fail undefined_proxy null_proxy invalid_regex duplicate_mark; do
+	status=0
+	"$CGTPROXY_BIN" --config "$repo/test/data/$invalid.yaml" check config || status=$?
+	if [[ $status != 1 ]]; then
+		echo "Expected configuration error for $invalid, got status $status" >&2
+		exit 1
+	fi
+
+	status=0
+	timeout 5s "$CGTPROXY_BIN" --config "$repo/test/data/$invalid.yaml" \
+		--log-file "$CASE_WORK/$invalid.log" || status=$?
+	if [[ $status != 1 ]]; then
+		echo "Expected startup configuration error for $invalid, got status $status" >&2
 		exit 1
 	fi
 done

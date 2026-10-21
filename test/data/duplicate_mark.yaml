@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+version: 1
+cgroup-root: AUTO
+route-table: 31300
+
+# Marks must be unique even for proxies not referenced by any rule.
+tproxies:
+  first:
+    port: 12345
+    mark: 100
+  second:
+    port: 12346
+    mark: 100
