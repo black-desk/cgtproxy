@@ -7,6 +7,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	. "github.com/black-desk/lib/go/errwrap"
@@ -59,6 +60,10 @@ func (c *Config) check() (err error) {
 			"cgroup root", cgroupRoot,
 		)
 	}
+
+	// Every component must use the same root when deriving cgroup paths and
+	// socket ancestry levels, including roots containing "." or repeated "/".
+	c.CgroupRoot = CGroupRoot(filepath.Clean(string(c.CgroupRoot)))
 
 	if c.Rules == nil {
 		c.log.Warnw("No rules in config.")
