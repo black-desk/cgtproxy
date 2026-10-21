@@ -19,8 +19,6 @@ import (
 func (nft *NFTManager) setRootTarget(conn *nftables.Conn, target types.Target) {
 	verdict := &expr.Verdict{Kind: expr.VerdictReturn}
 	switch target.Op {
-	case types.TargetDrop:
-		verdict.Kind = expr.VerdictDrop
 	case types.TargetTProxy:
 		verdict.Kind, verdict.Chain = expr.VerdictGoto, target.Chain
 	}

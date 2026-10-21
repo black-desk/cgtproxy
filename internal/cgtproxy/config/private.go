@@ -31,6 +31,7 @@ func (c *Config) check() (err error) {
 		types.ChainCgroupRoot:    "internal chain",
 		types.ChainOutputMangle:  "internal chain",
 		types.ChainOutputNAT:     "internal chain",
+		types.ChainOutputBypass:  "internal chain",
 		types.ChainPrerouting:    "internal chain",
 		types.ChainForwardMangle: "internal chain",
 		types.ChainPreroutingNAT: "internal chain",

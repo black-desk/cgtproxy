@@ -62,8 +62,6 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 
 		if m.cfg.Rules[i].Direct {
 			matcher.target.Op = types.TargetDirect
-		} else if m.cfg.Rules[i].Drop {
-			matcher.target.Op = types.TargetDrop
 		} else if m.cfg.Rules[i].TProxy != "" {
 			matcher.target.Op = types.TargetTProxy
 			matcher.target.Chain =

@@ -8,7 +8,6 @@ cgroup-root: AUTO
 tproxies:
   clash:
     port: 7893
-    addr: 127.0.0.1
 
 rules:
   - match: /user.slice/user-1000.slice/user@1000.service/app.slice/*

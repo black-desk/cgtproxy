@@ -9,14 +9,13 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[TargetNoop-0]
-	_ = x[TargetDrop-1]
-	_ = x[TargetTProxy-2]
-	_ = x[TargetDirect-3]
+	_ = x[TargetTProxy-1]
+	_ = x[TargetDirect-2]
 }
 
-const _TargetOp_name = "noopdroptproxydirect"
+const _TargetOp_name = "nooptproxydirect"
 
-var _TargetOp_index = [...]uint8{0, 4, 8, 14, 20}
+var _TargetOp_index = [...]uint8{0, 4, 10, 16}
 
 func (i TargetOp) String() string {
 	idx := int(i) - 0

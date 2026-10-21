@@ -48,7 +48,6 @@ func cgroupKeys(root string) (map[string]string, error) {
 func checkCgroupMap(args []string) error {
 	flags := flag.NewFlagSet("check-cgroup-map", flag.ExitOnError)
 	root := flags.String("root", "/sys/fs/cgroup", "cgroup root; all descendants must have entries")
-	dropPrefix := flags.String("drop-prefix", "group-drop-", "basename prefix of DROP cgroups")
 	proxyPrefix := flags.String("proxy-prefix", "group-proxy-", "basename prefix of proxy cgroups")
 	proxyChain := flags.String("proxy-chain", "proxy-MARK", "expected proxy target chain")
 	flags.Parse(args)
@@ -75,8 +74,6 @@ func checkCgroupMap(args []string) error {
 		}
 		want := expr.Verdict{Kind: expr.VerdictReturn}
 		switch name := filepath.Base(path); {
-		case strings.HasPrefix(name, *dropPrefix):
-			want.Kind = expr.VerdictDrop
 		case strings.HasPrefix(name, *proxyPrefix):
 			want.Kind, want.Chain = expr.VerdictGoto, *proxyChain
 		}

@@ -96,10 +96,9 @@ network topology, proxy servers, and nftables rules within this environment.
 The test network contains a simulated host, a client attached through a bridge,
 and a separate origin-server network namespace. The test proxy returns its
 identity, the original destination, and the request payload so clients can
-distinguish interception from direct access. Drop checks require a timeout or
-local firewall rejection, along with no server receipt. Cases also verify
-dynamic cgroup changes and removal of nftables tables, policy rules, and routes
-on graceful shutdown.
+distinguish interception from direct access. Cases also verify dynamic cgroup
+changes and removal of nftables tables, policy rules, and routes on graceful
+shutdown.
 
 Tests stop cgtproxy using SIGTERM so shutdown cleanup and coverage writes can
 finish.

@@ -11,7 +11,6 @@ for network in tcp4 udp4; do
 	probe proxied "$network" 198.51.100.10:18080 proxy
 	probe forwarded "$network" 198.51.100.10:18080 proxy
 	probe direct "$network" 198.51.100.10:18080 origin
-	probe blocked "$network" 198.51.100.10:18080 drop
 done
 [[ -z $(ip -6 route show table 31300 2>/dev/null) ]]
 if ip -6 rule show | grep -q 'lookup 31300'; then

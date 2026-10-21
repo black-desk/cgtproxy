@@ -14,7 +14,5 @@ tproxies:
 rules:
   - match: "/servers$|/manager$|/direct$"
     direct: true
-  - match: "^/blocked$"
-    drop: true
   - match: "/.*"
     tproxy: proxy

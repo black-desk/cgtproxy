@@ -4,22 +4,20 @@
 # SPDX-License-Identifier: MIT
 
 # Existing cgroups are found by the initial scan.
-mkdir /sys/fs/cgroup/proxied/{direct,drop,second}
+mkdir /sys/fs/cgroup/proxied/{direct,second}
 start_cgtproxy
 for network in tcp4 udp4; do
 	probe proxied "$network" 198.51.100.10:18080 proxy
 	probe direct "$network" 198.51.100.10:18080 origin
 	probe unmatched "$network" 198.51.100.10:18080 origin
-	probe blocked "$network" 198.51.100.10:18080 drop
 	probe proxied "$network" 198.51.100.20:18080 origin
 done
 probe proxied tcp6 '[2001:db8::10]:18080' proxy
 probe proxied udp6 '[2001:db8::10]:18080' proxy
 probe proxied tcp6 '[2001:db8::20]:18080' origin
 probe proxied/second tcp4 198.51.100.10:18080 second
-probe proxied/direct tcp4 198.51.100.10:18080 origin
 # First matching rule wins over the later proxied-parent rule.
-probe proxied/drop tcp4 198.51.100.10:18080 drop
+probe proxied/direct tcp4 198.51.100.10:18080 origin
 # Create, delete and recreate the same cgroup while cgtproxy is running.
 mkdir /sys/fs/cgroup/proxied/live
 wait_until has_cgroup proxied/live

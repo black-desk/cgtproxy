@@ -68,14 +68,13 @@ tproxies:
 # An explicit `match: '^/$'` rule can select this target independently.
 # `match` is an regex to match the cgroup path.
 # `direct` means the traffic will not be redirect to any TPROXY server;
-# `drop` means the traffic will be drop;
 # `tproxy` means the traffic will be redirect to that TPROXY server.
 #
 # NOTE: You can use systemd-cgls to check the cgroup layout on your system.
 #
 # NOTE: Any web service will provide their service directly.
 #       Traffics in connection created by remote host
-#       will never redirect to TPROXY server or drop.
+#       will never redirect to TPROXY server.
 rules:
   # This rule match the clash-meta core.
   # Make cgtproxy produce nft rules that
@@ -91,8 +90,8 @@ rules:
     direct: true
 
   # Same as above.
-  # Let's configure the user-level `cgtproxy-direct.slice`,
-  # `cgtproxy-proxy.slice` and `cgtproxy-drop.slice` cgroup.
+  # Let's configure the user-level `cgtproxy-direct.slice`
+  # and `cgtproxy-proxy.slice` cgroups.
   #
   # Using this setup, you can start a non-proxy shell
   # by execute:
@@ -109,9 +108,6 @@ rules:
   - match: |-
       \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-direct\.slice\/.*
     direct: true
-  - match: |-
-      \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-drop\.slice\/.*
-    drop: true
   - match: |-
       \/user\.slice\/user-\d+\.slice/user@\d+\.service\/cgtproxy\.slice\/cgtproxy-proxy\.slice\/.*
     tproxy: clash-meta

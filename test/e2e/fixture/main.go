@@ -199,13 +199,13 @@ func client(args []string) error {
 	flags := flag.NewFlagSet("client", flag.ExitOnError)
 	network := flags.String("network", "tcp4", "transport")
 	address := flags.String("address", "198.51.100.10:18080", "destination")
-	expect := flags.String("expect", "proxy", "expected server identity, or drop")
+	expect := flags.String("expect", "proxy", "expected server identity")
 	destination := flags.String("destination", "", "expected original destination")
 	count := flags.Int("count", 2, "requests on the same connection")
 	flags.Parse(args)
 	conn, err := net.DialTimeout(*network, *address, 3*time.Second)
 	if err != nil {
-		return checkDrop(*expect, err)
+		return err
 	}
 	defer conn.Close()
 	_ = conn.SetDeadline(time.Now().Add(3 * time.Second))
@@ -213,21 +213,21 @@ func client(args []string) error {
 	for i := range *count {
 		payload := fmt.Sprintf("cgtproxy-e2e-%d", i)
 		if _, err := fmt.Fprintln(conn, payload); err != nil {
-			return checkDrop(*expect, err)
+			return err
 		}
 		var value receipt
 		if strings.HasPrefix(*network, "udp") {
 			buf := make([]byte, 4096)
 			n, err := conn.Read(buf)
 			if err != nil {
-				return checkDrop(*expect, err)
+				return err
 			}
 			err = json.Unmarshal(buf[:n], &value)
 		} else {
 			err = decoder.Decode(&value)
 		}
 		if err != nil {
-			return checkDrop(*expect, err)
+			return err
 		}
 		if value.Server != *expect || value.Payload != payload || (*destination != "" && value.Destination != *destination) {
 			return fmt.Errorf("unexpected receipt %+v; want server=%s destination=%s payload=%s", value, *expect, *destination, payload)
@@ -235,13 +235,4 @@ func client(args []string) error {
 	}
 	fmt.Printf("PASS %s %s -> %s\n", *network, *address, *expect)
 	return nil
-}
-
-func checkDrop(expect string, err error) error {
-	var networkErr net.Error
-	if expect == "drop" && ((errors.As(err, &networkErr) && networkErr.Timeout()) || errors.Is(err, unix.EPERM)) {
-		fmt.Println("PASS packet dropped")
-		return nil
-	}
-	return err
 }

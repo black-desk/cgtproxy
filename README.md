@@ -58,7 +58,6 @@ dynamic transparent proxy rules at the application level.
 Currently supported targets include:
 
 - `DIRECT` (direct connection)
-- `DROP` (drop packets)
 - [`TPROXY`][TPROXY]
 
 [TPROXY]: https://www.infradead.org/~mchehab/kernel_docs/networking/tproxy.html
@@ -110,20 +109,16 @@ When you use this function like:
 # Run without proxy
 cgtproxy-exec direct /some/command
 
-# Run with network disabled
-cgtproxy-exec drop /some/command
-
 # Run with proxy
 cgtproxy-exec proxy /some/command
 ```
 
-The function uses `systemd-run` to run commands in the `cgtproxy-direct`,
-`cgtproxy-drop`, and `cgtproxy-proxy` slices.
+The function uses `systemd-run` to run commands in the `cgtproxy-direct` and
+`cgtproxy-proxy` slices.
 
 In the [example configuration], we:
 
 - Leave traffic from cgroup `cgtproxy-direct.slice` unmodified
-- Drop traffic from cgroup `cgtproxy-drop.slice`
 - Transparently proxy traffic from cgroup `cgtproxy-proxy.slice`
 
 [example configuration]: ./misc/config/example.yaml
@@ -242,10 +237,9 @@ currently implement this startup synchronization.
 
 On a ThinkPad L14 Gen 2, the observed race window was approximately 0.3–43 ms.
 
-TCP connections established directly during this window time out waiting for
-replies once DROP rules take effect, and are reset once TPROXY rules take
-effect. After reconnecting, clients follow the new rules; whether they retry
-automatically depends on the application.
+TCP connections established directly during this window are reset once TPROXY
+rules take effect. After reconnecting, clients follow the new rules; whether
+they retry automatically depends on the application.
 
 ## Differences from cgproxy
 

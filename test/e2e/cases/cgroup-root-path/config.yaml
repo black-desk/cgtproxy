@@ -12,7 +12,5 @@ tproxies:
 rules:
   - match: "^/proxied(/.*)?$"
     tproxy: proxy
-  - match: "^/blocked$"
-    drop: true
   - match: "/.*"
     direct: true

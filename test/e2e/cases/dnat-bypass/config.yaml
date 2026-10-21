@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+version: 1
+cgroup-root: AUTO
+route-table: 31300
+gateway: true
+bypass:
+  - 127.0.0.0/8
+  - ::1
+  - 198.51.100.20
+  - 2001:db8::20
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+  second:
+    port: 17893
+    mark: 42043
+rules:
+  - match: "^/(servers|manager|direct)$"
+    direct: true
+  - match: "^/second$"
+    tproxy: second
+  - match: "/.*"
+    tproxy: proxy

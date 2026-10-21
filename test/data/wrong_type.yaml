@@ -18,6 +18,6 @@ rules:
   - match: /user.slice/user-1000.slice/user@1000.service/app.slice/*
     tproxy: socks1
   - match: /user.slice/user-1001.slice/user@1001.service/app.slice/*
-    drop: true
+    direct: true
   - match: /user.slice/user-1002.slice/user@1002.service/app.slice/*
     tproxy: socks2
