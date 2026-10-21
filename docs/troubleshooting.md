@@ -67,12 +67,13 @@ The "file exists" is error message of EEXIST, which means that:
 
 ## Docker container DNS times out in gateway mode
 
-If [gateway mode](./configuration.md#gateway-mode) is enabled and the selected
-proxy's `dns-hijack.ip` is an IPv4 loopback address such as `127.0.0.1`,
-container DNS requests are DNATed to the host's loopback address. The kernel
-normally rejects routing packets arriving from other interfaces to loopback
-addresses, so DNS requests may be dropped even after they match the hijack
-rules.
+If
+[gateway mode](https://pkg.go.dev/github.com/black-desk/cgtproxy/internal/cgtproxy/config#Config.Gateway)
+is enabled and the selected proxy's `dns-hijack.ip` is an IPv4 loopback address
+such as `127.0.0.1`, container DNS requests are DNATed to the host's loopback
+address. The kernel normally rejects routing packets arriving from other
+interfaces to loopback addresses, so DNS requests may be dropped even after they
+match the hijack rules.
 
 In this situation, enable `route_localnet` on the host's incoming interface. See
 the comments before `dns-hijack` in the
