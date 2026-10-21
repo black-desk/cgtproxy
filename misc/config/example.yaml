@@ -5,8 +5,8 @@
 # This file is my daily use configuration,
 # I use it to show how to use cgtproxy with clash-meta.
 #
-# Further configuration documentation can be found at
-# See docs/configuration.md and internal/cgtproxy/config/config.go.
+# Configuration fields and behavior are documented in GoDoc:
+# https://pkg.go.dev/github.com/black-desk/cgtproxy/internal/cgtproxy/config#Config
 
 version: 1
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
@@ -16,7 +16,18 @@ route-table: 300
 # from LAN devices, virtual machines, or Docker bridge containers.
 # Gateway mode is off by default; this daily-use example enables it.
 # Local cgroup rules are independent of this.
-# See docs/configuration.md#gateway-mode.
+# Forwarded traffic shares this target because the sending process's cgroup
+# cannot be determined. Without a root match, forwarding remains unchanged.
+# cgtproxy does not enable IP forwarding or configure interface settings,
+# firewall permissions, or NAT for direct forwarding; configure these separately.
+# Docker usually supplies these settings for its bridges.
+# For a minimal gateway setup, define a proxy named clash-meta and use:
+#   gateway: true
+#   rules:
+#     - match: "^/$"
+#       tproxy: clash-meta
+# For container DNS timeouts, see:
+# https://github.com/black-desk/cgtproxy/blob/master/docs/troubleshooting.md#docker-container-dns-times-out-in-gateway-mode
 gateway: true
 
 # This means any traffic send to 127.0.0.1 and ::1 will be directly send
