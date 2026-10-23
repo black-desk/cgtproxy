@@ -143,14 +143,12 @@ func rootCmdRun() (err error) {
 
 	content, err := os.ReadFile(flags.cfgPath)
 	if errors.Is(err, os.ErrNotExist) && flags.cfgPath == CGTProxyCfgPath {
-		log.Errorw("Configuration file missing fallback to default config.")
+		log.Warnf("Configuration file %q does not exist; using the default configuration.", flags.cfgPath)
 
 		content = []byte(config.DefaultConfig)
 		err = nil
 	} else if err != nil {
-		log.Errorw("Failed to read configuration from file",
-			"file", flags.cfgPath,
-			"error", err)
+		log.Errorf("Failed to read configuration file %q: %v", flags.cfgPath, err)
 
 		return err
 	}
@@ -187,16 +185,11 @@ func rootCmdRun() (err error) {
 		return
 	}
 
-	log.Debugw(
-		"Core exited with error.",
-		"error", err,
-	)
+	log.Debugf("Core exited: %v", err)
 
 	var cancelBySignal *ErrCancelBySignal
 	if errors.As(err, &cancelBySignal) {
-		log.Infow("Signal received, exiting...",
-			"signal", cancelBySignal.Signal,
-		)
+		log.Infof("Received signal %s; exiting.", cancelBySignal.Signal)
 		err = nil
 		return
 	}

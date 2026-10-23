@@ -55,7 +55,12 @@ func (nft *NFTManager) Initialize(tps []*config.TProxy, rootTarget types.Target,
 		return err
 	}
 	*nft = next
-	nft.log.Info("Initial nft rules committed.")
+	nft.log.Infof("Initial nft rules committed: table=%q, cgroup routes=%d, root target=%s, root chain=%q.", NftTableName, len(nft.cgroupMapElement), rootTarget.Op, rootTarget.Chain)
+	paths := make([]string, 0, len(nft.cgroupMapElement))
+	for path := range nft.cgroupMapElement {
+		paths = append(paths, path)
+	}
+	nft.logCgroupRoutes("Added", nft.cgroupMapElement, paths)
 	nft.dumpNFTableRules()
 	return nil
 }
@@ -80,9 +85,7 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 	)
 
 	for _, tp := range tps {
-		nft.log.Debugw("Generating chain and rules for tproxy.",
-			"tproxy", tp,
-		)
+		nft.log.Debugf("Generating nft chains and rules for proxy %q: %+v.", tp.Name, tp)
 		if err = conn.SetAddElements(nft.proxyMarkSet, []nftables.SetElement{
 			{Key: binaryutil.NativeEndian.PutUint32(uint32(tp.Mark))},
 		}); err != nil {
@@ -118,9 +121,7 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 			}
 		}
 
-		nft.log.Debug("Chain and rules generated for this tproxy.",
-			"tproxy", tp,
-		)
+		nft.log.Debugf("Generated nft chains and rules for proxy %q.", tp.Name)
 	}
 
 	return

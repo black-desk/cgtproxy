@@ -7,6 +7,7 @@ package nftman
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"maps"
 	"os"
 	"sort"
@@ -14,6 +15,8 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
+	"github.com/google/nftables/binaryutil"
+	"go.uber.org/zap"
 )
 
 func (nft *NFTManager) cgroupElementsForRoutes(routes []types.Route) (map[string]nftables.SetElement, error) {
@@ -23,6 +26,7 @@ func (nft *NFTManager) cgroupElementsForRoutes(routes []types.Route) (map[string
 		element, err := nft.genSetElement(&routes[i])
 		if errors.Is(err, os.ErrNotExist) {
 			// The cgroup may disappear between the scan/event and stat(2).
+			nft.log.Debugf("Cgroup %q disappeared before its route could be built; removing any existing route.", routes[i].Path)
 			delete(next, path)
 			continue
 		}
@@ -36,14 +40,17 @@ func (nft *NFTManager) cgroupElementsForRoutes(routes []types.Route) (map[string
 
 func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement) (err error) {
 	var removed, added []nftables.SetElement
+	var removedPaths, addedPaths []string
 	for path, old := range nft.cgroupMapElement {
 		if element, ok := next[path]; !ok || !sameCgroupElement(old, element) {
 			removed = append(removed, old)
+			removedPaths = append(removedPaths, path)
 		}
 	}
 	for path, element := range next {
 		if old, ok := nft.cgroupMapElement[path]; !ok || !sameCgroupElement(old, element) {
 			added = append(added, element)
+			addedPaths = append(addedPaths, path)
 		}
 	}
 	if len(removed) == 0 && len(added) == 0 {
@@ -72,10 +79,31 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 	if err = conn.Flush(); err != nil {
 		return err
 	}
+	nft.logCgroupRoutes("Removed", nft.cgroupMapElement, removedPaths)
+	nft.logCgroupRoutes("Added", next, addedPaths)
 	nft.cgroupMapElement = next
-	nft.log.Infow("Cgroup routes updated.", "added", len(added), "removed", len(removed))
 	nft.dumpNFTableRules()
 	return nil
+}
+
+// Paths come from the existing route diff; logging must not scan the full map
+// again. Call only after the kernel accepts the transaction.
+func (nft *NFTManager) logCgroupRoutes(action string, elements map[string]nftables.SetElement, paths []string) {
+	if !nft.log.Desugar().Core().Enabled(zap.InfoLevel) {
+		return
+	}
+	for _, path := range paths {
+		nft.logCgroupChange(action, path, elements[path])
+	}
+}
+
+func (nft *NFTManager) logCgroupChange(action, path string, element nftables.SetElement) {
+	target := "DIRECT"
+	if element.VerdictData.Chain != "" {
+		target = fmt.Sprintf("TPROXY chain %q", element.VerdictData.Chain)
+	}
+	nft.log.Infof("%s cgroup route: path=%q, id=%d, target=%s.", action, path,
+		binaryutil.NativeEndian.Uint64(element.Key), target)
 }
 
 func sameCgroupElement(a, b nftables.SetElement) bool {

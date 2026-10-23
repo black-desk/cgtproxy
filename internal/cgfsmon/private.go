@@ -24,7 +24,7 @@ func (m *CGroupFSMonitor) walk(ctx context.Context, watcher *fsnotify.Watcher, r
 			return context.Cause(ctx)
 		}
 		if errors.Is(err, fs.ErrNotExist) && path != string(m.root) {
-			m.log.Debugw("Cgroup had been removed.", "path", path)
+			m.log.Debugf("Cgroup %q disappeared during the scan; skipping it.", path)
 			return nil
 		}
 		if err != nil {
@@ -87,12 +87,12 @@ func (m *CGroupFSMonitor) send(ctx context.Context, cgEvents types.CGroupEvents)
 		cgEvents.Events[i].Path = path
 	}
 
-	m.log.Debugw("New cgroup events.", "size", len(cgEvents.Events))
+	m.log.Debugf("Sending %d cgroup events (initial scan: %t) to the route manager.", len(cgEvents.Events), cgEvents.Initial)
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	case m.eventsOut <- cgEvents:
-		m.log.Debugw("Cgroup events sent.", "size", len(cgEvents.Events))
+		m.log.Debugf("Sent %d cgroup events to the route manager.", len(cgEvents.Events))
 	}
 	return nil
 }

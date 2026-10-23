@@ -632,10 +632,7 @@ func getNFTableRules() string {
 func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElement, err error) {
 	defer Wrap(&err, "generating set element for route %v", route)
 
-	nft.log.Debugw("Generating set element for new cgroup route.",
-		"Path", route.Path,
-		"Target", route.Target,
-	)
+	nft.log.Debugf("Building nft map element for cgroup %q: target=%s, chain=%q.", route.Path, route.Target.Op, route.Target.Chain)
 
 	path := route.Path
 	target := route.Target
@@ -650,10 +647,7 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 
 	path = nft.removeCgroupRootFromPath(path)
 
-	nft.log.Debugw("Get inode of cgroup file using stat(2).",
-		"path", path,
-		"inode", inode,
-	)
+	nft.log.Debugf("Resolved cgroup %q to ID %d using stat(2).", path, inode)
 
 	setElement := nftables.SetElement{
 		Key:         binaryutil.NativeEndian.PutUint64(inode),

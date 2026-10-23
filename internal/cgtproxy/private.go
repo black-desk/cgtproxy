@@ -9,9 +9,9 @@ import (
 )
 
 func (c *CGTProxy) runRouteManager(ctx context.Context) (err error) {
-	defer c.log.Debugw("Route manager exited.")
+	defer c.log.Debug("Route manager exited.")
 
-	c.log.Debugw("Start route manager.")
+	c.log.Debug("Start route manager.")
 
 	err = c.rtManager.RunRouteManager(ctx)
 	if err != nil {

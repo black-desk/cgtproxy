@@ -32,12 +32,12 @@ func (w *CGroupFSMonitor) RunCGroupMonitor(ctx context.Context) (err error) {
 	}()
 
 	known := make(map[string]struct{})
-	w.log.Info("Going through cgroupfs first time...")
+	w.log.Infof("Scanning cgroup filesystem at %q and installing watches.", w.root)
 	events, err := w.reconcile(ctx, watcher, string(w.root), known)
 	if err != nil {
 		return err
 	}
-	w.log.Info("Going through cgroupfs first time...Done.")
+	w.log.Infof("Initial cgroup scan completed: found %d cgroups under %q.", len(events), w.root)
 	if err = w.send(ctx, types.CGroupEvents{Initial: true, Events: events}); err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (w *CGroupFSMonitor) RunCGroupMonitor(ctx context.Context) (err error) {
 			if !event.Has(fsnotify.Create | fsnotify.Remove | fsnotify.Rename) {
 				continue
 			}
-			w.log.Debugw("New filesystem notification arrived.", "event", event.Op.String(), "path", event.Name)
+			w.log.Debugf("Received filesystem event %s for %q; rescanning the subtree.", event.Op, event.Name)
 			path = event.Name
 		}
 
