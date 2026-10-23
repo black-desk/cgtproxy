@@ -79,7 +79,7 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 
 	ret = m
 
-	m.log.Debugw("Create a new route manager.")
+	m.log.Debug("Create a new route manager.")
 	return
 }
 

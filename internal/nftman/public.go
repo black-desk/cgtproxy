@@ -45,9 +45,7 @@ func (nft *NFTManager) Clear() (err error) {
 	conn.DelTable(nft.table)
 	err = conn.Flush()
 	if errors.Is(err, os.ErrNotExist) {
-		nft.log.Debugw("Table not exist, nothing to remove.",
-			"table", nft.table.Name,
-		)
+		nft.log.Debugf("Nft table %q is already absent; skipping removal.", nft.table.Name)
 		err = nil
 	} else if err != nil {
 		return

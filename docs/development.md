@@ -77,11 +77,6 @@ netlink socket, which helps you find out which structure in
 - You can use environment variable `LOG_LEVEL` to control the log level,
   options: `debug`, `info`, `warn`, `error`, `dpanic`, `panic`, `fatal`.
 
-- Some information is structured and printed in fields, you can use [fmtjournal]
-  to view all log fields.
-
-[fmtjournal]: https://github.com/black-desk/fmtjournal
-
 ## Testing
 
 See the [testing section of the build guide](./build.md#testing) for

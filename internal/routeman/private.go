@@ -37,9 +37,7 @@ func (m *RouteManager) removeNftableRules() {
 
 	err = m.nft.Clear()
 	if err != nil {
-		m.log.Errorw("Failed to delete nft table.",
-			"error", err,
-		)
+		m.log.Errorf("Failed to delete the cgtproxy nft table: %v", err)
 		err = nil
 	}
 
@@ -49,17 +47,12 @@ func (m *RouteManager) removeNftableRules() {
 			continue
 		}
 
-		m.log.Errorw("Failed to delete route rule.",
-			"rule", rule,
-			"error", err,
-		)
+		m.log.Errorf("Failed to delete policy rule (family=%d, mark=%#x, table=%d): %v", rule.Family, rule.Mark, rule.Table, err)
 	}
 
 	err = m.nft.Release()
 	if err != nil {
-		m.log.Errorw("Failed to release NFTManager.",
-			"error", err,
-		)
+		m.log.Errorf("Failed to release the nftables connection: %v", err)
 		err = nil
 	}
 
@@ -76,7 +69,7 @@ func (m *RouteManager) addRuleWithFamily(
 
 	err = netlink.RuleAdd(rule)
 	if errors.Is(err, os.ErrExist) {
-		m.log.Infow("Rule already exists.")
+		m.log.Infof("Policy rule already exists (family=%d, mark=%#x, table=%d).", family, mark, rule.Table)
 		err = nil
 	}
 	if err != nil {
@@ -92,10 +85,7 @@ func (m *RouteManager) addRule(tp *config.TProxy) (err error) {
 	defer Wrap(&err, "add route rule")
 	mark := tp.Mark
 
-	m.log.Infow("Adding route rule.",
-		"mark", mark,
-		"table", m.cfg.RouteTable,
-	)
+	m.log.Infof("Adding policy rules for proxy %q: mark=%#x, table=%d, IPv6=%t.", tp.Name, mark, m.cfg.RouteTable, !tp.NoIPv6)
 
 	// ip rule add fwmark <mark> lookup <table>
 	err = m.addRuleWithFamily(mark, netlink.FAMILY_V4)
@@ -110,12 +100,7 @@ func (m *RouteManager) addRule(tp *config.TProxy) (err error) {
 	// ip -6 rule add fwmark <mark> lookup <table>
 	err = m.addRuleWithFamily(mark, netlink.FAMILY_V6)
 	if err != nil {
-		m.log.Errorw(
-			"Failed to add ipv6 rule.",
-			"mark", mark,
-			"table", m.cfg.RouteTable,
-			"error", err,
-		)
+		m.log.Errorf("Failed to add IPv6 policy rule (mark=%#x, table=%d): %v", mark, m.cfg.RouteTable, err)
 	}
 
 	return
@@ -123,10 +108,6 @@ func (m *RouteManager) addRule(tp *config.TProxy) (err error) {
 
 func (m *RouteManager) addRoute() (err error) {
 	defer Wrap(&err, "add route")
-
-	m.log.Infow("Adding route.",
-		"table", m.cfg.RouteTable,
-	)
 
 	// ip route add local default dev lo table <table>
 
@@ -166,6 +147,7 @@ func (m *RouteManager) addRoute() (err error) {
 		}
 
 		m.route = append(m.route, route)
+		m.log.Infof("Added local route: destination=%s, device=lo, table=%d.", cidr, route.Table)
 	}
 
 	return
@@ -179,8 +161,7 @@ func (m *RouteManager) removeRoute() {
 			continue
 		}
 
-		m.log.Warnw("Failed to remove route",
-			"error", err)
+		m.log.Warnf("Failed to remove route %s from table %d: %v", m.route[i].Dst, m.route[i].Table, err)
 	}
 
 	return
@@ -193,9 +174,7 @@ func (m *RouteManager) routesForPaths(paths []string) []types.Route {
 	for i := range paths {
 		path := paths[i]
 
-		m.log.Debugw("Checking route for cgroup.",
-			"path", path,
-		)
+		m.log.Debugf("Checking routing configuration for cgroup %q.", path)
 
 		// Match cgroup paths relative to cgroupfs, retaining the filesystem
 		// path in the route for stat(2) and deletion handling.
@@ -204,9 +183,7 @@ func (m *RouteManager) routesForPaths(paths []string) []types.Route {
 		target := m.targetForPath(matchPath)
 
 		if target.Op == types.TargetNoop {
-			m.log.Debugw("No rule match this cgroup",
-				"cgroup", path,
-			)
+			m.log.Debugf("No routing rule matches cgroup %q; inheriting the ancestor or root target.", matchPath)
 
 			continue
 		}
@@ -223,10 +200,7 @@ func (m *RouteManager) routesForPaths(paths []string) []types.Route {
 func (m *RouteManager) targetForPath(path string) types.Target {
 	for i := range m.matchers {
 		if m.matchers[i].reg.MatchString(path) {
-			m.log.Debugw("Rule found for this cgroup",
-				"cgroup", path,
-				"rule", m.cfg.Rules[i].String(),
-			)
+			m.log.Debugf("Cgroup %q matched rules[%d]: %s.", path, i, &m.cfg.Rules[i])
 			return m.matchers[i].target
 		}
 	}

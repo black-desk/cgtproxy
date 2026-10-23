@@ -17,10 +17,7 @@ func addDebugCounter(exprs []expr.Any) []expr.Any {
 }
 
 func (nft *NFTManager) dumpNFTableRules() {
-	nft.log.WithOptions(zap.AddStacktrace(zap.DebugLevel)).Debugw(
-		"Dump nft ruleset.",
-		"content", getNFTableRules(),
-	)
+	nft.log.WithOptions(zap.AddStacktrace(zap.DebugLevel)).Debugf("Nft ruleset after commit:\n%s", getNFTableRules())
 
 	return
 }

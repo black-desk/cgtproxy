@@ -82,7 +82,7 @@ func New(opts ...Opt) (ret *NFTManager, err error) {
 	}
 
 	ret = t
-	t.log.Debugw("NFTManager created.")
+	t.log.Debug("NFTManager created.")
 
 	return
 }

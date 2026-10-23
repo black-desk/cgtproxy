@@ -86,10 +86,7 @@ func (c *Config) check() (err error) {
 
 		c.CgroupRoot = cgroupRoot
 
-		c.log.Infow(
-			"Cgroup mount point auto detection done.",
-			"cgroup root", cgroupRoot,
-		)
+		c.log.Infof("Detected cgroup filesystem mount point: %q.", cgroupRoot)
 	}
 
 	// Every component must use the same root when deriving cgroup paths and
@@ -97,7 +94,7 @@ func (c *Config) check() (err error) {
 	c.CgroupRoot = CGroupRoot(filepath.Clean(string(c.CgroupRoot)))
 
 	if c.Rules == nil {
-		c.log.Warnw("No rules in config.")
+		c.log.Warn("No cgroup routing rules configured; all cgroups use the root fallback target.")
 	}
 
 	if c.TProxies == nil {

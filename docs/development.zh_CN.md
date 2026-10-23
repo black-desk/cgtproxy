@@ -59,10 +59,6 @@ nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须
 
 - 你可以使用环境变量`LOG_LEVEL`控制日志级别，可选值为：`debug`、`info`、`warn`、`error`、`dpanic`、`panic`、`fatal`；
 
-- 有部分信息结构化地被打印在字段中，你可以使用[fmtjournal]来查看所有日志字段。
-
-[fmtjournal]: https://github.com/black-desk/fmtjournal
-
 ## 测试
 
 测试运行方法见[构建指南的测试章节](./build.zh_CN.md#测试)。
