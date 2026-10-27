@@ -125,6 +125,9 @@ func serve(args []string) error {
 						return
 					}
 				}
+				if err := scanner.Err(); err != nil {
+					fmt.Fprintf(os.Stderr, "Read TCP request from %s: %v\n", conn.RemoteAddr(), err)
+				}
 			}()
 		}
 	}

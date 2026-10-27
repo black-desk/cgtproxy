@@ -55,8 +55,6 @@ func (m *RouteManager) removeNftableRules() {
 		m.log.Errorf("Failed to release the nftables connection: %v", err)
 		err = nil
 	}
-
-	return
 }
 
 func (m *RouteManager) addRuleWithFamily(
@@ -163,8 +161,6 @@ func (m *RouteManager) removeRoute() {
 
 		m.log.Warnf("Failed to remove route %s from table %d: %v", m.route[i].Dst, m.route[i].Table, err)
 	}
-
-	return
 }
 
 func (m *RouteManager) routesForPaths(paths []string) []types.Route {
