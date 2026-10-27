@@ -16,11 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type chans struct {
-	in  <-chan types.CGroupEvent
-	out chan<- types.CGroupEvent
-}
-
 func provideCGroupEventChan(mon interfaces.CGroupMonitor) <-chan types.CGroupEvents {
 	return mon.Events()
 }

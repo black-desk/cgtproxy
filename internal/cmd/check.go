@@ -26,8 +26,6 @@ var checkCmd = &cobra.Command{
 			}
 
 			err = fmt.Errorf("\n%w\n"+CheckDocumentString, err)
-
-			return
 		}()
 
 		err = checkCmdRun()

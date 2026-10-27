@@ -34,6 +34,22 @@ if grep -Fq '%!' "$CASE_WORK/missing-config.stderr"; then
 	exit 1
 fi
 
+# Profile setup must report template and file errors before starting the core.
+for profile in cpu block; do
+	for path in '{{' '{{call .PID}}' "$CASE_WORK"; do
+		status=0
+		CGTPROXY_PROFILE=$profile timeout 5s "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" \
+			--log-file "$CASE_WORK/profile.log" "--$profile-profile" "$path" \
+			>"$CASE_WORK/profile.stderr" 2>&1 || status=$?
+		[[ $status == 1 ]]
+		if [[ $path == "$CASE_WORK" ]]; then
+			grep -Fq 'is a directory' "$CASE_WORK/profile.stderr"
+		else
+			grep -Fq 'template:' "$CASE_WORK/profile.stderr"
+		fi
+	done
+done
+
 check_invalid_config() {
 	local invalid=$1 path=$2 status=0
 	"$CGTPROXY_BIN" --config "$path" check config || status=$?

@@ -7,7 +7,6 @@ package nftman
 import (
 	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -618,15 +617,6 @@ func (t *NFTManager) addCgroupRuleForLevel(
 
 	conn.AddRule(rule)
 	return
-}
-
-func getNFTableRules() string {
-	out, err := exec.Command("nft", "list", "ruleset").Output()
-	if err != nil {
-		panic(err)
-	}
-
-	return string(out)
 }
 
 func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElement, err error) {

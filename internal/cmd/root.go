@@ -83,6 +83,9 @@ func generateProfileName(tmplStr string) (name string, err error) {
 func createProfileFile(tmplStr string) (ret *os.File, err error) {
 	var path string
 	path, err = generateProfileName(tmplStr)
+	if err != nil {
+		return
+	}
 	dir := filepath.Dir(path)
 	err = os.MkdirAll(dir, 0700)
 	if err != nil {
@@ -117,25 +120,22 @@ func rootCmdRun() (err error) {
 		defer cpuProfile.Close()
 
 		err = pprof.StartCPUProfile(cpuProfile)
-		defer pprof.StopCPUProfile()
 		if err != nil {
 			return
 		}
+		defer pprof.StopCPUProfile()
 	}
 
 	if slices.Contains(profiles, "block") {
 		var blockProfile *os.File
 		blockProfile, err = createProfileFile(flags.blockProfile)
-		defer blockProfile.Close()
 		if err != nil {
 			return
 		}
+		defer blockProfile.Close()
 
 		runtime.SetBlockProfileRate(1)
 		defer pprof.Lookup("block").WriteTo(blockProfile, 0)
-		if err != nil {
-			return
-		}
 	}
 
 	content, err := os.ReadFile(flags.cfgPath)
@@ -189,8 +189,7 @@ func rootCmdRun() (err error) {
 
 	log.Debugf("Core exited: %v", err)
 
-	var cancelBySignal *ErrCancelBySignal
-	if errors.As(err, &cancelBySignal) {
+	if cancelBySignal, ok := errors.AsType[*ErrCancelBySignal](err); ok {
 		log.Infof("Received signal %s; exiting.", cancelBySignal.Signal)
 		err = nil
 		return
