@@ -52,13 +52,10 @@ var rootCmd = &cobra.Command{
 			}
 
 			err = fmt.Errorf(
-				"\n%w\n\n"+
-					`You can run 'cgtproxy check' to perform health check built in cgtproxy.`+
-					CheckDocumentString,
+				"\n%w\n\nYou can run 'cgtproxy check' to perform health check built in cgtproxy.%s",
 				err,
+				CheckDocumentString,
 			)
-
-			return
 		}()
 		err = rootCmdRun()
 		return
@@ -143,12 +140,17 @@ func rootCmdRun() (err error) {
 
 	content, err := os.ReadFile(flags.cfgPath)
 	if errors.Is(err, os.ErrNotExist) && flags.cfgPath == CGTProxyCfgPath {
-		log.Warnf("Configuration file %q does not exist; using the default configuration.", flags.cfgPath)
+		log.Warnf("Configuration file %q does not exist; using the default configuration.",
+			flags.cfgPath,
+		)
 
 		content = []byte(config.DefaultConfig)
 		err = nil
 	} else if err != nil {
-		log.Errorf("Failed to read configuration file %q: %v", flags.cfgPath, err)
+		log.Errorf("Failed to read configuration file %q: %v",
+			flags.cfgPath,
+			err,
+		)
 
 		return err
 	}
