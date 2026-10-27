@@ -8,9 +8,9 @@ import (
 	"net"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
+	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/interfaces"
 	"github.com/black-desk/cgtproxy/internal/nftman/connector"
-	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"go.uber.org/zap"
 )

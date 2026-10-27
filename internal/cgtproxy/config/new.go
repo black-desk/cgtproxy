@@ -7,7 +7,7 @@ package config
 import (
 	"bytes"
 
-	. "github.com/black-desk/lib/go/errwrap"
+	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )

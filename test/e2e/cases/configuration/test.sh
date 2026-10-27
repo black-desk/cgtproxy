@@ -8,6 +8,32 @@
 repo=$(cd -- "$CASE_DIR/../../../.." && pwd)
 "$CGTPROXY_BIN" --config "$repo/misc/config/example.yaml" check config
 "$CGTPROXY_BIN" --config "$repo/test/data/example_config.yaml" check config
+
+# Exercise default logging and file logging without the old logger wrapper.
+LOG_LEVEL= "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" check config --with-logger
+LOG_LEVEL=info "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" \
+	--log-file "$CASE_WORK/check.log" check config --with-logger
+grep -q 'Detected cgroup filesystem mount point' "$CASE_WORK/check.log"
+[[ $(stat -c '%a' "$CASE_WORK/check.log") == 600 ]]
+for log_path in "" "$CASE_WORK/invalid-level.log"; do
+	status=0
+	LOG_LEVEL=invalid "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" \
+		--log-file "$log_path" check config --with-logger >"$CASE_WORK/invalid-level.stderr" 2>&1 || status=$?
+	[[ $status == 1 ]]
+	grep -q 'invalid LOG_LEVEL' "$CASE_WORK/invalid-level.stderr"
+done
+
+# Error annotations must preserve literal percent signs in paths.
+status=0
+"$CGTPROXY_BIN" --config "$CASE_WORK/missing%config.yaml" check config \
+	>"$CASE_WORK/missing-config.stderr" 2>&1 || status=$?
+[[ $status == 1 ]]
+grep -Fq "read configuration from $CASE_WORK/missing%config.yaml" "$CASE_WORK/missing-config.stderr"
+if grep -Fq '%!' "$CASE_WORK/missing-config.stderr"; then
+	echo 'Error annotation contains a formatting error' >&2
+	exit 1
+fi
+
 check_invalid_config() {
 	local invalid=$1 path=$2 status=0
 	"$CGTPROXY_BIN" --config "$path" check config || status=$?

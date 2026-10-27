@@ -8,8 +8,8 @@ import (
 	"errors"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
+	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
-	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
 )
