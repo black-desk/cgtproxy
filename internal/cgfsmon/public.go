@@ -8,8 +8,8 @@ import (
 	"context"
 	"errors"
 
+	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
-	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/fsnotify/fsnotify"
 )
 

@@ -5,7 +5,7 @@
 package connector
 
 import (
-	. "github.com/black-desk/lib/go/errwrap"
+	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/google/nftables"
 )
 

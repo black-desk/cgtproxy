@@ -6,8 +6,8 @@ package cgtproxy
 
 import (
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
+	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/interfaces"
-	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/sourcegraph/conc/pool"
 	"go.uber.org/zap"
 )

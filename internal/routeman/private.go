@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
+	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
-	. "github.com/black-desk/lib/go/errwrap"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sys/unix"

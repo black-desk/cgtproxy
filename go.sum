@@ -1,9 +1,7 @@
 github.com/Masterminds/semver/v3 v3.4.0 h1:Zog+i5UMtVoCU8oKka5P7i9q9HgrJeGzI9SA1Xbatp0=
 github.com/Masterminds/semver/v3 v3.4.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
-github.com/black-desk/lib/go v0.0.0-20240826013949-6a950e6b19a1 h1:x9ImbFjQZdU8sDp+2Q+yvYBJmA2RxrI8B1WITAVeAy0=
-github.com/black-desk/lib/go v0.0.0-20240826013949-6a950e6b19a1/go.mod h1:zxT8xvxZZ5/6hU4Ya4qhGU46XSXGXlJRvGZhelAQlsE=
-github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b h1:fiO3y68dfa5ctXhgZKCniY0IfPl0U+EoyADUgG2zP+s=
-github.com/black-desk/zap-journal v0.0.0-20230529080551-a8e82d81454b/go.mod h1:H5owNzV6HHMmOk5jI+uaWAVZFVQkWrgoE3d/fABb1PQ=
+github.com/black-desk/zap-journal v0.0.0-20261027020732-be8a596707b9 h1:xmzarFjFh8XECtwQ1I9OOUGxsUzjTwXzPOizqFfdKlU=
+github.com/black-desk/zap-journal v0.0.0-20261027020732-be8a596707b9/go.mod h1:WgYpOOlmR5Za1eexJsHAscxX/louKJQ0wc4gXMnSgxQ=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

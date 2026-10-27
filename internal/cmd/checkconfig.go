@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	. "github.com/black-desk/lib/go/errwrap"
+	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -36,7 +36,7 @@ var checkConfigCmd = &cobra.Command{
 }
 
 func checkConfigCmdRun() (err error) {
-	defer Wrap(&err)
+	defer Wrap(&err, "")
 
 	log := zap.NewNop().Sugar()
 	if checkFlags.EnableLogger {
