@@ -103,7 +103,7 @@ func createProfileFile(tmplStr string) (ret *os.File, err error) {
 }
 
 func rootCmdRun() (err error) {
-	log, closeLog, err := newCommandLogger(flags.logFile)
+	log, closeLog, err := newLogger(flags.logFile)
 	if err != nil {
 		return err
 	}

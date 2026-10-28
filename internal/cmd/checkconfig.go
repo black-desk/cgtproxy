@@ -39,7 +39,7 @@ func checkConfigCmdRun() (err error) {
 	log := zap.NewNop().Sugar()
 	if checkFlags.EnableLogger {
 		var closeLog func()
-		log, closeLog, err = newCommandLogger(flags.logFile)
+		log, closeLog, err = newLogger(flags.logFile)
 		if err != nil {
 			return err
 		}
