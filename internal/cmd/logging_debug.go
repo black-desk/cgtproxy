@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func commandLoggerConfig() (zapcore.EncoderConfig, []zap.Option, zapcore.Level) {
+func loggerConfig() (zapcore.EncoderConfig, []zap.Option, zapcore.Level) {
 	return zap.NewDevelopmentEncoderConfig(), []zap.Option{
 		zap.Development(),
 		zap.AddStacktrace(zap.WarnLevel),
