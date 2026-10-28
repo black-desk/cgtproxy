@@ -1,10 +1,12 @@
-// SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+// SPDX-FileCopyrightText: 2025-2026 Chen Linxuan <me@black-desk.cn>
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 package cgtproxy
 
 import (
+	"context"
+
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/interfaces"
@@ -115,4 +117,45 @@ func WithRouteManager(rman interfaces.RouteManager) Opt {
 		ret = core
 		return
 	}
+}
+
+func (c *CGTProxy) RunCGTProxy(ctx context.Context) (err error) {
+	c.log.Debug("CGTProxy starting.")
+	defer c.log.Debug("CGTProxy exiting.")
+	defer Wrap(&err, "running cgtproxy core")
+
+	pool := pool.New().
+		WithContext(ctx).
+		WithCancelOnError()
+
+	pool.Go(c.runCGroupMonitor)
+	pool.Go(c.runRouteManager)
+
+	return pool.Wait()
+}
+
+func (c *CGTProxy) runRouteManager(ctx context.Context) (err error) {
+	defer c.log.Debug("Route manager exited.")
+
+	c.log.Debug("Start route manager.")
+
+	err = c.rtManager.RunRouteManager(ctx)
+	if err != nil {
+		return
+	}
+
+	return ctx.Err()
+}
+
+func (c *CGTProxy) runCGroupMonitor(ctx context.Context) (err error) {
+	defer c.log.Debug("Filesystem watcher exited.")
+
+	c.log.Debug("Start filesystem watcher.")
+
+	err = c.cgMonitor.RunCGroupMonitor(ctx)
+	if err != nil {
+		return
+	}
+
+	return ctx.Err()
 }

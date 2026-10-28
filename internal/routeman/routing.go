@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+// SPDX-FileCopyrightText: 2025-2026 Chen Linxuan <me@black-desk.cn>
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -8,54 +8,12 @@ import (
 	"errors"
 	"net"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	. "github.com/black-desk/cgtproxy/internal/errwrap"
-	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/vishvananda/netlink"
-	"golang.org/x/exp/maps"
 	"golang.org/x/sys/unix"
 )
-
-func (m *RouteManager) initializeNftableRules(paths []string) (err error) {
-	defer Wrap(&err, "initializing nftable rules")
-
-	for _, tp := range m.cfg.TProxies {
-		err = m.addRule(tp)
-		if err != nil {
-			return
-		}
-	}
-
-	return m.nft.Initialize(maps.Values(m.cfg.TProxies), m.targetForPath("/"), m.routesForPaths(paths))
-}
-
-func (m *RouteManager) removeNftableRules() {
-	var err error
-
-	err = m.nft.Clear()
-	if err != nil {
-		m.log.Errorf("Failed to delete the cgtproxy nft table: %v", err)
-		err = nil
-	}
-
-	for _, rule := range m.rule {
-		err = netlink.RuleDel(rule)
-		if err == nil {
-			continue
-		}
-
-		m.log.Errorf("Failed to delete policy rule (family=%d, mark=%#x, table=%d): %v", rule.Family, rule.Mark, rule.Table, err)
-	}
-
-	err = m.nft.Release()
-	if err != nil {
-		m.log.Errorf("Failed to release the nftables connection: %v", err)
-		err = nil
-	}
-}
 
 func (m *RouteManager) addRuleWithFamily(
 	mark config.FireWallMark, family int,
@@ -102,6 +60,17 @@ func (m *RouteManager) addRule(tp *config.TProxy) (err error) {
 	}
 
 	return
+}
+
+func (m *RouteManager) removeRules() {
+	for _, rule := range m.rule {
+		err := netlink.RuleDel(rule)
+		if err == nil {
+			continue
+		}
+
+		m.log.Errorf("Failed to delete policy rule (family=%d, mark=%#x, table=%d): %v", rule.Family, rule.Mark, rule.Table, err)
+	}
 }
 
 func (m *RouteManager) addRoute() (err error) {
@@ -161,44 +130,4 @@ func (m *RouteManager) removeRoute() {
 
 		m.log.Warnf("Failed to remove route %s from table %d: %v", m.route[i].Dst, m.route[i].Table, err)
 	}
-}
-
-func (m *RouteManager) routesForPaths(paths []string) []types.Route {
-	routes := []types.Route{}
-	root := filepath.Clean(string(m.cfg.CgroupRoot))
-
-	for i := range paths {
-		path := paths[i]
-
-		m.log.Debugf("Checking routing configuration for cgroup %q.", path)
-
-		// Match cgroup paths relative to cgroupfs, retaining the filesystem
-		// path in the route for stat(2) and deletion handling.
-		matchPath := strings.TrimPrefix(filepath.Clean(path), root)
-		matchPath = "/" + strings.TrimPrefix(matchPath, "/")
-		target := m.targetForPath(matchPath)
-
-		if target.Op == types.TargetNoop {
-			m.log.Debugf("No routing rule matches cgroup %q; inheriting the ancestor or root target.", matchPath)
-
-			continue
-		}
-
-		routes = append(routes, types.Route{
-			Path:   path,
-			Target: target,
-		})
-	}
-
-	return routes
-}
-
-func (m *RouteManager) targetForPath(path string) types.Target {
-	for i := range m.matchers {
-		if m.matchers[i].reg.MatchString(path) {
-			m.log.Debugf("Cgroup %q matched rules[%d]: %s.", path, i, &m.cfg.Rules[i])
-			return m.matchers[i].target
-		}
-	}
-	return types.Target{}
 }
