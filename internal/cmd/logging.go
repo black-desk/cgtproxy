@@ -55,8 +55,9 @@ func newDefaultLogger(cfg zapcore.EncoderConfig, options []zap.Option, level zap
 		))
 	}
 
-	cfg.StacktraceKey = "STACKTRACE"
-	enc, err := encoder.New(encoder.WithCfg(cfg))
+	journalCfg := cfg
+	journalCfg.StacktraceKey = "STACKTRACE"
+	enc, err := encoder.New(encoder.WithCfg(journalCfg))
 	var journal *conn.JournalConn
 	if err == nil {
 		journal, err = conn.New()
@@ -68,7 +69,7 @@ func newDefaultLogger(cfg zapcore.EncoderConfig, options []zap.Option, level zap
 	}
 	if len(cores) == 0 {
 		cores = append(cores, zapcore.NewCore(
-			zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig()),
+			zapcore.NewConsoleEncoder(cfg),
 			zapcore.Lock(os.Stderr), level,
 		))
 	}
