@@ -5,7 +5,7 @@
 
 # File logging uses the build's encoder and warning stacktrace settings.
 LOG_LEVEL= "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" \
-	--log-file "$CASE_WORK/default-check.log" check config --with-logger
+	--log-file "$CASE_WORK/default-check.log" check config
 if go version -m "$CGTPROXY_BIN" | grep -q -- '-tags=.*debug'; then
 	grep -q '"L":"WARN"' "$CASE_WORK/default-check.log"
 	grep -q '"S":' "$CASE_WORK/default-check.log"
