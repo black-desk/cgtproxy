@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+// SPDX-FileCopyrightText: 2025-2026 Chen Linxuan <me@black-desk.cn>
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -10,6 +10,7 @@ import (
 
 	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
+	"golang.org/x/exp/maps"
 )
 
 func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
@@ -76,5 +77,36 @@ func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 		if eventsErr != nil {
 			return eventsErr
 		}
+	}
+}
+
+func (m *RouteManager) initializeNftableRules(paths []string) (err error) {
+	defer Wrap(&err, "initializing nftable rules")
+
+	for _, tp := range m.cfg.TProxies {
+		err = m.addRule(tp)
+		if err != nil {
+			return
+		}
+	}
+
+	return m.nft.Initialize(maps.Values(m.cfg.TProxies), m.targetForPath("/"), m.routesForPaths(paths))
+}
+
+func (m *RouteManager) removeNftableRules() {
+	var err error
+
+	err = m.nft.Clear()
+	if err != nil {
+		m.log.Errorf("Failed to delete the cgtproxy nft table: %v", err)
+		err = nil
+	}
+
+	m.removeRules()
+
+	err = m.nft.Release()
+	if err != nil {
+		m.log.Errorf("Failed to release the nftables connection: %v", err)
+		err = nil
 	}
 }

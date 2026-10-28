@@ -12,6 +12,7 @@ import (
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
+	"github.com/google/nftables/expr"
 )
 
 // Initialize installs the complete ruleset, including the first cgroup scan,
@@ -193,4 +194,20 @@ func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
 	}
 
 	return
+}
+
+// setRootTarget sets the shared fallback for local and forwarded traffic.
+func (nft *NFTManager) setRootTarget(conn *nftables.Conn, target types.Target) {
+	verdict := &expr.Verdict{Kind: expr.VerdictReturn}
+	switch target.Op {
+	case types.TargetTProxy:
+		verdict.Kind, verdict.Chain = expr.VerdictGoto, target.Chain
+	}
+	conn.AddRule(&nftables.Rule{Table: nft.table, Chain: nft.rootChain,
+		Exprs: addDebugCounter([]expr.Any{verdict})})
+}
+
+func (nft *NFTManager) addRootFallback(conn *nftables.Conn, chain *nftables.Chain) {
+	conn.AddRule(&nftables.Rule{Table: nft.table, Chain: chain,
+		Exprs: addDebugCounter([]expr.Any{&expr.Verdict{Kind: expr.VerdictGoto, Chain: nft.rootChain.Name}})})
 }
