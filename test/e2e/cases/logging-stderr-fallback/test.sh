@@ -7,7 +7,7 @@
 unshare --mount bash -euc '
 	mount --make-rprivate /
 	mount -t tmpfs tmpfs /run
-	LOG_LEVEL=info "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" check config --with-logger
+	LOG_LEVEL=info "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" check config
 ' 2>"$CASE_WORK/no-journal.stderr"
 grep -Eq $'\t(info|INFO)\tcgtproxy\t' "$CASE_WORK/no-journal.stderr"
 if grep -q '^{' "$CASE_WORK/no-journal.stderr"; then

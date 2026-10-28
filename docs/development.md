@@ -67,6 +67,9 @@ netlink socket, which helps you find out which structure in
 
 ## Logging
 
+`check config` enables logging by default and uses the same `--log-file` and
+`LOG_LEVEL` settings as the main command.
+
 - Use `--log-file /path/to/cgtproxy.log` to append JSON logs directly to a file
   instead of stderr or journald. New files are created with permissions `0600`;
   the parent directory must already exist.

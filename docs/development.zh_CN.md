@@ -53,6 +53,8 @@ nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须
 
 ## 日志记录
 
+`check config`默认启用日志，与主命令使用相同的`--log-file`和`LOG_LEVEL`设置。
+
 - 使用`--log-file /path/to/cgtproxy.log`将JSON日志直接追加到文件，替代stderr和journald输出。新文件的权限为`0600`，父目录必须已存在。
 
 - 当标准错误是终端时，日志写入标准错误；否则，日志会被发送到journald；
