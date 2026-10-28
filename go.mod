@@ -7,7 +7,7 @@ module github.com/black-desk/cgtproxy
 go 1.27.0
 
 require (
-	github.com/black-desk/zap-journal v0.0.0-20261027020732-be8a596707b9
+	github.com/black-desk/zap-journal v0.0.0-20261028072115-204df47d5efc
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/google/nftables v0.3.0
