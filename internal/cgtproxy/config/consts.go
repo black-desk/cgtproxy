@@ -6,7 +6,7 @@ package config
 
 const (
 	DefaultConfig = `
-version: 1
+version: 2
 cgroup-root: AUTO
 route-table: 300
 rules:
