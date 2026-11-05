@@ -96,7 +96,15 @@ func (nft *NFTManager) initProtoSet() {
 	}
 }
 
-func (nft *NFTManager) addReturnRule(conn *nftables.Conn, chain *nftables.Chain, filters ...expr.Any) {
+func (nft *NFTManager) addReturnRule(
+	conn *nftables.Conn,
+	chain *nftables.Chain,
+	filters ...expr.Any,
+) {
 	filters = append(filters, &expr.Verdict{Kind: expr.VerdictReturn})
-	conn.AddRule(&nftables.Rule{Table: nft.table, Chain: chain, Exprs: addDebugCounter(filters)})
+	conn.AddRule(&nftables.Rule{
+		Table: nft.table,
+		Chain: chain,
+		Exprs: addDebugCounter(filters),
+	})
 }

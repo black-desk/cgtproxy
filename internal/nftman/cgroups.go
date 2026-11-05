@@ -63,14 +63,23 @@ func (nft *NFTManager) initCgroupMap(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTManager) cgroupElementsForRoutes(routes []types.Route) (map[string]nftables.SetElement, error) {
+func (nft *NFTManager) cgroupElementsForRoutes(
+	routes []types.Route,
+) (
+	map[string]nftables.SetElement,
+	error,
+) {
 	next := maps.Clone(nft.cgroupMapElement)
 	for i := range routes {
 		path := nft.relativeCgroupPath(routes[i].Path)
 		element, err := nft.genSetElement(&routes[i])
 		if errors.Is(err, os.ErrNotExist) {
-			// The cgroup may disappear between the scan/event and stat(2).
-			nft.log.Debugf("Cgroup %q disappeared before its route could be built; removing any existing route.", routes[i].Path)
+			// The cgroup may disappear between the scan/event and
+			// stat(2).
+			nft.log.Debugf(
+				"Cgroup %q disappeared before its route could be built; removing any existing route.",
+				routes[i].Path,
+			)
 			delete(next, path)
 			continue
 		}
@@ -82,7 +91,11 @@ func (nft *NFTManager) cgroupElementsForRoutes(routes []types.Route) (map[string
 	return next, nil
 }
 
-func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement) (err error) {
+func (nft *NFTManager) updateCgroupElements(
+	next map[string]nftables.SetElement,
+) (
+	err error,
+) {
 	var removed, added []nftables.SetElement
 	var removedPaths, addedPaths []string
 	for path, old := range nft.cgroupMapElement {
@@ -108,12 +121,20 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 		return err
 	}
 	// nft: delete element inet cgtproxy cgroup-vmap { <old cgroup IDs> }
-	err = queueSetElements(nft.cgroupMap, removed, conn.SetDeleteElements)
+	err = queueSetElements(
+		nft.cgroupMap,
+		removed,
+		conn.SetDeleteElements,
+	)
 	if err != nil {
 		return fmt.Errorf("delete cgroup map elements: %w", err)
 	}
 	// nft: add element inet cgtproxy cgroup-vmap { <ID> : <verdict>, ... }
-	err = queueSetElements(nft.cgroupMap, added, conn.SetAddElements)
+	err = queueSetElements(
+		nft.cgroupMap,
+		added,
+		conn.SetAddElements,
+	)
 	if err != nil {
 		return fmt.Errorf("add cgroup map elements: %w", err)
 	}
@@ -142,7 +163,11 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 
 // Paths come from the existing route diff; logging must not scan the full map
 // again. Call only after the kernel accepts the transaction.
-func (nft *NFTManager) logCgroupRoutes(action string, elements map[string]nftables.SetElement, paths []string) {
+func (nft *NFTManager) logCgroupRoutes(
+	action string,
+	elements map[string]nftables.SetElement,
+	paths []string,
+) {
 	if !nft.log.Desugar().Core().Enabled(zap.InfoLevel) {
 		return
 	}
@@ -151,13 +176,25 @@ func (nft *NFTManager) logCgroupRoutes(action string, elements map[string]nftabl
 	}
 }
 
-func (nft *NFTManager) logCgroupChange(action, path string, element nftables.SetElement) {
+func (nft *NFTManager) logCgroupChange(
+	action,
+	path string,
+	element nftables.SetElement,
+) {
 	target := "DIRECT"
 	if element.VerdictData.Chain != "" {
-		target = fmt.Sprintf("TPROXY chain %q", element.VerdictData.Chain)
+		target = fmt.Sprintf(
+			"TPROXY chain %q",
+			element.VerdictData.Chain,
+		)
 	}
-	nft.log.Infof("%s cgroup route: path=%q, id=%d, target=%s.", action, path,
-		binaryutil.NativeEndian.Uint64(element.Key), target)
+	nft.log.Infof(
+		"%s cgroup route: path=%q, id=%d, target=%s.",
+		action,
+		path,
+		binaryutil.NativeEndian.Uint64(element.Key),
+		target,
+	)
 }
 
 func sameCgroupElement(a, b nftables.SetElement) bool {
@@ -179,10 +216,20 @@ func (t *NFTManager) relativeCgroupPath(path string) string {
 	return path
 }
 
-func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElement, err error) {
+func (nft *NFTManager) genSetElement(
+	route *types.Route,
+) (
+	ret nftables.SetElement,
+	err error,
+) {
 	defer errwrap.Wrap(&err, "build cgroup map element for %q", route.Path)
 
-	nft.log.Debugf("Building nft map element for cgroup %q: target=%s, chain=%q.", route.Path, route.Target.Op, route.Target.Chain)
+	nft.log.Debugf(
+		"Building nft map element for cgroup %q: target=%s, chain=%q.",
+		route.Path,
+		route.Target.Op,
+		route.Target.Chain,
+	)
 
 	path := route.Path
 	target := route.Target
@@ -197,7 +244,11 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 
 	path = nft.relativeCgroupPath(path)
 
-	nft.log.Debugf("Resolved cgroup %q to ID %d using stat(2).", path, inode)
+	nft.log.Debugf(
+		"Resolved cgroup %q to ID %d using stat(2).",
+		path,
+		inode,
+	)
 
 	setElement := nftables.SetElement{
 		Key:         binaryutil.NativeEndian.PutUint64(inode),
@@ -223,9 +274,7 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 	return
 }
 
-func (t *NFTManager) addCgroupRuleForLevel(
-	conn *nftables.Conn, level int,
-) {
+func (t *NFTManager) addCgroupRuleForLevel(conn *nftables.Conn, level int) {
 	// nft: socket cgroupv2 level <level> vmap @cgroup-vmap
 	// The socket lookup loads the ancestor's cgroup ID, then the verdict map
 	// returns or goes to its MARK chain. A failed lookup falls through to the

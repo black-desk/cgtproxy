@@ -29,11 +29,23 @@ func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 
 	err = conn.AddSet(nft.ipv4BypassSet, nil)
 	if err != nil {
-		return fmt.Errorf("create set %q: %w", nft.ipv4BypassSet.Name, err)
+		return fmt.Errorf(
+			"create set %q: %w",
+			nft.ipv4BypassSet.Name,
+			err,
+		)
 	}
-	err = queueSetElements(nft.ipv4BypassSet, bypassSetElements(nft.bypassIPv4), conn.SetAddElements)
+	err = queueSetElements(
+		nft.ipv4BypassSet,
+		bypassSetElements(nft.bypassIPv4),
+		conn.SetAddElements,
+	)
 	if err != nil {
-		return fmt.Errorf("populate set %q: %w", nft.ipv4BypassSet.Name, err)
+		return fmt.Errorf(
+			"populate set %q: %w",
+			nft.ipv4BypassSet.Name,
+			err,
+		)
 	}
 	return
 }
@@ -52,11 +64,23 @@ func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 
 	err = conn.AddSet(nft.ipv6BypassSet, nil)
 	if err != nil {
-		return fmt.Errorf("create set %q: %w", nft.ipv6BypassSet.Name, err)
+		return fmt.Errorf(
+			"create set %q: %w",
+			nft.ipv6BypassSet.Name,
+			err,
+		)
 	}
-	err = queueSetElements(nft.ipv6BypassSet, bypassSetElements(nft.bypassIPv6), conn.SetAddElements)
+	err = queueSetElements(
+		nft.ipv6BypassSet,
+		bypassSetElements(nft.bypassIPv6),
+		conn.SetAddElements,
+	)
 	if err != nil {
-		return fmt.Errorf("populate set %q: %w", nft.ipv6BypassSet.Name, err)
+		return fmt.Errorf(
+			"populate set %q: %w",
+			nft.ipv6BypassSet.Name,
+			err,
+		)
 	}
 	return
 }
@@ -70,7 +94,11 @@ func (nft *NFTManager) initProxyMarkSet(conn *nftables.Conn) error {
 		KeyByteOrder: binaryutil.NativeEndian,
 	}
 	if err := conn.AddSet(nft.proxyMarkSet, nil); err != nil {
-		return fmt.Errorf("create set %q: %w", nft.proxyMarkSet.Name, err)
+		return fmt.Errorf(
+			"create set %q: %w",
+			nft.proxyMarkSet.Name,
+			err,
+		)
 	}
 	return nil
 }
@@ -79,15 +107,23 @@ func (nft *NFTManager) initOutputBypassChain(conn *nftables.Conn) {
 	// nft: type route hook output priority -99; policy accept;
 	priority := nftables.ChainPriority(*nftables.ChainPriorityNATDest + 1)
 	chain := conn.AddChain(&nftables.Chain{
-		Table: nft.table, Name: types.ChainOutputBypass, Type: nftables.ChainTypeRoute,
-		Hooknum: nftables.ChainHookOutput, Priority: &priority, Policy: &nft.policy,
+		Table:    nft.table,
+		Name:     types.ChainOutputBypass,
+		Type:     nftables.ChainTypeRoute,
+		Hooknum:  nftables.ChainHookOutput,
+		Priority: &priority,
+		Policy:   &nft.policy,
 	})
 	// A route chain triggers a new lookup when clearing a mark after OUTPUT
 	// DNAT. Otherwise the packet can retain the earlier local TPROXY route.
 	nft.addBypassRules(conn, chain, true)
 }
 
-func (nft *NFTManager) addBypassRules(conn *nftables.Conn, chain *nftables.Chain, clearProxyMark bool) {
+func (nft *NFTManager) addBypassRules(
+	conn *nftables.Conn,
+	chain *nftables.Chain,
+	clearProxyMark bool,
+) {
 	// nft with clearProxyMark=false (one rule per address family):
 	//   meta nfproto ipv4 ip daddr @bypass return
 	//   meta nfproto ipv6 ip6 daddr @bypass6 return
@@ -105,22 +141,50 @@ func (nft *NFTManager) addBypassRules(conn *nftables.Conn, chain *nftables.Chain
 	} {
 		exprs := []expr.Any{
 			&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
-			&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{family.protocol}},
-			&expr.Payload{DestRegister: 1, Base: expr.PayloadBaseNetworkHeader,
-				Offset: family.offset, Len: family.length},
-			&expr.Lookup{SourceRegister: 1, SetID: family.set.ID, SetName: family.set.Name},
+			&expr.Cmp{
+				Op:       expr.CmpOpEq,
+				Register: 1,
+				Data:     []byte{family.protocol},
+			},
+			&expr.Payload{
+				DestRegister: 1,
+				Base:         expr.PayloadBaseNetworkHeader,
+				Offset:       family.offset,
+				Len:          family.length,
+			},
+			&expr.Lookup{
+				SourceRegister: 1,
+				SetID:          family.set.ID,
+				SetName:        family.set.Name,
+			},
 		}
 		if clearProxyMark {
-			// Marks are reserved by their exact configured values. Leave marks
-			// used by other network components untouched.
+			// Marks are reserved by their exact configured values.
+			// Leave marks used by other network components
+			// untouched.
 			exprs = append(exprs,
 				&expr.Meta{Key: expr.MetaKeyMARK, Register: 1},
-				&expr.Lookup{SourceRegister: 1, SetID: nft.proxyMarkSet.ID, SetName: nft.proxyMarkSet.Name},
-				&expr.Immediate{Register: 1, Data: binaryutil.NativeEndian.PutUint32(0)},
-				&expr.Meta{Key: expr.MetaKeyMARK, Register: 1, SourceRegister: true},
+				&expr.Lookup{
+					SourceRegister: 1,
+					SetID:          nft.proxyMarkSet.ID,
+					SetName:        nft.proxyMarkSet.Name,
+				},
+				&expr.Immediate{
+					Register: 1,
+					Data:     binaryutil.NativeEndian.PutUint32(0),
+				},
+				&expr.Meta{
+					Key:            expr.MetaKeyMARK,
+					Register:       1,
+					SourceRegister: true,
+				},
 			)
 		}
 		exprs = append(exprs, &expr.Verdict{Kind: expr.VerdictReturn})
-		conn.AddRule(&nftables.Rule{Table: nft.table, Chain: chain, Exprs: addDebugCounter(exprs)})
+		conn.AddRule(&nftables.Rule{
+			Table: nft.table,
+			Chain: chain,
+			Exprs: addDebugCounter(exprs),
+		})
 	}
 }

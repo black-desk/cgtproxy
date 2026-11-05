@@ -23,7 +23,15 @@ import (
 // entries outside this subtree are left unchanged. Notifications only select
 // where to scan: even a removal notification may refer to a recreated
 // directory.
-func (m *CGroupFSMonitor) reconcile(ctx context.Context, watcher *fsnotify.Watcher, root string, known map[string]struct{}) ([]types.CGroupEvent, error) {
+func (m *CGroupFSMonitor) reconcile(
+	ctx context.Context,
+	watcher *fsnotify.Watcher,
+	root string,
+	known map[string]struct{},
+) (
+	[]types.CGroupEvent,
+	error,
+) {
 	// walk installs watches and emits New for every directory it finds,
 	// including known paths. Re-emitting them lets the consumer refresh
 	// cgroup IDs when a directory was deleted and recreated at the same
@@ -43,7 +51,10 @@ func (m *CGroupFSMonitor) reconcile(ctx context.Context, watcher *fsnotify.Watch
 		// Check only root and its descendants. The slash boundary keeps
 		// a scan of /a from treating /abc as a descendant and deleting
 		// its record.
-		if path != root && !strings.HasPrefix(path, strings.TrimRight(root, "/")+"/") {
+		if path != root && !strings.HasPrefix(
+			path,
+			strings.TrimRight(root, "/")+"/",
+		) {
 			continue
 		}
 		if _, exists := seen[path]; exists {
@@ -55,10 +66,23 @@ func (m *CGroupFSMonitor) reconcile(ctx context.Context, watcher *fsnotify.Watch
 		// watch, before fsnotify has consumed the corresponding
 		// notification.
 		err = watcher.Remove(path)
-		if err != nil && !errors.Is(err, fsnotify.ErrNonExistentWatch) && !errors.Is(err, unix.EINVAL) {
-			return nil, fmt.Errorf("unwatch cgroup %q: %w", path, err)
+		if err != nil && !errors.Is(
+			err,
+			fsnotify.ErrNonExistentWatch,
+		) && !errors.Is(
+			err,
+			unix.EINVAL,
+		) {
+			return nil, fmt.Errorf(
+				"unwatch cgroup %q: %w",
+				path,
+				err,
+			)
 		}
-		events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeDelete})
+		events = append(events, types.CGroupEvent{
+			Path:      path,
+			EventType: types.CgroupEventTypeDelete,
+		})
 		delete(known, path)
 	}
 	// Merge the surviving/new paths after removing stale ones above.
@@ -70,14 +94,26 @@ func (m *CGroupFSMonitor) reconcile(ctx context.Context, watcher *fsnotify.Watch
 	return events, nil
 }
 
-func (m *CGroupFSMonitor) walk(ctx context.Context, watcher *fsnotify.Watcher, root string) ([]types.CGroupEvent, error) {
+func (m *CGroupFSMonitor) walk(
+	ctx context.Context,
+	watcher *fsnotify.Watcher,
+	root string,
+) (
+	[]types.CGroupEvent,
+	error,
+) {
 	var events []types.CGroupEvent
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(root, func(
+		path string, d fs.DirEntry, err error,
+	) error {
 		if ctx.Err() != nil {
 			return context.Cause(ctx)
 		}
 		if errors.Is(err, fs.ErrNotExist) && path != string(m.root) {
-			m.log.Debugf("Cgroup %q disappeared during the scan; skipping it.", path)
+			m.log.Debugf(
+				"Cgroup %q disappeared during the scan; skipping it.",
+				path,
+			)
 			return nil
 		}
 		if err != nil {
@@ -87,16 +123,23 @@ func (m *CGroupFSMonitor) walk(ctx context.Context, watcher *fsnotify.Watcher, r
 			return nil
 		}
 
-		// WalkDir invokes this callback before reading the directory. Add
-		// synchronously installs its watch: existing children are found by
-		// the scan, and children created after that are covered by events.
+		// WalkDir invokes this callback before reading the directory.
+		// Add synchronously installs its watch: existing children are
+		// found by the scan, and children created after that are
+		// covered by events.
 		if err = watcher.Add(path); err != nil {
-			if errors.Is(err, fs.ErrNotExist) && path != string(m.root) {
+			if errors.Is(
+				err,
+				fs.ErrNotExist,
+			) && path != string(m.root) {
 				return filepath.SkipDir
 			}
 			return fmt.Errorf("watch cgroup %q: %w", path, err)
 		}
-		events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeNew})
+		events = append(events, types.CGroupEvent{
+			Path:      path,
+			EventType: types.CgroupEventTypeNew},
+		)
 		return nil
 	})
 	return events, err
