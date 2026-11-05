@@ -60,8 +60,14 @@ func New(opts ...Opt) (ret *CGTProxy, err error) {
 
 	ret = c
 
-	c.log.Debugf("Created cgtproxy core: cgroup root=%q, route table=%d, gateway=%+v, proxies=%d, rules=%d.",
-		c.cfg.CgroupRoot, c.cfg.RouteTable, c.cfg.Gateway, len(c.cfg.TProxies), len(c.cfg.Rules))
+	c.log.Debugf(
+		"Created cgtproxy core: cgroup root=%q, route table=%d, gateway=%+v, proxies=%d, rules=%d.",
+		c.cfg.CgroupRoot,
+		c.cfg.RouteTable,
+		c.cfg.Gateway,
+		len(c.cfg.TProxies),
+		len(c.cfg.Rules),
+	)
 
 	return
 }

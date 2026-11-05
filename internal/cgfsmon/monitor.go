@@ -102,12 +102,19 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 	}()
 
 	known := make(map[string]struct{})
-	w.log.Infof("Scanning cgroup filesystem at %q and installing watches.", w.root)
+	w.log.Infof(
+		"Scanning cgroup filesystem at %q and installing watches.",
+		w.root,
+	)
 	events, err := w.reconcile(ctx, watcher, string(w.root), known)
 	if err != nil {
 		return err
 	}
-	w.log.Infof("Initial cgroup scan completed: found %d cgroups including root %q.", len(events), w.root)
+	w.log.Infof(
+		"Initial cgroup scan completed: found %d cgroups including root %q.",
+		len(events),
+		w.root,
+	)
 	if err = w.send(ctx, types.CGroupEvents{Events: events}); err != nil {
 		return err
 	}
@@ -119,14 +126,19 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 			return context.Cause(ctx)
 		case watchErr, ok := <-watcher.Errors:
 			if !ok {
-				return errors.New("filesystem watcher closed unexpectedly")
+				return errors.New(
+					"filesystem watcher closed unexpectedly",
+				)
 			}
 			if !errors.Is(watchErr, fsnotify.ErrEventOverflow) {
 				return watchErr
 			}
-			w.log.Warn("Filesystem event queue overflowed; rebuilding watches and rescanning cgroupfs.")
-			// Overflow may also lose watch-removal events. Rebuild the watcher
-			// rather than trusting its bookkeeping for deleted/recreated paths.
+			w.log.Warn(
+				"Filesystem event queue overflowed; rebuilding watches and rescanning cgroupfs.",
+			)
+			// Overflow may also lose watch-removal events. Rebuild
+			// the watcher rather than trusting its bookkeeping for
+			// deleted/recreated paths.
 			if err = watcher.Close(); err != nil {
 				return err
 			}
@@ -137,12 +149,22 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 			path = string(w.root)
 		case event, ok := <-watcher.Events:
 			if !ok {
-				return errors.New("filesystem watcher closed unexpectedly")
+				return errors.New(
+					"filesystem watcher closed unexpectedly",
+				)
 			}
-			if !event.Has(fsnotify.Create | fsnotify.Remove | fsnotify.Rename) {
+			if !event.Has(
+				fsnotify.Create |
+					fsnotify.Remove |
+					fsnotify.Rename,
+			) {
 				continue
 			}
-			w.log.Debugf("Received filesystem event %s for %q; rescanning the subtree.", event.Op, event.Name)
+			w.log.Debugf(
+				"Received filesystem event %s for %q; rescanning the subtree.",
+				event.Op,
+				event.Name,
+			)
 			path = event.Name
 		}
 
@@ -163,17 +185,29 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 	}
 }
 
-func (m *CGroupFSMonitor) send(ctx context.Context, cgEvents types.CGroupEvents) (err error) {
+func (m *CGroupFSMonitor) send(
+	ctx context.Context,
+	cgEvents types.CGroupEvents,
+) (
+	err error,
+) {
 	for i := range cgEvents.Events {
-		cgEvents.Events[i].Path = filepath.Clean(cgEvents.Events[i].Path)
+		cgEvents.Events[i].Path =
+			filepath.Clean(cgEvents.Events[i].Path)
 	}
 
-	m.log.Debugf("Sending %d cgroup events to the route manager.", len(cgEvents.Events))
+	m.log.Debugf(
+		"Sending %d cgroup events to the route manager.",
+		len(cgEvents.Events),
+	)
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	case m.eventsOut <- cgEvents:
-		m.log.Debugf("Sent %d cgroup events to the route manager.", len(cgEvents.Events))
+		m.log.Debugf(
+			"Sent %d cgroup events to the route manager.",
+			len(cgEvents.Events),
+		)
 	}
 	return nil
 }

@@ -47,7 +47,9 @@ func serve(args []string) error {
 			}
 			go func() {
 				defer conn.Close()
-				_ = conn.SetDeadline(time.Now().Add(5 * time.Second))
+				_ = conn.SetDeadline(
+					time.Now().Add(5 * time.Second),
+				)
 				scanner := bufio.NewScanner(conn)
 				for scanner.Scan() {
 					value := receipt{
@@ -63,7 +65,12 @@ func serve(args []string) error {
 					}
 				}
 				if err := scanner.Err(); err != nil {
-					fmt.Fprintf(os.Stderr, "Read TCP request from %s: %v\n", conn.RemoteAddr(), err)
+					fmt.Fprintf(
+						os.Stderr,
+						"Read TCP request from %s: %v\n",
+						conn.RemoteAddr(),
+						err,
+					)
 				}
 			}()
 		}
