@@ -22,14 +22,14 @@ import (
 )
 
 // cgroupKeys reads the expected inode keys independently from the application.
-// The root uses a fallback chain rather than an entry in cgroup-vmap.
+// Include the namespace root: it is an ordinary entry in cgroup-vmap.
 func cgroupKeys(root string) (map[string]string, error) {
 	keys := make(map[string]string)
 	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !entry.IsDir() || path == root {
+		if !entry.IsDir() {
 			return nil
 		}
 		info, err := os.Stat(path)
@@ -47,7 +47,7 @@ func cgroupKeys(root string) (map[string]string, error) {
 // makes the particular entries lost to a truncated message unpredictable.
 func checkCgroupMap(args []string) error {
 	flags := flag.NewFlagSet("check-cgroup-map", flag.ExitOnError)
-	root := flags.String("root", "/sys/fs/cgroup", "cgroup root; all descendants must have entries")
+	root := flags.String("root", "/sys/fs/cgroup", "cgroup root; it and all descendants must have entries")
 	proxyPrefix := flags.String("proxy-prefix", "group-proxy-", "basename prefix of proxy cgroups")
 	proxyChain := flags.String("proxy-chain", "proxy-MARK", "expected proxy target chain")
 	flags.Parse(args)

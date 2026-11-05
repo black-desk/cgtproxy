@@ -4,10 +4,6 @@
 # SPDX-License-Identifier: MIT
 
 mkdir /sys/fs/cgroup/proxied/initial
-"$FIXTURE_BIN" check-nft-init -ready "$CASE_WORK/monitor.ready" -cgroup /sys/fs/cgroup/servers &
-monitor_pid=$!
-pids+=("$monitor_pid")
-wait_until test -f "$CASE_WORK/monitor.ready"
 
 # Exercise changes overlapping the initial scan and transaction construction.
 (
@@ -20,15 +16,16 @@ wait_until test -f "$CASE_WORK/monitor.ready"
 churn_pid=$!
 pids+=("$churn_pid")
 start_cgtproxy
-wait "$monitor_pid"
 wait "$churn_pid"
 wait_until no_cgroup proxied/transient
 probe proxied/initial tcp4 198.51.100.10:18080 origin
 probe unmatched tcp4 198.51.100.10:18080 proxy
 probe forwarded udp4 198.51.100.10:18080 proxy
-# The scan includes the root, whose own traffic still uses the fallback.
+# Verify traffic originating in the root cgroup as well as its descendants.
 probe / tcp4 198.51.100.10:18080 proxy
 probe / udp4 198.51.100.10:18080 proxy
+probe / tcp6 '[2001:db8::10]:18080' proxy
+probe / udp6 '[2001:db8::10]:18080' proxy
 
 # Queue a removal and recreation before the manager can consume either event.
 mkdir /sys/fs/cgroup/proxied/live

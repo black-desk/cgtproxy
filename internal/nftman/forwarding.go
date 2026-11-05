@@ -12,7 +12,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func (nft *NFTManager) initForwardingChains(conn *nftables.Conn) error {
+func (nft *NFTManager) initForwardingChains(conn *nftables.Conn, target types.Target) error {
 	// Conntrack has already run at priority -200. Classify before destination
 	// NAT; TPROXY dispatch runs after NAT so the DNS mark can be cleared first.
 	markPriority := nftables.ChainPriority(*nftables.ChainPriorityMangle - 2)
@@ -41,7 +41,12 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn) error {
 		)
 	}
 	if nft.gateway {
-		nft.addRootFallback(conn, chain)
+		verdict := &expr.Verdict{Kind: expr.VerdictReturn}
+		if target.Op == types.TargetTProxy {
+			verdict.Kind, verdict.Chain = expr.VerdictGoto, target.Chain
+		}
+		conn.AddRule(&nftables.Rule{Table: nft.table, Chain: chain,
+			Exprs: addDebugCounter([]expr.Any{verdict})})
 	}
 
 	dnsChain := conn.AddChain(&nftables.Chain{

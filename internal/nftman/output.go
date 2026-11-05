@@ -33,7 +33,9 @@ func (nft *NFTManager) fillOutputCgroupRules(conn *nftables.Conn, elements map[s
 	}
 	levelSet := map[int]struct{}{}
 	for path := range elements {
-		levelSet[strings.Count(path, "/")] = struct{}{}
+		// Count path components so the namespace root naturally has depth 0.
+		level := len(strings.FieldsFunc(path, func(r rune) bool { return r == '/' }))
+		levelSet[level] = struct{}{}
 	}
 	levels := make([]int, 0, len(levelSet))
 	for level := range levelSet {
@@ -43,7 +45,6 @@ func (nft *NFTManager) fillOutputCgroupRules(conn *nftables.Conn, elements map[s
 	for _, level := range levels {
 		nft.addCgroupRuleForLevel(conn, level)
 	}
-	nft.addRootFallback(conn, nft.outputMangleChain)
 	return nil
 }
 

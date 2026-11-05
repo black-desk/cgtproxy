@@ -92,7 +92,7 @@ for table in 1 252 256 31300; do
 	"$CGTPROXY_BIN" --config "$path" check config
 done
 # Proxy names share a namespace with all generated and internal chains.
-for name in cgroup-root output-mangle output-nat output-bypass prerouting forward-mangle prerouting-nat; do
+for name in output-mangle output-nat output-bypass prerouting forward-mangle prerouting-nat; do
 	path=$CASE_WORK/proxy-name-$name.yaml
 	cat "$CASE_DIR/config.yaml" >"$path"
 	cat >>"$path" <<YAML

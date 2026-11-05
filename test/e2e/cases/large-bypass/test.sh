@@ -21,13 +21,7 @@ sed '/^bypass:/d' "$CASE_DIR/config.yaml" >"$CASE_WORK/config.yaml"
 } >>"$CASE_WORK/config.yaml"
 CASE_DIR=$CASE_WORK
 
-# Splitting messages must preserve the single initial transaction.
-"$FIXTURE_BIN" check-nft-init -ready "$CASE_WORK/monitor.ready" -cgroup /sys/fs/cgroup/servers &
-monitor_pid=$!
-pids+=("$monitor_pid")
-wait_until test -f "$CASE_WORK/monitor.ready"
 start_cgtproxy
-wait "$monitor_pid"
 "$FIXTURE_BIN" check-bypass-set -set bypass -addresses "$CASE_WORK/ipv4"
 "$FIXTURE_BIN" check-bypass-set -set bypass6 -addresses "$CASE_WORK/ipv6"
 

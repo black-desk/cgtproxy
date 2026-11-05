@@ -132,15 +132,15 @@ start_servers() {
 	start_server host tcp4 0.0.0.0:18081 host
 }
 
-output_ready() {
-	kill -0 "$cgtproxy_pid" 2>/dev/null && nft list chain inet cgtproxy output-mangle 2>/dev/null | grep -q 'goto cgroup-root'
+rules_ready() {
+	kill -0 "$cgtproxy_pid" 2>/dev/null && nft list table inet cgtproxy >/dev/null 2>&1
 }
 
 start_cgtproxy() {
 	LOG_LEVEL=${LOG_LEVEL:-debug} in_group manager "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" \
 		--log-file "$CASE_WORK/cgtproxy.log" &
 	cgtproxy_pid=$!
-	wait_until output_ready
+	wait_until rules_ready
 }
 
 stop_cgtproxy() {

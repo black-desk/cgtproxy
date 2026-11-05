@@ -19,11 +19,6 @@ func (m *RouteManager) routesForPaths(paths []string) []types.Route {
 
 	for i := range paths {
 		path := paths[i]
-		// The root target is installed separately as the shared fallback,
-		// rather than as an ordinary cgroup map entry.
-		if filepath.Clean(path) == root {
-			continue
-		}
 
 		m.log.Debugf("Checking routing configuration for cgroup %q.", path)
 

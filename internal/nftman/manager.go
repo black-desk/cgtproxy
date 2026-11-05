@@ -49,7 +49,6 @@ type NFTManager struct {
 	outputMangleChain *nftables.Chain
 	outputNATChain    *nftables.Chain
 	preroutingChain   *nftables.Chain
-	rootChain         *nftables.Chain
 }
 
 type Opt = (func(*NFTManager) (*NFTManager, error))
