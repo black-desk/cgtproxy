@@ -5,7 +5,7 @@
 
 mkdir /sys/fs/cgroup/proxied/gone
 start_cgtproxy
-probe proxied tcp4 198.51.100.10:18080 proxy
+probe proxied tcp4 198.51.100.10:18080 origin proxy
 
 # Simulate an unexpected external edit. Removing the cgroup now attempts to
 # delete a missing map element, so the incremental transaction must fail.
@@ -22,5 +22,5 @@ if [[ $status != 1 ]]; then
 fi
 grep -q 'update .*routes in nftable: commit cgroup route updates:' "$CASE_WORK/cgtproxy.log"
 assert_network_cleanup
-probe proxied tcp4 198.51.100.10:18080 origin
-probe proxied udp6 '[2001:db8::10]:18080' origin
+probe proxied tcp4 198.51.100.10:18080 origin direct
+probe proxied udp6 '[2001:db8::10]:18080' origin direct

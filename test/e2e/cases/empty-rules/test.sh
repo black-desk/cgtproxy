@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 start_cgtproxy
-probe forwarded tcp4 198.51.100.10:18080 origin
-probe forwarded tcp6 '[2001:db8::10]:18080' origin
-probe forwarded udp6 '[2001:db8::10]:18080' origin
-probe unmatched tcp4 198.51.100.10:18080 origin
+probe forwarded tcp4 198.51.100.10:18080 origin direct
+probe forwarded tcp6 '[2001:db8::10]:18080' origin direct
+probe forwarded udp6 '[2001:db8::10]:18080' origin direct
+probe unmatched tcp4 198.51.100.10:18080 origin direct

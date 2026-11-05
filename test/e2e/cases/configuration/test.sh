@@ -190,4 +190,4 @@ YAML
 	"$CGTPROXY_BIN" --config "$path" check config
 done
 start_cgtproxy
-probe forwarded tcp4 198.51.100.10:18080 origin
+probe forwarded tcp4 198.51.100.10:18080 origin direct

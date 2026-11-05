@@ -5,10 +5,10 @@
 
 mkdir /sys/fs/cgroup/second
 start_cgtproxy
-probe proxied tcp4 198.51.100.10:18080 proxy
-probe second tcp4 198.51.100.10:18080 proxy
-probe forwarded tcp4 198.51.100.10:18080 proxy
-probe proxied tcp4 198.51.100.20:18080 origin
+probe proxied tcp4 198.51.100.10:18080 origin proxy
+probe second tcp4 198.51.100.10:18080 origin proxy
+probe forwarded tcp4 198.51.100.10:18080 origin proxy
+probe proxied tcp4 198.51.100.20:18080 origin direct
 
 nft -f - <<'NFT'
 table inet external-dnat {
@@ -36,7 +36,7 @@ for source in direct proxied second forwarded; do
 			original='[2001:db8::10]:18080'
 			translated='[2001:db8::20]:18080'
 		fi
-		probe "$source" "$network" "$original" origin "$translated"
+		probe "$source" "$network" "$original" origin direct "$translated"
 	done
 done
 
@@ -58,5 +58,5 @@ NFT
 for network in tcp4 udp4 tcp6 udp6; do
 	address=198.51.100.20:18080
 	if [[ $network == *6 ]]; then address='[2001:db8::20]:18080'; fi
-	probe direct "$network" "$address" origin
+	probe direct "$network" "$address" origin direct
 done

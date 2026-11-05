@@ -15,7 +15,7 @@ tproxies:
     port: 17893
     mark: 42042
     dns-hijack:
-      ip: 172.31.254.1
+      ip: 198.51.100.53
       port: 15353
       tcp: true
 rules:

@@ -1,0 +1,28 @@
+{
+  "log": { "level": "info", "timestamp": false },
+  "inbounds": [
+    { "type": "tproxy", "tag": "proxy", "listen": "::", "listen_port": 17893 },
+    { "type": "tproxy", "tag": "second", "listen": "::", "listen_port": 17894 }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "proxy-out",
+      "inet4_bind_address": "198.18.0.3",
+      "inet6_bind_address": "fd43::3"
+    },
+    {
+      "type": "direct",
+      "tag": "second-out",
+      "inet4_bind_address": "198.18.0.4",
+      "inet6_bind_address": "fd43::4"
+    }
+  ],
+  "route": {
+    "rules": [
+      { "inbound": ["proxy"], "action": "route", "outbound": "proxy-out" },
+      { "inbound": ["second"], "action": "route", "outbound": "second-out" }
+    ],
+    "final": "proxy-out"
+  }
+}

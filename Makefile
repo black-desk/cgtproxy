@@ -77,7 +77,7 @@ test:
 		-ldflags "$(_GO_LDFLAGS) $(GO_LDFLAGS)" \
 		-tags="$(_GO_TAGS),$(GO_TAGS)" \
 		-o "$(TEST_BUILD_DIR)/cgtproxy" $(GO_MAIN_PACKAGE_DIR)
-	$(GO) build -o "$(TEST_BUILD_DIR)/fixture" ./test/e2e/fixture
+	$(GO) -C test/e2e/fixture build -o "$(abspath $(TEST_BUILD_DIR))/fixture" .
 	# Building from GOROOT also supports toolchain downloads without covdata installed.
 	$(GO) build -o "$(TEST_BUILD_DIR)/covdata" cmd/covdata
 	set -e; \
