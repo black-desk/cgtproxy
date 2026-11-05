@@ -12,10 +12,10 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// Automatic SetAddElements/SetDeleteElements splitting was merged upstream in
+// TODO: Remove this workaround after upgrading to an nftables release that
+// includes automatic SetAddElements/SetDeleteElements splitting. It was merged in
 // https://github.com/google/nftables/pull/303, but is not included in the
-// currently pinned nftables v0.3.0. Remove this workaround after upgrading to a
-// release that includes it.
+// currently pinned nftables v0.3.0.
 //
 // queueSetElements follows nft's mnl_nft_setelem_batch: an element that would
 // overflow NFTA_SET_ELEM_LIST_ELEMENTS starts the next message. Only queue the
