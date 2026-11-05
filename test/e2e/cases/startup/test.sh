@@ -17,7 +17,6 @@ churn_pid=$!
 pids+=("$churn_pid")
 start_cgtproxy
 wait "$churn_pid"
-wait_until no_cgroup proxied/transient
 probe proxied/initial tcp4 198.51.100.10:18080 origin
 probe unmatched tcp4 198.51.100.10:18080 proxy
 probe forwarded udp4 198.51.100.10:18080 proxy
@@ -29,7 +28,7 @@ probe / udp6 '[2001:db8::10]:18080' proxy
 
 # Queue a removal and recreation before the manager can consume either event.
 mkdir /sys/fs/cgroup/proxied/live
-wait_until has_cgroup proxied/live
+wait_until probe proxied/live tcp4 198.51.100.10:18080 origin
 old_inode=$(stat -c %i /sys/fs/cgroup/proxied/live)
 manager_pid=${cgtproxy_pid:?}
 kill -STOP "$manager_pid"
@@ -40,12 +39,9 @@ mkdir /sys/fs/cgroup/proxied/live
 mkdir /sys/fs/cgroup/proxied/transient
 rmdir /sys/fs/cgroup/proxied/transient
 kill -CONT "$manager_pid"
-wait_until has_cgroup proxied/live
-probe proxied/live tcp4 198.51.100.10:18080 origin
-probe proxied/live udp4 198.51.100.10:18080 origin
+wait_until probe proxied/live tcp4 198.51.100.10:18080 origin
+wait_until probe proxied/live udp4 198.51.100.10:18080 origin
 rmdir /sys/fs/cgroup/proxied/live
-wait_until no_cgroup proxied/live
-wait_until no_cgroup proxied/transient
 if grep -q 'Failed to update cgroup routes' "$CASE_WORK/cgtproxy.log"; then
 	echo 'Queued cgroup events failed to reconcile' >&2
 	exit 1

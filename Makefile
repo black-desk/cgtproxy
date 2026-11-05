@@ -83,7 +83,7 @@ test:
 	set -e; \
 		coverage_dir=$$(mktemp -d "$(TEST_BUILD_DIR)/coverage.XXXXXX"); \
 		status=0; \
-		$(SYSTEMD_RUN) env PATH="$(PATH)" E2E_CASE="$(E2E_CASE)" \
+		$(SYSTEMD_RUN) env PATH="$(PATH)" E2E_CASE="$(E2E_CASE)" E2E_GO_TAGS="$(_GO_TAGS),$(GO_TAGS)" \
 			bash test/e2e/run.sh "$(TEST_BUILD_DIR)/cgtproxy" "$(TEST_BUILD_DIR)/fixture" "$$coverage_dir" || status=$$?; \
 		"$(TEST_BUILD_DIR)/covdata" textfmt -i="$$coverage_dir" -o="$(GO_COVERAGE_PROFILE)"; \
 		exit "$$status"

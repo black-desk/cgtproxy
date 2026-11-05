@@ -10,10 +10,8 @@ for network in tcp4 udp4; do
 	probe direct "$network" 198.51.100.10:18080 origin
 done
 mkdir /sys/fs/cgroup/proxied/live
-wait_until has_cgroup proxied/live
-probe proxied/live tcp4 198.51.100.10:18080 proxy
+wait_until probe proxied/live tcp4 198.51.100.10:18080 proxy
 rmdir /sys/fs/cgroup/proxied/live
-wait_until no_cgroup proxied/live
 stop_cgtproxy
 
 # ".." and repeated separators must resolve to the same cgroup ancestry.

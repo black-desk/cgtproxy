@@ -17,11 +17,9 @@ if (LOG_LEVEL=debug in_group manager "$CGTPROXY_BIN" --config "$CASE_DIR/config.
 	exit 1
 fi
 grep -q 'update .*routes in nftable: commit initial ruleset:' "$CASE_WORK/cgtproxy.log"
-nft list chain inet cgtproxy sentinel | grep -q 'counter packets 0 bytes 0 accept'
-if nft list chain inet cgtproxy output-mangle >/dev/null 2>&1; then
-	echo 'Failed initialization left a partial ruleset' >&2
-	exit 1
-fi
+# The nft-ruleset case compares the complete sentinel table before/after
+# startup failure. Here only check that the existing table remains present.
+nft list table inet cgtproxy >/dev/null
 if {
 	ip rule show
 	ip -6 rule show

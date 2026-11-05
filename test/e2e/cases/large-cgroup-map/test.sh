@@ -13,11 +13,7 @@ for ((i = 0; i < 20; i++)); do
 done
 start_cgtproxy
 
-check_map() {
-	"$FIXTURE_BIN" check-cgroup-map \
-		-proxy-chain proxy-with-a-long-chain-name-to-exercise-variable-length-verdict-encoding-and-netlink-attribute-alignment-when-splitting-large-cgroup-maps-without-changing-the-transaction-boundaries-or-dropping-elements-MARK
-}
-check_map
+# Complete kernel map contents are checked by the nft-ruleset case.
 for i in 0 10 19; do
 	probe "group-direct-$i" tcp4 198.51.100.10:18080 origin
 	probe "group-proxy-$((i * 15))" tcp4 198.51.100.10:18080 proxy
@@ -25,12 +21,10 @@ done
 probe direct tcp4 198.51.100.10:18080 origin
 
 # Reconcile a removal and recreation with the large map already installed.
-# Check all keys again to catch stale kernel state after incremental updates.
+# Verify traffic after incremental updates; nft-ruleset checks every key.
 rmdir /sys/fs/cgroup/group-direct-0
-wait_until check_map
 mkdir /sys/fs/cgroup/group-direct-0
-wait_until check_map
-probe group-direct-0 udp4 198.51.100.10:18080 origin
+wait_until probe group-direct-0 udp4 198.51.100.10:18080 origin
 probe group-proxy-299 udp4 198.51.100.10:18080 proxy
 if grep -q 'Failed to update cgroup routes' "$CASE_WORK/cgtproxy.log"; then
 	echo 'Large cgroup map failed to reconcile' >&2

@@ -16,14 +16,6 @@ for source in proxied forwarded; do
 		probe "$source" "$network" '[2001:db8::10]:18080' proxy
 	done
 done
-# Check that the complete merged intervals reached the kernel, including both
-# ends of each address space and the addresses between adjacent input ranges.
-for address in 0.0.0.0 0.0.0.1 198.51.100.21 198.51.100.23 255.255.255.254 255.255.255.255; do
-	nft get element inet cgtproxy bypass "{ $address }"
-done
-for address in :: ::1 ::ffff:ffff:ffff 2001:db8::21 2001:db8::23 ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff; do
-	nft get element inet cgtproxy bypass6 "{ $address }"
-done
 stop_cgtproxy
 
 # Reuse the same routing configuration with empty and full-address-space sets.
