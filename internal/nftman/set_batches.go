@@ -12,10 +12,13 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// TODO: Contribute automatic SetAddElements/SetDeleteElements splitting to
-// github.com/google/nftables, and length overflow rejection to
-// github.com/mdlayher/netlink. Remove this workaround once upstream supports
-// it.
+// Automatic SetAddElements/SetDeleteElements splitting was merged upstream in
+// https://github.com/google/nftables/pull/303, but is not included in the
+// currently pinned nftables v0.3.0. Remove this workaround after upgrading to a
+// release that includes it.
+//
+// TODO: Contribute length overflow rejection in MarshalAttributes to
+// github.com/mdlayher/netlink.
 //
 // queueSetElements follows nft's mnl_nft_setelem_batch: an element that would
 // overflow NFTA_SET_ELEM_LIST_ELEMENTS starts the next message. Only queue the
