@@ -21,7 +21,7 @@ stop_cgtproxy
 
 # An IPv4-only host must also work without any TPROXY targets.
 cat >"$CASE_WORK/config.yaml" <<'YAML'
-version: 1
+version: 2
 cgroup-root: AUTO
 route-table: 31300
 rules:

@@ -19,8 +19,10 @@ import "go.uber.org/zap"
 //
 // [example configuration]: https://github.com/black-desk/cgtproxy/blob/master/misc/config/example.yaml
 type Config struct {
-	// Version is the configuration format version; currently only 1 is supported.
-	Version string `yaml:"version" validate:"required,eq=1"`
+	// Version is the configuration format version; currently only 2 is supported.
+	// To migrate from version 1, remove drop rules, explicitly set a nonzero
+	// port for every configured dns-hijack, and change version to 2.
+	Version string `yaml:"version" validate:"required,eq=2"`
 
 	// CgroupRoot is the cgroup v2 mount path, or AUTO to discover it.
 	CgroupRoot CGroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`

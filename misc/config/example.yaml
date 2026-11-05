@@ -8,7 +8,7 @@
 # Configuration fields and behavior are documented in GoDoc:
 # https://pkg.go.dev/github.com/black-desk/cgtproxy/internal/cgtproxy/config#Config
 
-version: 1
+version: 2
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
 route-table: 300
 

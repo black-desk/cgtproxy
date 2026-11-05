@@ -60,6 +60,43 @@ check_invalid_config() {
 	fi
 }
 
+# Legacy fields must not obscure the version error or migration instructions.
+for version in 1 '"1"'; do
+	path=$CASE_WORK/version-1.yaml
+	cat >"$path" <<YAML
+version: $version
+cgroup-root: AUTO
+route-table: 31300
+rules:
+  - match: /blocked
+    drop: true
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+    dns-hijack:
+      ip: 127.0.0.1
+YAML
+	check_invalid_config version-1 "$path"
+	for advice in 'configuration version 1 is no longer supported' \
+		'removing drop rules' 'explicit nonzero port' 'changing version to 2' \
+		'cgtproxy check config'; do
+		grep -Fq "$advice" "$CASE_WORK/version-1.stderr"
+	done
+	if grep -Fq 'field drop not found' "$CASE_WORK/version-1.stderr"; then
+		echo 'Legacy fields obscured the configuration migration advice' >&2
+		exit 1
+	fi
+done
+
+for version in missing 3; do
+	path=$CASE_WORK/version-$version.yaml
+	sed '/^version:/d' "$CASE_DIR/config.yaml" >"$path"
+	if [[ $version != missing ]]; then printf 'version: %s\n' "$version" >>"$path"; fi
+	check_invalid_config "version-$version" "$path"
+	grep -Fq 'supported version: 2' "$CASE_WORK/version-$version.stderr"
+done
+
 for invalid in wrong_type validation_fail undefined_proxy null_proxy invalid_regex duplicate_mark; do
 	check_invalid_config "$invalid" "$repo/test/data/$invalid.yaml"
 done
@@ -81,7 +118,7 @@ done
 for target in '{direct: true}' '{tproxy: proxy}'; do
 	path=$CASE_WORK/gateway-valid.yaml
 	cat >"$path" <<YAML
-version: 1
+version: 2
 cgroup-root: AUTO
 route-table: 31300
 gateway: $target
@@ -97,7 +134,7 @@ done
 for value in true false; do
 	path=$CASE_WORK/removed-drop-$value.yaml
 	cat >"$path" <<YAML
-version: 1
+version: 2
 cgroup-root: AUTO
 route-table: 31300
 rules:

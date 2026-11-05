@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-version: 1
+version: 2
 cgroup-root: AUTO
 route-table: 31300
 rules: []

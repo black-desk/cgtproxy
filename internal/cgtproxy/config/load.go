@@ -30,6 +30,27 @@ func New(opts ...Opt) (ret *Config, err error) {
 		c.log = zap.NewNop().Sugar()
 	}
 
+	// Check the format before decoding its fields so legacy options such as
+	// drop do not hide the migration advice behind an unknown-field error.
+	var header struct {
+		Version string `yaml:"version"`
+	}
+	if err := yaml.Unmarshal(c.raw, &header); err != nil {
+		return nil, fmt.Errorf("read configuration version: %w", err)
+	}
+	switch header.Version {
+	case "2":
+	case "1":
+		return nil, fmt.Errorf("configuration version 1 is no longer supported: " +
+			"migrate to version 2 by removing drop rules (use a separate firewall if blocking is needed), " +
+			"setting an explicit nonzero port for each configured dns-hijack, " +
+			"and changing version to 2; then run cgtproxy check config before restarting the service")
+	case "":
+		return nil, fmt.Errorf("configuration version is required; supported version: 2")
+	default:
+		return nil, fmt.Errorf("unsupported configuration version %q; supported version: 2", header.Version)
+	}
+
 	decoder := yaml.NewDecoder(bytes.NewReader(c.raw))
 	decoder.KnownFields(true)
 	err = decoder.Decode(c)
