@@ -28,3 +28,7 @@ done
 # shellcheck disable=SC2154
 nsenter -t "$client_ns" -n "$FIXTURE_BIN" client -network udp4 \
 	-address 198.51.100.10:53 -expect dns -count 256
+
+# Local root and unmatched cgroups remain direct while the gateway proxies.
+probe / tcp4 198.51.100.10:18080 origin
+probe unmatched udp4 198.51.100.10:18080 origin

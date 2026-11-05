@@ -75,6 +75,12 @@ func (c *Config) check() (err error) {
 		}
 	}
 
+	if c.Gateway != nil && c.Gateway.TProxy != "" {
+		if _, exists := c.TProxies[c.Gateway.TProxy]; !exists {
+			return fmt.Errorf("gateway.tproxy: undefined proxy %q", c.Gateway.TProxy)
+		}
+	}
+
 	if c.CgroupRoot == "AUTO" {
 		var cgroupRoot CGroupRoot
 		cgroupRoot, err = getCgroupRoot()

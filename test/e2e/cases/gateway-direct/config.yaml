@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 version: 1
-gateway: true
+gateway:
+  direct: true
 cgroup-root: AUTO
 route-table: 31300
 bypass:

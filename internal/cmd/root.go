@@ -179,7 +179,6 @@ func rootCmdRun() (err error) {
 	nft, err := nftman.New(
 		nftman.WithCgroupRoot(cfg.CgroupRoot),
 		nftman.WithBypass(cfg.Bypass),
-		nftman.WithGateway(cfg.Gateway),
 		nftman.WithLogger(log),
 	)
 	if err != nil {

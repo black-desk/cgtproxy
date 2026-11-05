@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 version: 1
-gateway: true
+gateway:
+  tproxy: proxy
 cgroup-root: AUTO
 route-table: 31300
 bypass:
@@ -33,5 +34,5 @@ rules:
     tproxy: second
   - match: "/proxied(/.*)?$"
     tproxy: proxy
-  - match: "/.*"
-    tproxy: proxy
+  - match: "^/$"
+    direct: true

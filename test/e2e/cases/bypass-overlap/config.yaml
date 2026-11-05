@@ -5,7 +5,8 @@
 version: 1
 cgroup-root: AUTO
 route-table: 31300
-gateway: true
+gateway:
+  tproxy: proxy
 bypass:
   - 198.51.100.20
   - ::ffff:198.51.100.20

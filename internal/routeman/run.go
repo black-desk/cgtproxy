@@ -74,7 +74,11 @@ func (m *RouteManager) initializeNftableRules(paths []string) (err error) {
 		}
 	}
 
-	return m.nft.Initialize(maps.Values(m.cfg.TProxies), m.targetForPath("/"), m.routesForPaths(paths))
+	return m.nft.Initialize(
+		maps.Values(m.cfg.TProxies),
+		m.resolveTarget(m.cfg.Gateway),
+		m.routesForPaths(paths),
+	)
 }
 
 func (m *RouteManager) removeNftableRules() {
