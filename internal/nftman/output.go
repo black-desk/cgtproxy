@@ -27,14 +27,28 @@ func (nft *NFTManager) initOutputMangleChain(conn *nftables.Conn) (err error) {
 	return
 }
 
-func (nft *NFTManager) fillOutputCgroupRules(conn *nftables.Conn, elements map[string]nftables.SetElement) error {
-	if err := nft.addCommonFilters(conn, nft.outputMangleChain); err != nil {
-		return err
+func (nft *NFTManager) rebuildOutputCgroupRules(
+	conn *nftables.Conn,
+	elements map[string]nftables.SetElement,
+) (
+	err error,
+) {
+	if nft.initialized {
+		conn.FlushChain(nft.outputMangleChain)
 	}
+	err = nft.addCommonFilters(conn, nft.outputMangleChain)
+	if err != nil {
+		return
+	}
+
 	levelSet := map[int]struct{}{}
 	for path := range elements {
-		// Count path components so the namespace root naturally has depth 0.
-		level := len(strings.FieldsFunc(path, func(r rune) bool { return r == '/' }))
+		// Count path components so the namespace root naturally has
+		// depth 0.
+		level := len(strings.FieldsFunc(
+			path,
+			func(r rune) bool { return r == '/' }),
+		)
 		levelSet[level] = struct{}{}
 	}
 	levels := make([]int, 0, len(levelSet))

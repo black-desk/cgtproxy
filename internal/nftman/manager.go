@@ -17,6 +17,8 @@ import (
 )
 
 type NFTManager struct {
+	tproxies   map[string]*config.TProxy
+	gateway    *config.Target
 	cgroupRoot config.CGroupRoot
 	bypassIPv4 []string
 	bypassIPv6 []string
@@ -24,7 +26,8 @@ type NFTManager struct {
 
 	connector *connector.Connector
 
-	table *nftables.Table
+	table       *nftables.Table
+	initialized bool // Set only after the first complete ruleset is committed.
 
 	ipv4BypassSet *nftables.Set
 	ipv6BypassSet *nftables.Set
@@ -73,6 +76,20 @@ func New(opts ...Opt) (ret *NFTManager, err error) {
 	t.log.Debug("NFTManager created.")
 
 	return
+}
+
+func WithTProxies(proxies map[string]*config.TProxy) Opt {
+	return func(nft *NFTManager) (*NFTManager, error) {
+		nft.tproxies = proxies
+		return nft, nil
+	}
+}
+
+func WithGateway(target *config.Target) Opt {
+	return func(nft *NFTManager) (*NFTManager, error) {
+		nft.gateway = target
+		return nft, nil
+	}
 }
 
 func WithBypass(bypass config.Bypass) Opt {
@@ -132,8 +149,9 @@ func WithLogger(log *zap.SugaredLogger) Opt {
 func (nft *NFTManager) Clear() (err error) {
 	defer errwrap.Wrap(&err, "remove nftables table")
 
-	if nft.table == nil {
-		return
+	if !nft.initialized {
+		// Never submit pending initialization commands during cleanup.
+		return nft.connector.Release()
 	}
 
 	var conn *nftables.Conn

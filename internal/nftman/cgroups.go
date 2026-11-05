@@ -25,10 +25,14 @@ import (
 // UpdateRoutes reconciles paths with their current cgroups, adding, replacing,
 // or removing map entries. Both creation and removal notifications are hints to
 // check the current state; queued events may describe an older cgroup.
+// The first call initializes and commits the base rules together with these
+// routes, even when there are no routes. Policy routes must already be ready.
+// Later calls with no changes do not submit a transaction.
 func (nft *NFTManager) UpdateRoutes(routes []types.Route) (err error) {
 	defer errwrap.Wrap(&err, "update %d routes in nftable", len(routes))
-	if len(routes) == 0 {
-		return nil
+	defer nft.discardOnError(&err)
+	if err = nft.initializeIfNeeded(); err != nil {
+		return err
 	}
 
 	next, err := nft.cgroupElementsForRoutes(routes)
@@ -61,7 +65,7 @@ func (nft *NFTManager) initCgroupMap(conn *nftables.Conn) (err error) {
 func (nft *NFTManager) cgroupElementsForRoutes(routes []types.Route) (map[string]nftables.SetElement, error) {
 	next := maps.Clone(nft.cgroupMapElement)
 	for i := range routes {
-		path := nft.removeCgroupRootFromPath(routes[i].Path)
+		path := nft.relativeCgroupPath(routes[i].Path)
 		element, err := nft.genSetElement(&routes[i])
 		if errors.Is(err, os.ErrNotExist) {
 			// The cgroup may disappear between the scan/event and stat(2).
@@ -81,18 +85,20 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 	var removed, added []nftables.SetElement
 	var removedPaths, addedPaths []string
 	for path, old := range nft.cgroupMapElement {
-		if element, ok := next[path]; !ok || !sameCgroupElement(old, element) {
+		element, ok := next[path]
+		if !ok || !sameCgroupElement(old, element) {
 			removed = append(removed, old)
 			removedPaths = append(removedPaths, path)
 		}
 	}
 	for path, element := range next {
-		if old, ok := nft.cgroupMapElement[path]; !ok || !sameCgroupElement(old, element) {
+		old, ok := nft.cgroupMapElement[path]
+		if !ok || !sameCgroupElement(old, element) {
 			added = append(added, element)
 			addedPaths = append(addedPaths, path)
 		}
 	}
-	if len(removed) == 0 && len(added) == 0 {
+	if len(removed) == 0 && len(added) == 0 && nft.initialized {
 		return nil
 	}
 
@@ -100,23 +106,30 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 	if err != nil {
 		return err
 	}
-	defer nft.discardOnError(&err)
-	if len(removed) != 0 {
-		if err = queueSetElements(nft.cgroupMap, removed, conn.SetDeleteElements); err != nil {
-			return fmt.Errorf("delete cgroup map elements: %w", err)
-		}
+	err = queueSetElements(nft.cgroupMap, removed, conn.SetDeleteElements)
+	if err != nil {
+		return fmt.Errorf("delete cgroup map elements: %w", err)
 	}
-	if len(added) != 0 {
-		if err = queueSetElements(nft.cgroupMap, added, conn.SetAddElements); err != nil {
-			return fmt.Errorf("add cgroup map elements: %w", err)
-		}
+	err = queueSetElements(nft.cgroupMap, added, conn.SetAddElements)
+	if err != nil {
+		return fmt.Errorf("add cgroup map elements: %w", err)
 	}
-	conn.FlushChain(nft.outputMangleChain)
-	if err = nft.fillOutputCgroupRules(conn, next); err != nil {
+	if err = nft.rebuildOutputCgroupRules(conn, next); err != nil {
 		return err
 	}
 	if err = conn.Flush(); err != nil {
+		if !nft.initialized {
+			return fmt.Errorf("commit initial ruleset: %w", err)
+		}
 		return fmt.Errorf("commit cgroup route updates: %w", err)
+	}
+	if !nft.initialized {
+		nft.initialized = true
+		nft.log.Infof(
+			"Initial nft rules committed: table=%q, cgroup routes=%d.",
+			NftTableName,
+			len(next),
+		)
 	}
 	nft.logCgroupRoutes("Removed", nft.cgroupMapElement, removedPaths)
 	nft.logCgroupRoutes("Added", next, addedPaths)
@@ -148,7 +161,9 @@ func sameCgroupElement(a, b nftables.SetElement) bool {
 	return bytes.Equal(a.Key, b.Key) && *a.VerdictData == *b.VerdictData
 }
 
-func (t *NFTManager) removeCgroupRootFromPath(path string) string {
+// relativeCgroupPath returns a path relative to the cgroup mount point,
+// retaining a leading slash to match configuration paths; the root is /.
+func (t *NFTManager) relativeCgroupPath(path string) string {
 	path = filepath.Clean(path)
 	if strings.HasPrefix(path, string(t.cgroupRoot)) {
 		path = path[len(t.cgroupRoot):]
@@ -177,7 +192,7 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 
 	inode := fileInfo.Sys().(*syscall.Stat_t).Ino
 
-	path = nft.removeCgroupRootFromPath(path)
+	path = nft.relativeCgroupPath(path)
 
 	nft.log.Debugf("Resolved cgroup %q to ID %d using stat(2).", path, inode)
 
@@ -229,5 +244,4 @@ func (t *NFTManager) addCgroupRuleForLevel(
 	}
 
 	conn.AddRule(rule)
-	return
 }

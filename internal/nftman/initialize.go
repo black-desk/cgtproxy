@@ -13,57 +13,44 @@ import (
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
+	"golang.org/x/exp/maps"
 )
 
-// Initialize installs the complete ruleset, including the first cgroup scan,
-// in one transaction. Policy routes must be ready before calling it.
-func (nft *NFTManager) Initialize(tps []*config.TProxy, gatewayTarget types.Target, routes []types.Route) (err error) {
+// initializeIfNeeded queues base rules unless the table is already committed.
+func (nft *NFTManager) initializeIfNeeded() (err error) {
 	defer errwrap.Wrap(&err, "initialize nftable rules")
+
+	if nft.initialized {
+		return nil
+	}
 
 	conn, err := nft.connector.Connect()
 	if err != nil {
 		return err
 	}
-	defer nft.discardOnError(&err)
 
-	// Publish state only after the kernel accepts the complete transaction.
-	// In particular, cleanup must not delete a table we failed to create.
+	// Build state separately so a preparation failure leaves no partial state.
+	// Clear must not delete this table until UpdateRoutes commits its creation.
 	next := *nft
 	if err = next.initStructure(conn); err != nil {
 		return err
 	}
-	if err = next.addChainAndRulesForTProxies(conn, tps); err != nil {
+	if err = next.addChainAndRulesForTProxies(conn, maps.Values(nft.tproxies)); err != nil {
 		return err
+	}
+	var gatewayTarget types.Target
+	if nft.gateway != nil {
+		gatewayTarget.Op = types.TargetDirect
+		if !nft.gateway.Direct {
+			gatewayTarget.Op = types.TargetTProxy
+			gatewayTarget.Chain = nft.tproxies[nft.gateway.TProxy].Name + "-MARK"
+		}
 	}
 	if err = next.initForwardingChains(conn, gatewayTarget); err != nil {
 		return err
 	}
-	next.cgroupMapElement, err = next.cgroupElementsForRoutes(routes)
-	if err != nil {
-		return err
-	}
-	if len(next.cgroupMapElement) != 0 {
-		elements := make([]nftables.SetElement, 0, len(next.cgroupMapElement))
-		for _, element := range next.cgroupMapElement {
-			elements = append(elements, element)
-		}
-		if err = queueSetElements(next.cgroupMap, elements, conn.SetAddElements); err != nil {
-			return fmt.Errorf("populate initial cgroup map: %w", err)
-		}
-	}
-	if err = next.fillOutputCgroupRules(conn, next.cgroupMapElement); err != nil {
-		return err
-	}
-	if err = conn.Flush(); err != nil {
-		return fmt.Errorf("commit initial ruleset: %w", err)
-	}
 	*nft = next
-	nft.log.Infof("Initial nft rules committed: table=%q, cgroup routes=%d, gateway target=%s, gateway chain=%q.", NftTableName, len(nft.cgroupMapElement), gatewayTarget.Op, gatewayTarget.Chain)
-	paths := make([]string, 0, len(nft.cgroupMapElement))
-	for path := range nft.cgroupMapElement {
-		paths = append(paths, path)
-	}
-	nft.logCgroupRoutes("Added", nft.cgroupMapElement, paths)
+	nft.log.Debugf("Base nft rules prepared: table=%q, gateway target=%s, gateway chain=%q.", NftTableName, gatewayTarget.Op, gatewayTarget.Chain)
 	return nil
 }
 
