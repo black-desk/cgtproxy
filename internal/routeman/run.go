@@ -9,7 +9,6 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
-	"golang.org/x/exp/maps"
 )
 
 func (m *RouteManager) Run(ctx context.Context) (err error) {
@@ -21,8 +20,14 @@ func (m *RouteManager) Run(ctx context.Context) (err error) {
 		return
 	}
 
+	defer m.removeRules()
+	for _, tp := range m.cfg.TProxies {
+		if err = m.addRule(tp); err != nil {
+			return err
+		}
+	}
+
 	defer m.removeNftableRules()
-	initialized := false
 
 	for {
 		var events types.CGroupEvents
@@ -43,16 +48,7 @@ func (m *RouteManager) Run(ctx context.Context) (err error) {
 				paths = append(paths, event.Path)
 			}
 		}
-		var eventsErr error
-		if !initialized {
-			// The first batch is the complete scan, including the
-			// root. Commit its routes together with the base rules
-			// in one transaction.
-			eventsErr = m.initializeNftableRules(paths)
-			initialized = eventsErr == nil
-		} else {
-			eventsErr = m.nft.UpdateRoutes(m.routesForPaths(paths))
-		}
+		eventsErr := m.nft.UpdateRoutes(m.routesForPaths(paths))
 
 		if events.Result != nil {
 			events.Result <- eventsErr
@@ -64,23 +60,6 @@ func (m *RouteManager) Run(ctx context.Context) (err error) {
 	}
 }
 
-func (m *RouteManager) initializeNftableRules(paths []string) (err error) {
-	defer errwrap.Wrap(&err, "initialize routing")
-
-	for _, tp := range m.cfg.TProxies {
-		err = m.addRule(tp)
-		if err != nil {
-			return
-		}
-	}
-
-	return m.nft.Initialize(
-		maps.Values(m.cfg.TProxies),
-		m.resolveTarget(m.cfg.Gateway),
-		m.routesForPaths(paths),
-	)
-}
-
 func (m *RouteManager) removeNftableRules() {
 	var err error
 
@@ -89,8 +68,6 @@ func (m *RouteManager) removeNftableRules() {
 		m.log.Errorf("Failed to delete the cgtproxy nft table: %v", err)
 		err = nil
 	}
-
-	m.removeRules()
 
 	err = m.nft.Release()
 	if err == nil {

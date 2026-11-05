@@ -16,7 +16,7 @@ if (LOG_LEVEL=debug in_group manager "$CGTPROXY_BIN" --config "$CASE_DIR/config.
 	echo 'Initialization unexpectedly succeeded with an existing table' >&2
 	exit 1
 fi
-grep -Fq 'initialize nftable rules: commit initial ruleset:' "$CASE_WORK/cgtproxy.log"
+grep -q 'update .*routes in nftable: commit initial ruleset:' "$CASE_WORK/cgtproxy.log"
 nft list chain inet cgtproxy sentinel | grep -q 'counter packets 0 bytes 0 accept'
 if nft list chain inet cgtproxy output-mangle >/dev/null 2>&1; then
 	echo 'Failed initialization left a partial ruleset' >&2
