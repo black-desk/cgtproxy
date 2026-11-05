@@ -5,7 +5,7 @@
 package connector
 
 import (
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/google/nftables"
 )
 
@@ -22,7 +22,7 @@ func New(...Opt) (ret *Connector, err error) {
 }
 
 func (c *Connector) Connect() (ret *nftables.Conn, err error) {
-	defer Wrap(&err, "new lasting netlink connection")
+	defer errwrap.Wrap(&err, "new lasting netlink connection")
 
 	if c.conn != nil {
 		ret = c.conn
@@ -41,7 +41,7 @@ func (c *Connector) Connect() (ret *nftables.Conn, err error) {
 }
 
 func (c *Connector) Release() (err error) {
-	defer Wrap(&err, "release lasting netlink connection")
+	defer errwrap.Wrap(&err, "release lasting netlink connection")
 
 	if c.conn == nil {
 		return nil

@@ -8,7 +8,7 @@ import (
 	"regexp"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/interfaces"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/vishvananda/netlink"
@@ -34,7 +34,7 @@ type RouteManager struct {
 //go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/internal/routeman.RouteManager -as interfaces.RouteManager -o ../interfaces/routeman.go
 
 func New(opts ...Opt) (ret *RouteManager, err error) {
-	defer Wrap(&err, "create the nftable rule manager")
+	defer errwrap.Wrap(&err, "create route manager")
 
 	m := &RouteManager{}
 	for i := range opts {

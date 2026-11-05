@@ -13,5 +13,3 @@ import (
 func addDebugCounter(exprs []expr.Any) []expr.Any {
 	return exprs
 }
-
-func (nft *NFTManager) dumpNFTableRules() {}

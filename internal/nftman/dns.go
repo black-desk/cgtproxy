@@ -5,6 +5,7 @@
 package nftman
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
@@ -185,7 +186,7 @@ func (nft *NFTManager) initMarkDNSMap(conn *nftables.Conn) (err error) {
 
 	err = conn.AddSet(nft.markDNSMap, []nftables.SetElement{})
 	if err != nil {
-		return
+		return fmt.Errorf("create map %q: %w", nft.markDNSMap.Name, err)
 	}
 
 	return

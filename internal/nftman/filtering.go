@@ -5,6 +5,8 @@
 package nftman
 
 import (
+	"fmt"
+
 	"github.com/google/nftables"
 	"github.com/google/nftables/expr"
 	"golang.org/x/sys/unix"
@@ -49,7 +51,7 @@ func (nft *NFTManager) addCommonFilters(
 	nft.protoSet.ID = 0
 	err = conn.AddSet(nft.protoSet, nft.protoSetElement)
 	if err != nil {
-		return
+		return fmt.Errorf("create TCP/UDP protocol set: %w", err)
 	}
 
 	exprs = []expr.Any{

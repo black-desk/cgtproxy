@@ -14,7 +14,7 @@ import (
 	"strings"
 	"syscall"
 
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
@@ -26,7 +26,7 @@ import (
 // or removing map entries. Both creation and removal notifications are hints to
 // check the current state; queued events may describe an older cgroup.
 func (nft *NFTManager) UpdateRoutes(routes []types.Route) (err error) {
-	defer Wrap(&err, "update %d routes in nftable", len(routes))
+	defer errwrap.Wrap(&err, "update %d routes in nftable", len(routes))
 	if len(routes) == 0 {
 		return nil
 	}
@@ -52,7 +52,7 @@ func (nft *NFTManager) initCgroupMap(conn *nftables.Conn) (err error) {
 
 	err = conn.AddSet(nft.cgroupMap, []nftables.SetElement{})
 	if err != nil {
-		return
+		return fmt.Errorf("create map %q: %w", nft.cgroupMap.Name, err)
 	}
 
 	return
@@ -103,12 +103,12 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 	defer nft.discardOnError(&err)
 	if len(removed) != 0 {
 		if err = queueSetElements(nft.cgroupMap, removed, conn.SetDeleteElements); err != nil {
-			return err
+			return fmt.Errorf("delete cgroup map elements: %w", err)
 		}
 	}
 	if len(added) != 0 {
 		if err = queueSetElements(nft.cgroupMap, added, conn.SetAddElements); err != nil {
-			return err
+			return fmt.Errorf("add cgroup map elements: %w", err)
 		}
 	}
 	conn.FlushChain(nft.outputMangleChain)
@@ -116,12 +116,11 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 		return err
 	}
 	if err = conn.Flush(); err != nil {
-		return err
+		return fmt.Errorf("commit cgroup route updates: %w", err)
 	}
 	nft.logCgroupRoutes("Removed", nft.cgroupMapElement, removedPaths)
 	nft.logCgroupRoutes("Added", next, addedPaths)
 	nft.cgroupMapElement = next
-	nft.dumpNFTableRules()
 	return nil
 }
 
@@ -163,7 +162,7 @@ func (t *NFTManager) removeCgroupRootFromPath(path string) string {
 }
 
 func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElement, err error) {
-	defer Wrap(&err, "generating set element for route %v", route)
+	defer errwrap.Wrap(&err, "build cgroup map element for %q", route.Path)
 
 	nft.log.Debugf("Building nft map element for cgroup %q: target=%s, chain=%q.", route.Path, route.Target.Op, route.Target.Chain)
 
@@ -206,12 +205,7 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 
 func (t *NFTManager) addCgroupRuleForLevel(
 	conn *nftables.Conn, level int,
-) (
-	err error,
 ) {
-	defer Wrap(&err,
-		"update output chain for level %d cgroup", level)
-
 	exprs := []expr.Any{
 		&expr.Socket{ // socket load cgroupv2 => reg 1
 			Key:      expr.SocketKeyCgroupv2,

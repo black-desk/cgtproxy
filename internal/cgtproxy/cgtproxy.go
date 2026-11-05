@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/interfaces"
 	"github.com/sourcegraph/conc/pool"
 	"go.uber.org/zap"
@@ -29,7 +29,7 @@ type Opt = (func(*CGTProxy) (*CGTProxy, error))
 //go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/internal/cgtproxy.CGTProxy -as interfaces.CGTProxy -o ../interfaces/cgtproxy.go
 
 func New(opts ...Opt) (ret *CGTProxy, err error) {
-	defer Wrap(&err, "create new cgtproxy core")
+	defer errwrap.Wrap(&err, "create new cgtproxy core")
 
 	c := &CGTProxy{}
 	for i := range opts {
@@ -122,7 +122,6 @@ func WithRouteManager(rman interfaces.RouteManager) Opt {
 func (c *CGTProxy) RunCGTProxy(ctx context.Context) (err error) {
 	c.log.Debug("CGTProxy starting.")
 	defer c.log.Debug("CGTProxy exiting.")
-	defer Wrap(&err, "running cgtproxy core")
 
 	pool := pool.New().
 		WithContext(ctx).

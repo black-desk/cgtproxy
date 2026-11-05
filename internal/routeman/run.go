@@ -8,13 +8,13 @@ import (
 	"context"
 	"errors"
 
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"golang.org/x/exp/maps"
 )
 
 func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
-	defer Wrap(&err, "running route manager")
+	defer errwrap.Wrap(&err, "running route manager")
 
 	defer m.removeRoute()
 	err = m.addRoute()
@@ -81,7 +81,7 @@ func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
 }
 
 func (m *RouteManager) initializeNftableRules(paths []string) (err error) {
-	defer Wrap(&err, "initializing nftable rules")
+	defer errwrap.Wrap(&err, "initialize routing")
 
 	for _, tp := range m.cfg.TProxies {
 		err = m.addRule(tp)

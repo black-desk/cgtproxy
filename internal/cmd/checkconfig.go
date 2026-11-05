@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/spf13/cobra"
 )
 
@@ -33,8 +32,6 @@ var checkConfigCmd = &cobra.Command{
 }
 
 func checkConfigCmdRun() (err error) {
-	defer Wrap(&err, "")
-
 	log, closeLog, err := newLogger(flags.logFile)
 	if err != nil {
 		return err
@@ -44,12 +41,7 @@ func checkConfigCmdRun() (err error) {
 	var content []byte
 	content, err = os.ReadFile(flags.cfgPath)
 	if err != nil {
-		Wrap(
-			&err,
-			"read configuration from %s",
-			flags.cfgPath,
-		)
-		return
+		return fmt.Errorf("read configuration from %s: %w", flags.cfgPath, err)
 	}
 
 	_, err = config.New(

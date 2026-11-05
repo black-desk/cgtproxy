@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/fsnotify/fsnotify"
 	"go.uber.org/zap"
@@ -26,7 +26,7 @@ type CGroupFSMonitor struct {
 //go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/internal/cgfsmon.CGroupFSMonitor -as interfaces.CGroupMonitor -o ../interfaces/cgmon.go
 
 func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
-	defer Wrap(&err, "create filesystem watcher")
+	defer errwrap.Wrap(&err, "create filesystem watcher")
 
 	w := &CGroupFSMonitor{}
 
@@ -89,7 +89,7 @@ func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvents {
 }
 
 func (w *CGroupFSMonitor) RunCGroupMonitor(ctx context.Context) (err error) {
-	defer Wrap(&err, "running filesystem watcher")
+	defer errwrap.Wrap(&err, "running filesystem watcher")
 	defer close(w.eventsOut)
 
 	watcher, err := fsnotify.NewWatcher()

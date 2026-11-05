@@ -6,9 +6,10 @@ package nftman
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
@@ -18,7 +19,7 @@ import (
 // Initialize installs the complete ruleset, including the first cgroup scan,
 // in one transaction. Policy routes must be ready before calling it.
 func (nft *NFTManager) Initialize(tps []*config.TProxy, rootTarget types.Target, routes []types.Route) (err error) {
-	defer Wrap(&err, "initialize nftable rules")
+	defer errwrap.Wrap(&err, "initialize nftable rules")
 
 	conn, err := nft.connector.Connect()
 	if err != nil {
@@ -46,14 +47,14 @@ func (nft *NFTManager) Initialize(tps []*config.TProxy, rootTarget types.Target,
 			elements = append(elements, element)
 		}
 		if err = queueSetElements(next.cgroupMap, elements, conn.SetAddElements); err != nil {
-			return err
+			return fmt.Errorf("populate initial cgroup map: %w", err)
 		}
 	}
 	if err = next.fillOutputCgroupRules(conn, next.cgroupMapElement); err != nil {
 		return err
 	}
 	if err = conn.Flush(); err != nil {
-		return err
+		return fmt.Errorf("commit initial ruleset: %w", err)
 	}
 	*nft = next
 	nft.log.Infof("Initial nft rules committed: table=%q, cgroup routes=%d, root target=%s, root chain=%q.", NftTableName, len(nft.cgroupMapElement), rootTarget.Op, rootTarget.Chain)
@@ -62,7 +63,6 @@ func (nft *NFTManager) Initialize(tps []*config.TProxy, rootTarget types.Target,
 		paths = append(paths, path)
 	}
 	nft.logCgroupRoutes("Added", nft.cgroupMapElement, paths)
-	nft.dumpNFTableRules()
 	return nil
 }
 
@@ -79,18 +79,12 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 		return
 	}
 
-	defer Wrap(
-		&err,
-		"add chain and rules to nft table for tproxies %#v",
-		tps,
-	)
-
 	for _, tp := range tps {
 		nft.log.Debugf("Generating nft chains and rules for proxy %q: %+v.", tp.Name, tp)
 		if err = conn.SetAddElements(nft.proxyMarkSet, []nftables.SetElement{
 			{Key: binaryutil.NativeEndian.PutUint32(uint32(tp.Mark))},
 		}); err != nil {
-			return err
+			return fmt.Errorf("register mark for proxy %q: %w", tp.Name, err)
 		}
 
 		_, err = nft.addMarkChainForTProxy(conn, tp)
@@ -102,12 +96,12 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 
 		chain, err = nft.addTproxyChainForTProxy(conn, tp)
 		if err != nil {
-			return
+			return fmt.Errorf("build TPROXY chain for proxy %q: %w", tp.Name, err)
 		}
 
 		err = nft.updateMarkTproxyMap(conn, tp.Mark, chain.Name)
 		if err != nil {
-			return
+			return fmt.Errorf("register TPROXY target for proxy %q: %w", tp.Name, err)
 		}
 
 		if tp.DNSHijack != nil {
@@ -118,7 +112,7 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 
 			err = nft.updateMarkDNSMap(conn, tp.Mark, chain.Name)
 			if err != nil {
-				return
+				return fmt.Errorf("register DNS target for proxy %q: %w", tp.Name, err)
 			}
 		}
 
@@ -129,8 +123,6 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 }
 
 func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
-	defer Wrap(&err, "build initial structure")
-
 	nft.log.Debug("Building nft table structure.")
 
 	nft.table = conn.CreateTable(&nftables.Table{
