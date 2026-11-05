@@ -6,11 +6,12 @@ package routeman
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 )
@@ -29,7 +30,7 @@ func (m *RouteManager) addRuleWithFamily(
 		err = nil
 	}
 	if err != nil {
-		return
+		return fmt.Errorf("add policy rule (family=%d, mark=%#x, table=%d): %w", family, mark, m.cfg.RouteTable, err)
 	}
 
 	m.rule = append(m.rule, rule)
@@ -38,7 +39,6 @@ func (m *RouteManager) addRuleWithFamily(
 }
 
 func (m *RouteManager) addRule(tp *config.TProxy) (err error) {
-	defer Wrap(&err, "add route rule")
 	mark := tp.Mark
 
 	m.log.Infof("Adding policy rules for proxy %q: mark=%#x, table=%d, IPv6=%t.", tp.Name, mark, m.cfg.RouteTable, !tp.NoIPv6)
@@ -74,7 +74,7 @@ func (m *RouteManager) removeRules() {
 }
 
 func (m *RouteManager) addRoute() (err error) {
-	defer Wrap(&err, "add route")
+	defer errwrap.Wrap(&err, "add route")
 
 	// ip route add local default dev lo table <table>
 
@@ -110,7 +110,7 @@ func (m *RouteManager) addRoute() (err error) {
 
 		err = netlink.RouteAdd(route)
 		if err != nil {
-			return
+			return fmt.Errorf("add local route %s to table %d: %w", cidr, route.Table, err)
 		}
 
 		m.route = append(m.route, route)

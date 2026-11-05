@@ -7,11 +7,11 @@ package config
 import (
 	"os"
 
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 )
 
 func getCgroupRoot() (cgroupRoot CGroupRoot, err error) {
-	defer Wrap(&err, "get cgroupv2 mount point")
+	defer errwrap.Wrap(&err, "get cgroupv2 mount point")
 
 	paths := []string{"/sys/fs/cgroup/unified", "/sys/fs/cgroup"}
 

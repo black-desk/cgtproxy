@@ -20,7 +20,7 @@ if [[ $status != 1 ]]; then
 	echo "Expected route update failure, got exit status $status" >&2
 	exit 1
 fi
-grep -q 'update .*routes in nftable' "$CASE_WORK/cgtproxy.log"
+grep -q 'update .*routes in nftable: commit cgroup route updates:' "$CASE_WORK/cgtproxy.log"
 assert_network_cleanup
 probe proxied tcp4 198.51.100.10:18080 origin
 probe proxied udp6 '[2001:db8::10]:18080' origin

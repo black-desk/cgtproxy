@@ -52,6 +52,12 @@ check_invalid_config() {
 		echo "Expected startup configuration error for $invalid, got status $status" >&2
 		exit 1
 	fi
+	# Exercise the operation-level wrapper in both regular and debug builds.
+	grep -Fq 'load configuration:' "$CASE_WORK/$invalid.stderr"
+	if grep -Eq '\.go:[0-9]+ \([[:xdigit:]]+\)' "$CASE_WORK/$invalid.stderr"; then
+		echo 'Error annotation unexpectedly contains a source position' >&2
+		exit 1
+	fi
 }
 
 for invalid in wrong_type validation_fail undefined_proxy null_proxy invalid_regex duplicate_mark; do

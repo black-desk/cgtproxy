@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/interfaces"
 	"github.com/black-desk/cgtproxy/internal/nftman/connector"
 	"github.com/google/nftables"
@@ -57,7 +57,7 @@ type Opt = (func(*NFTManager) (*NFTManager, error))
 
 //go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/internal/nftman.NFTManager -as interfaces.NFTManager -o ../interfaces/nftman.go
 func New(opts ...Opt) (ret *NFTManager, err error) {
-	defer Wrap(&err, "create nft table mananger")
+	defer errwrap.Wrap(&err, "create nftables manager")
 
 	t := &NFTManager{}
 
@@ -164,7 +164,7 @@ func WithConnFactory(f interfaces.NetlinkConnector) Opt {
 }
 
 func (nft *NFTManager) Clear() (err error) {
-	defer Wrap(&err, "remove nftable.")
+	defer errwrap.Wrap(&err, "remove nftables table")
 
 	if nft.table == nil {
 		return
@@ -185,11 +185,9 @@ func (nft *NFTManager) Clear() (err error) {
 		return
 	}
 
-	nft.dumpNFTableRules()
 	return
 }
 
 func (nft *NFTManager) Release() (err error) {
-	defer Wrap(&err, "release NFTManager")
 	return nft.connector.Release()
 }

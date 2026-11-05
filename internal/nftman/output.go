@@ -41,9 +41,7 @@ func (nft *NFTManager) fillOutputCgroupRules(conn *nftables.Conn, elements map[s
 	}
 	sort.Sort(sort.Reverse(sort.IntSlice(levels)))
 	for _, level := range levels {
-		if err := nft.addCgroupRuleForLevel(conn, level); err != nil {
-			return err
-		}
+		nft.addCgroupRuleForLevel(conn, level)
 	}
 	nft.addRootFallback(conn, nft.outputMangleChain)
 	return nil

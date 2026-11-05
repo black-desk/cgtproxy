@@ -35,9 +35,8 @@ project.
 Add go build tag `debug` by `make GO_TAGS=debug` to produce debug build binary,
 which:
 
-1. Makes error carry more information like source position
-2. Calls `nft` to print ruleset in logs after we update it
-3. Adds debug counter to nft ruleset
+1. Enables debug logging by default and attaches stacktraces to warnings
+2. Adds debug counter to nft ruleset
 
 ## Testing
 

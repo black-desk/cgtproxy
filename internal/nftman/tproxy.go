@@ -5,6 +5,8 @@
 package nftman
 
 import (
+	"fmt"
+
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
@@ -100,7 +102,7 @@ func (t *NFTManager) addTproxyChainForTProxy(
 		t.protoSet.ID = 0
 		err = conn.AddSet(t.protoSet, t.protoSetElement)
 		if err != nil {
-			return
+			return nil, fmt.Errorf("create TCP/UDP protocol set: %w", err)
 		}
 		*lookup = &expr.Lookup{ // lookup reg 1 set __set%d
 			SourceRegister: 1,
@@ -173,7 +175,7 @@ func (nft *NFTManager) initMarkMap(conn *nftables.Conn) (err error) {
 
 	err = conn.AddSet(nft.markTproxyMap, []nftables.SetElement{})
 	if err != nil {
-		return
+		return fmt.Errorf("create map %q: %w", nft.markTproxyMap.Name, err)
 	}
 
 	return

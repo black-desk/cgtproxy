@@ -6,26 +6,8 @@
 
 package nftman
 
-import (
-	"os/exec"
-
-	"github.com/google/nftables/expr"
-	"go.uber.org/zap"
-)
+import "github.com/google/nftables/expr"
 
 func addDebugCounter(exprs []expr.Any) []expr.Any {
 	return append([]expr.Any{&expr.Counter{}}, exprs...)
-}
-
-func (nft *NFTManager) dumpNFTableRules() {
-	nft.log.WithOptions(zap.AddStacktrace(zap.DebugLevel)).Debugf("Nft ruleset after commit:\n%s", getNFTableRules())
-}
-
-func getNFTableRules() string {
-	out, err := exec.Command("nft", "list", "ruleset").Output()
-	if err != nil {
-		panic(err)
-	}
-
-	return string(out)
 }

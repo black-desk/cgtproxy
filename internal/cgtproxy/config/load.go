@@ -6,8 +6,9 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
@@ -15,7 +16,7 @@ import (
 type Opt func(c *Config) (ret *Config, err error)
 
 func New(opts ...Opt) (ret *Config, err error) {
-	defer Wrap(&err, "load configuration")
+	defer errwrap.Wrap(&err, "load configuration")
 
 	c := &Config{}
 	for i := range opts {
@@ -33,8 +34,7 @@ func New(opts ...Opt) (ret *Config, err error) {
 	decoder.KnownFields(true)
 	err = decoder.Decode(c)
 	if err != nil {
-		Wrap(&err, "unmarshal configuration")
-		return
+		return nil, fmt.Errorf("unmarshal configuration: %w", err)
 	}
 
 	err = c.check()

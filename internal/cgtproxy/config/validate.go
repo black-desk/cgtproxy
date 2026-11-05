@@ -10,13 +10,13 @@ import (
 	"regexp"
 	"strings"
 
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/go-playground/validator/v10"
 )
 
 func (c *Config) check() (err error) {
-	defer Wrap(&err, "check configuration")
+	defer errwrap.Wrap(&err, "check configuration")
 
 	var validator = validator.New()
 	err = validator.Struct(c)

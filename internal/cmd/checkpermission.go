@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/spf13/cobra"
 	"kernel.org/pub/linux/libs/security/libcap/cap"
 )
@@ -33,12 +32,11 @@ var checkPermissionCmd = &cobra.Command{
 }
 
 func checkPermissionCmdRun() (err error) {
-	defer Wrap(&err, "")
 	capSet := cap.GetProc()
 	hasCapNetAdmin := false
 	hasCapNetAdmin, err = capSet.GetFlag(cap.Effective, cap.NET_ADMIN)
 	if err != nil {
-		return
+		return fmt.Errorf("read effective CAP_NET_ADMIN capability: %w", err)
 	}
 
 	if !hasCapNetAdmin {

@@ -5,7 +5,9 @@
 package nftman
 
 import (
-	. "github.com/black-desk/cgtproxy/internal/errwrap"
+	"fmt"
+
+	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
@@ -14,7 +16,7 @@ import (
 )
 
 func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
-	defer Wrap(&err, "prepare ipv4 bypass set")
+	defer errwrap.Wrap(&err, "prepare ipv4 bypass set")
 
 	nft.ipv4BypassSet = &nftables.Set{
 		Table:        nft.table,
@@ -26,14 +28,18 @@ func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 
 	err = conn.AddSet(nft.ipv4BypassSet, nil)
 	if err != nil {
-		return
+		return fmt.Errorf("create set %q: %w", nft.ipv4BypassSet.Name, err)
 	}
 	err = queueSetElements(nft.ipv4BypassSet, bypassSetElements(nft.bypassIPv4), conn.SetAddElements)
-
+	if err != nil {
+		return fmt.Errorf("populate set %q: %w", nft.ipv4BypassSet.Name, err)
+	}
 	return
 }
 
 func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
+	defer errwrap.Wrap(&err, "prepare ipv6 bypass set")
+
 	nft.ipv6BypassSet = &nftables.Set{
 		Table:        nft.table,
 		Name:         "bypass6",
@@ -44,10 +50,12 @@ func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 
 	err = conn.AddSet(nft.ipv6BypassSet, nil)
 	if err != nil {
-		return
+		return fmt.Errorf("create set %q: %w", nft.ipv6BypassSet.Name, err)
 	}
 	err = queueSetElements(nft.ipv6BypassSet, bypassSetElements(nft.bypassIPv6), conn.SetAddElements)
-
+	if err != nil {
+		return fmt.Errorf("populate set %q: %w", nft.ipv6BypassSet.Name, err)
+	}
 	return
 }
 
@@ -55,7 +63,10 @@ func (nft *NFTManager) initProxyMarkSet(conn *nftables.Conn) error {
 	nft.proxyMarkSet = &nftables.Set{
 		Table: nft.table, Name: "proxy-marks", KeyType: nftables.TypeMark,
 	}
-	return conn.AddSet(nft.proxyMarkSet, nil)
+	if err := conn.AddSet(nft.proxyMarkSet, nil); err != nil {
+		return fmt.Errorf("create set %q: %w", nft.proxyMarkSet.Name, err)
+	}
+	return nil
 }
 
 func (nft *NFTManager) initOutputBypassChain(conn *nftables.Conn) {
