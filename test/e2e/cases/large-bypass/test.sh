@@ -22,8 +22,6 @@ sed '/^bypass:/d' "$CASE_DIR/config.yaml" >"$CASE_WORK/config.yaml"
 CASE_DIR=$CASE_WORK
 
 start_cgtproxy
-"$FIXTURE_BIN" check-bypass-set -set bypass -addresses "$CASE_WORK/ipv4"
-"$FIXTURE_BIN" check-bypass-set -set bypass6 -addresses "$CASE_WORK/ipv6"
 
 for source in proxied forwarded; do
 	for network in tcp4 udp4; do

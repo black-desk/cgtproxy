@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+# Configuration fragment: duplicates, overlaps, adjacency, mapped IPv4,
+# and both ends of each address space. The expected union is written in test.sh.
+bypass:
+  - 198.51.100.20
+  - ::ffff:198.51.100.20
+  - ::ffff:198.51.100.20/126
+  - 198.51.100.22/31
+  - 198.51.100.20/31
+  - 198.51.100.21
+  - 198.51.100.20/30
+  - 198.51.100.20/30
+  - 2001:db8::20
+  - 2001:db8::22/127
+  - 2001:db8::20/127
+  - 2001:db8::21
+  - 2001:db8::20/126
+  - 2001:db8::20/126
+  - 0.0.0.0
+  - 0.0.0.1
+  - 255.255.255.254/31
+  - 255.255.255.255
+  - "::"
+  - ::/80
+  - ::1
+  - ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe/127
+  - ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff

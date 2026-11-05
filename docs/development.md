@@ -70,22 +70,6 @@ netlink socket, which helps you find out which structure in
 See the [testing section of the build guide](./build.md#testing) for
 instructions on running tests.
 
-### How the Tests Work
-
-Each [end-to-end case](../test/e2e/cases) runs in isolated user, mount, network,
-PID, and cgroup namespaces and a delegated cgroup. The scripts create the
-network topology, proxy servers, and nftables rules within this environment.
-
-The test network contains a simulated host, a client attached through a bridge,
-and a separate origin-server network namespace. The test proxy returns its
-identity, the original destination, and the request payload so clients can
-distinguish interception from direct access. Cases also verify dynamic cgroup
-changes and removal of nftables tables, policy rules, and routes on graceful
-shutdown.
-
-Tests stop cgtproxy using SIGTERM so shutdown cleanup and coverage writes can
-finish.
-
 ### Adding Cases
 
 This project does not use unit tests.

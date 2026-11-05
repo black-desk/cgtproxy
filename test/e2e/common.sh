@@ -179,9 +179,3 @@ probe() {
 		(in_group "$source" "${command[@]}")
 	fi
 }
-
-has_cgroup() {
-	nft list map inet cgtproxy cgroup-vmap | grep -Fq "\"$1\""
-}
-
-no_cgroup() { ! has_cgroup "$1"; }

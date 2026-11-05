@@ -1,0 +1,147 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+# Reviewed snapshot of normalized nft list table output.
+table inet cgtproxy {
+	chain forward-mangle {
+		type filter hook prerouting priority mangle - 2; policy accept;
+		ct direction reply return
+		ip daddr @bypass return
+		ip6 daddr @bypass6 return
+		meta l4proto != { tcp, udp } return
+		fib daddr type local return
+		fib daddr type != unicast return
+		fib saddr type local return
+		goto proxy-MARK
+	}
+
+	chain ipv4-only {
+		meta l4proto tcp tproxy ip to :17895
+	}
+
+	chain ipv4-only-MARK {
+		meta nfproto ipv6 return
+		meta l4proto udp return
+		meta mark set 0x0000a43c
+	}
+
+	chain output-bypass {
+		type route hook output priority dstnat + 1; policy accept;
+		ip daddr @bypass meta mark @proxy-marks meta mark set 0x00000000 return
+		ip6 daddr @bypass6 meta mark @proxy-marks meta mark set 0x00000000 return
+	}
+
+	chain output-mangle {
+		type route hook output priority mangle; policy accept;
+		ct direction reply return
+		ip daddr @bypass return
+		ip6 daddr @bypass6 return
+		meta l4proto != { tcp, udp } return
+		socket cgroupv2 level 2 vmap @cgroup-vmap
+		socket cgroupv2 level 1 vmap @cgroup-vmap
+		socket cgroupv2 level 0 vmap @cgroup-vmap
+	}
+
+	chain output-nat {
+		type nat hook output priority dstnat; policy accept;
+		meta mark vmap @mark-dns-vmap
+	}
+
+	chain prerouting {
+		type filter hook prerouting priority dstnat + 1; policy accept;
+		ip daddr @bypass meta mark @proxy-marks meta mark set 0x00000000 return
+		ip6 daddr @bypass6 meta mark @proxy-marks meta mark set 0x00000000 return
+		meta mark vmap @mark-vmap
+	}
+
+	chain prerouting-nat {
+		type nat hook prerouting priority dstnat; policy accept;
+		meta mark vmap @mark-dns-vmap
+	}
+
+	chain proxy {
+		meta l4proto { tcp, udp } tproxy to :17893
+	}
+
+	chain proxy-DNS {
+		meta nfproto ipv4 udp dport 53 meta mark set 0x00000000 dnat ip to 172.31.254.1:15353
+		meta nfproto ipv4 tcp dport 53 meta mark set 0x00000000 dnat ip to 172.31.254.1:15353
+	}
+
+	chain proxy-MARK {
+		ct status dnat ct original proto-dst 53 ct reply ip saddr 172.31.254.1 ct reply proto-src 15353 return
+		meta mark set 0x0000a43a
+	}
+
+	chain second {
+		meta l4proto tcp tproxy to :17894
+	}
+
+	chain second-DNS {
+		meta nfproto ipv4 udp dport 53 meta mark set 0x00000000 dnat ip to 172.31.254.1:15353
+	}
+
+	chain second-MARK {
+		meta nfproto ipv6 meta l4proto udp return
+		udp dport != 53 return
+		ct status dnat ct original proto-dst 53 ct reply ip saddr 172.31.254.1 ct reply proto-src 15353 meta l4proto udp return
+		meta mark set 0x0000a43b
+	}
+
+	map cgroup-vmap {
+		type cgroupsv2 : verdict
+		elements = {
+			"/" : return,
+			"direct" : return,
+			"manager" : return,
+			"proxied" : goto proxy-MARK,
+			"proxied/second" : goto second-MARK,
+			"servers" : return
+		}
+	}
+
+	map mark-dns-vmap {
+		type mark : verdict
+		elements = {
+			0x0000a43a : goto proxy-DNS,
+			0x0000a43b : goto second-DNS
+		}
+	}
+
+	map mark-vmap {
+		type mark : verdict
+		elements = {
+			0x0000a43a : goto proxy,
+			0x0000a43b : goto second,
+			0x0000a43c : goto ipv4-only
+		}
+	}
+
+	set bypass {
+		type ipv4_addr
+		flags interval
+		elements = {
+			127.0.0.0/8,
+			198.51.100.20
+		}
+	}
+
+	set bypass6 {
+		type ipv6_addr
+		flags interval
+		elements = {
+			2001:db8::20,
+			::1
+		}
+	}
+
+	set proxy-marks {
+		type mark
+		elements = {
+			0x0000a43a,
+			0x0000a43b,
+			0x0000a43c
+		}
+	}
+}
