@@ -15,9 +15,7 @@ import (
 
 func injectedCGTProxy(
 	*config.Config, *zap.SugaredLogger,
-) (
-	interfaces.CGTProxy, error,
-) {
+) (interfaces.CGTProxy, error) {
 	panic(wire.Build(set))
 }
 

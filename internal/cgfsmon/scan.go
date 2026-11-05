@@ -1,0 +1,84 @@
+// SPDX-FileCopyrightText: 2025-2026 Chen Linxuan <me@black-desk.cn>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+package cgfsmon
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io/fs"
+	"path/filepath"
+	"strings"
+
+	"github.com/black-desk/cgtproxy/internal/types"
+	"github.com/fsnotify/fsnotify"
+	"golang.org/x/sys/unix"
+)
+
+// reconcile rescans a subtree, installs watches, and compares its current
+// contents with known paths. Filesystem notifications only select the subtree.
+func (m *CGroupFSMonitor) reconcile(ctx context.Context, watcher *fsnotify.Watcher, root string, known map[string]struct{}) ([]types.CGroupEvent, error) {
+	events, err := m.walk(ctx, watcher, root)
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]struct{}, len(events))
+	for _, event := range events {
+		seen[event.Path] = struct{}{}
+	}
+	for path := range known {
+		if path != root && !strings.HasPrefix(path, strings.TrimRight(root, "/")+"/") {
+			continue
+		}
+		if _, exists := seen[path]; exists {
+			continue
+		}
+		// The kernel may have already removed a deleted directory's watch,
+		// before fsnotify has consumed the corresponding notification.
+		if err = watcher.Remove(path); err != nil && !errors.Is(err, fsnotify.ErrNonExistentWatch) && !errors.Is(err, unix.EINVAL) {
+			return nil, fmt.Errorf("unwatch cgroup %q: %w", path, err)
+		}
+		events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeDelete})
+		delete(known, path)
+	}
+	for path := range seen {
+		known[path] = struct{}{}
+	}
+	return events, nil
+}
+
+func (m *CGroupFSMonitor) walk(ctx context.Context, watcher *fsnotify.Watcher, root string) ([]types.CGroupEvent, error) {
+	var events []types.CGroupEvent
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if ctx.Err() != nil {
+			return context.Cause(ctx)
+		}
+		if errors.Is(err, fs.ErrNotExist) && path != string(m.root) {
+			m.log.Debugf("Cgroup %q disappeared during the scan; skipping it.", path)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("scan cgroup %q: %w", path, err)
+		}
+		if !d.IsDir() {
+			return nil
+		}
+
+		// WalkDir invokes this callback before reading the directory. Add
+		// synchronously installs its watch: existing children are found by
+		// the scan, and children created after that are covered by events.
+		if err = watcher.Add(path); err != nil {
+			if errors.Is(err, fs.ErrNotExist) && path != string(m.root) {
+				return filepath.SkipDir
+			}
+			return fmt.Errorf("watch cgroup %q: %w", path, err)
+		}
+		if path != string(m.root) {
+			events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeNew})
+		}
+		return nil
+	})
+	return events, err
+}

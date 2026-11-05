@@ -6,7 +6,6 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -109,29 +108,5 @@ func (c *Config) check() (err error) {
 		}
 	}
 
-	return
-}
-
-func getCgroupRoot() (cgroupRoot CGroupRoot, err error) {
-	defer Wrap(&err, "get cgroupv2 mount point")
-
-	paths := []string{"/sys/fs/cgroup/unified", "/sys/fs/cgroup"}
-
-	for i := range paths {
-		var fileInfo os.FileInfo
-		fileInfo, err = os.Stat(paths[i])
-		if err != nil {
-			continue
-		}
-
-		if !fileInfo.IsDir() {
-			continue
-		}
-
-		cgroupRoot = CGroupRoot(paths[i])
-		return
-	}
-
-	err = ErrCannotFoundCgroupv2Root
 	return
 }
