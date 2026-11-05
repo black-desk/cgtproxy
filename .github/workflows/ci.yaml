@@ -47,11 +47,15 @@ jobs:
           sudo apt update
           sudo apt install -y autoconf automake libtool iproute2 nftables util-linux procps
 
+      - uses: actions/checkout@v6
+
       - uses: actions/setup-go@v7
         with:
           go-version: stable
           cache: true
-          cache-dependency-path: ${{ github.workspace }}/go.sum
+          cache-dependency-path: |
+            go.sum
+            test/e2e/fixture/go.sum
 
       - uses: black-desk/workflows/autotools@master
 
@@ -76,11 +80,15 @@ jobs:
           sudo apt update
           sudo apt install -y autoconf automake libtool iproute2 nftables util-linux procps
 
+      - uses: actions/checkout@v6
+
       - uses: actions/setup-go@v7
         with:
           go-version: stable
           cache: true
-          cache-dependency-path: ${{ github.workspace }}/go.sum
+          cache-dependency-path: |
+            go.sum
+            test/e2e/fixture/go.sum
 
       - uses: black-desk/workflows/autotools@master
         env:

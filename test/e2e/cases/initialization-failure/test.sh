@@ -29,4 +29,4 @@ if {
 fi
 [[ -z $(ip route show table 31300 2>/dev/null) && -z $(ip -6 route show table 31300 2>/dev/null) ]]
 nft delete table inet cgtproxy
-probe unmatched tcp4 198.51.100.10:18080 origin
+probe unmatched tcp4 198.51.100.10:18080 origin direct

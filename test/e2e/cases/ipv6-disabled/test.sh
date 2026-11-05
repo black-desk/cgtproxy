@@ -8,9 +8,9 @@ original_config=$CASE_DIR/config.yaml
 sysctl -qw net.ipv6.conf.all.disable_ipv6=1
 start_cgtproxy
 for network in tcp4 udp4; do
-	probe proxied "$network" 198.51.100.10:18080 proxy
-	probe forwarded "$network" 198.51.100.10:18080 proxy
-	probe direct "$network" 198.51.100.10:18080 origin
+	probe proxied "$network" 198.51.100.10:18080 origin proxy
+	probe forwarded "$network" 198.51.100.10:18080 origin proxy
+	probe direct "$network" 198.51.100.10:18080 origin direct
 done
 [[ -z $(ip -6 route show table 31300 2>/dev/null) ]]
 if ip -6 rule show | grep -q 'lookup 31300'; then
@@ -30,7 +30,7 @@ rules:
 YAML
 export CASE_DIR=$CASE_WORK
 start_cgtproxy
-probe proxied tcp4 198.51.100.10:18080 origin
+probe proxied tcp4 198.51.100.10:18080 origin direct
 stop_cgtproxy
 
 # A target explicitly allowing IPv6 still requires successful IPv6 setup.

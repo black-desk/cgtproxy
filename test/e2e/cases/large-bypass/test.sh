@@ -25,11 +25,11 @@ start_cgtproxy
 
 for source in proxied forwarded; do
 	for network in tcp4 udp4; do
-		probe "$source" "$network" 198.51.100.20:18080 origin
-		probe "$source" "$network" 198.51.100.10:18080 proxy
+		probe "$source" "$network" 198.51.100.20:18080 origin direct
+		probe "$source" "$network" 198.51.100.10:18080 origin proxy
 	done
 	for network in tcp6 udp6; do
-		probe "$source" "$network" '[2001:db8::20]:18080' origin
-		probe "$source" "$network" '[2001:db8::10]:18080' proxy
+		probe "$source" "$network" '[2001:db8::20]:18080' origin direct
+		probe "$source" "$network" '[2001:db8::10]:18080' origin proxy
 	done
 done

@@ -28,7 +28,7 @@ grep -q 'running filesystem watcher: watch cgroup.*\/sys\/fs\/cgroup\/unreadable
 assert_network_cleanup
 
 start_cgtproxy
-probe proxied tcp4 198.51.100.10:18080 proxy
+probe proxied tcp4 198.51.100.10:18080 origin proxy
 
 # Pause until the inaccessible directory is fully configured, so watching it
 # fails rather than a later directory scan racing with chmod.
@@ -49,4 +49,4 @@ if [[ $status != 1 ]]; then
 fi
 grep -q 'watch cgroup.*\/sys\/fs\/cgroup\/unreadable.*permission denied' "$CASE_WORK/cgtproxy.log"
 assert_network_cleanup
-probe proxied tcp4 198.51.100.10:18080 origin
+probe proxied tcp4 198.51.100.10:18080 origin direct
