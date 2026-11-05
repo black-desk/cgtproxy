@@ -34,7 +34,7 @@ for case_dir in "$suite"/cases/*; do
 	if (
 		echo "$BASHPID" >"$group/cgroup.procs"
 		exec timeout --kill-after=5s 45s unshare -U -C -m -n -p -f --kill-child --map-user=0 --mount-proc \
-			bash "$suite/sandbox.sh"
+			bash "$suite/run-case.sh"
 	) >"$CASE_WORK/case.log" 2>&1; then
 		echo "PASS $name"
 	else

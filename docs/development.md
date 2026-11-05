@@ -76,10 +76,12 @@ This project does not use unit tests.
 
 To add an end-to-end test case, create a directory under `test/e2e/cases/`
 containing a complete `config.yaml` and a `test.sh` script; the runner discovers
-it automatically. Shared network setup and helpers such as `start_cgtproxy`,
-`probe`, and `wait_until` are in [common.sh](../test/e2e/common.sh); the test
-clients and transparent servers are in [fixture](../test/e2e/fixture/main.go).
-Cases do not import internal packages or mock components.
+it automatically. See [run.sh](../test/e2e/run.sh) for the runner and
+[run-case.sh](../test/e2e/run-case.sh) for per-case initialization. Shared
+network setup and helpers such as `start_cgtproxy`, `probe`, and `wait_until`
+are in [common.sh](../test/e2e/common.sh); the test clients and transparent
+servers are in [fixture](../test/e2e/fixture/main.go). Cases do not import
+internal packages or mock components.
 
 When adding or fixing routing behavior, verify the expected result with real
 traffic and add a regression scenario for the problem being fixed. Existing

@@ -57,9 +57,14 @@ func socketControl(transparent bool) func(string, string, syscall.RawConn) error
 	return func(network, _ string, raw syscall.RawConn) error {
 		var socketErr error
 		err := raw.Control(func(fd uintptr) {
-			level, transparentOption, originalOption := unix.SOL_IP, unix.IP_TRANSPARENT, unix.IP_RECVORIGDSTADDR
+			level := unix.SOL_IP
+			transparentOption := unix.IP_TRANSPARENT
+			originalOption := unix.IP_RECVORIGDSTADDR
+
 			if strings.HasSuffix(network, "6") {
-				level, transparentOption, originalOption = unix.SOL_IPV6, unix.IPV6_TRANSPARENT, unix.IPV6_RECVORIGDSTADDR
+				level = unix.SOL_IPV6
+				transparentOption = unix.IPV6_TRANSPARENT
+				originalOption = unix.IPV6_RECVORIGDSTADDR
 			}
 			options := [][2]int{{unix.SOL_SOCKET, unix.SO_REUSEADDR}}
 			if transparent {
@@ -115,7 +120,8 @@ func serve(args []string) error {
 				for scanner.Scan() {
 					value := receipt{*id, conn.LocalAddr().String(), scanner.Text()}
 					record(value)
-					if err := json.NewEncoder(conn).Encode(value); err != nil {
+					err := json.NewEncoder(conn).Encode(value)
+					if err != nil {
 						return
 					}
 				}
@@ -146,16 +152,18 @@ func serve(args []string) error {
 		}
 		value := receipt{*id, destination.String(), strings.TrimSuffix(string(buf[:n]), "\n")}
 		record(value)
-		// Reply from the original destination, including its port. Sending from
-		// the wildcard TPROXY listener would use the proxy port as the source.
+		// Reply from the original destination, including its port.
+		/// Sending from the wildcard TPROXY listener would use the
+		// proxy port as the source.
 		dialer := net.Dialer{LocalAddr: destination, Control: socketControl(*transparent)}
 		reply, err := dialer.Dial(*network, peer.String())
 		if err != nil {
 			return err
 		}
-		// The connected reply socket can receive the next request before the
-		// wildcard listener. Keep it open and serve that tuple; closing it
-		// after sending a reply can discard the client's next datagram.
+		// The connected reply socket can receive the next request
+		// before the wildcard listener. Keep it open and serve that
+		// tuple; closing it after sending a reply can discard the
+		// client's next datagram.
 		go func(reply net.Conn, value receipt) {
 			defer reply.Close()
 			encoder := json.NewEncoder(reply)
