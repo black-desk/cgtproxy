@@ -64,7 +64,10 @@ func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 func (nft *NFTManager) initProxyMarkSet(conn *nftables.Conn) error {
 	// nft: set proxy-marks { type mark; }
 	nft.proxyMarkSet = &nftables.Set{
-		Table: nft.table, Name: "proxy-marks", KeyType: nftables.TypeMark,
+		Table:        nft.table,
+		Name:         "proxy-marks",
+		KeyType:      nftables.TypeMark,
+		KeyByteOrder: binaryutil.NativeEndian,
 	}
 	if err := conn.AddSet(nft.proxyMarkSet, nil); err != nil {
 		return fmt.Errorf("create set %q: %w", nft.proxyMarkSet.Name, err)
