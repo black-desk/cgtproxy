@@ -11,7 +11,6 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/errwrap"
-	"github.com/black-desk/cgtproxy/internal/interfaces"
 	"github.com/black-desk/cgtproxy/internal/nftman/connector"
 	"github.com/google/nftables"
 	"go.uber.org/zap"
@@ -24,7 +23,7 @@ type NFTManager struct {
 	gateway    bool
 	log        *zap.SugaredLogger
 
-	connector interfaces.NetlinkConnector
+	connector *connector.Connector
 
 	table *nftables.Table
 
@@ -55,11 +54,10 @@ type NFTManager struct {
 
 type Opt = (func(*NFTManager) (*NFTManager, error))
 
-//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/internal/nftman.NFTManager -as interfaces.NFTManager -o ../interfaces/nftman.go
 func New(opts ...Opt) (ret *NFTManager, err error) {
 	defer errwrap.Wrap(&err, "create nftables manager")
 
-	t := &NFTManager{}
+	t := &NFTManager{connector: &connector.Connector{}}
 
 	for i := range opts {
 		t, err = opts[i](t)
@@ -67,16 +65,6 @@ func New(opts ...Opt) (ret *NFTManager, err error) {
 			t = nil
 			return
 		}
-	}
-
-	if t.connector == nil {
-		var ctr *connector.Connector
-		ctr, err = connector.New()
-		if err != nil {
-			return
-		}
-
-		t.connector = ctr
 	}
 
 	if t.log == nil {
@@ -147,19 +135,6 @@ func WithLogger(log *zap.SugaredLogger) Opt {
 
 		nft.log = log
 		return nft, nil
-	}
-}
-
-func WithConnFactory(f interfaces.NetlinkConnector) Opt {
-	return func(nft *NFTManager) (ret *NFTManager, err error) {
-		if f == nil {
-			err = ErrConnFactoryMissing
-			return
-		}
-
-		nft.connector = f
-		ret = nft
-		return
 	}
 }
 

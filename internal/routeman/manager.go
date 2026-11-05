@@ -9,7 +9,7 @@ import (
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/errwrap"
-	"github.com/black-desk/cgtproxy/internal/interfaces"
+	"github.com/black-desk/cgtproxy/internal/nftman"
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
@@ -18,7 +18,7 @@ import (
 type RouteManager struct {
 	cgroupEventsChan <-chan types.CGroupEvents
 
-	nft interfaces.NFTManager
+	nft *nftman.NFTManager
 	cfg *config.Config
 	log *zap.SugaredLogger
 
@@ -30,8 +30,6 @@ type RouteManager struct {
 	rule  []*netlink.Rule
 	route []*netlink.Route
 }
-
-//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/internal/routeman.RouteManager -as interfaces.RouteManager -o ../interfaces/routeman.go
 
 func New(opts ...Opt) (ret *RouteManager, err error) {
 	defer errwrap.Wrap(&err, "create route manager")
@@ -85,7 +83,7 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 
 type Opt func(m *RouteManager) (ret *RouteManager, err error)
 
-func WithNFTMan(t interfaces.NFTManager) Opt {
+func WithNFTMan(t *nftman.NFTManager) Opt {
 	return func(m *RouteManager) (ret *RouteManager, err error) {
 		if t == nil {
 			err = ErrNFTManagerMissing

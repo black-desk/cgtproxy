@@ -8,19 +8,7 @@ SPDX-License-Identifier: MIT
 
 [en](./development.md) | zh_CN
 
-## 编译与测试
-
-编译方法、调试构建、测试环境要求、运行命令、日志和覆盖率说明见[构建指南](./build.zh_CN.md)。
-
-## 项目结构
-
-本项目使用[wire]来实践[依赖注入]。你需要查看[wire.go]文件来了解这个应用程序是如何构建的。
-
-[wire]: https://github.com/google/wire
-[依赖注入]: https://en.wikipedia.org/wiki/Dependency_injection
-[wire.go]: ../internal/cmd/wire.go
-
-所有实现包位于`internal/`，仅供cgtproxy自身使用。内部接口用于组织组件，不作为公开的库API。
+## 工作流程
 
 cgtproxy的基本工作流程：
 
@@ -77,6 +65,6 @@ nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须
 
 本项目不做单元测试。
 
-新增端到端测试用例时，在`test/e2e/cases/`下创建目录，提供完整的`config.yaml`和`test.sh`，测试运行器会自动发现该用例。公共网络搭建和`start_cgtproxy`、`probe`、`wait_until`等辅助函数见[common.sh](../test/e2e/common.sh)，测试客户端和透明代理实现见[fixture](../test/e2e/fixture/main.go)。用例无需导入内部包或模拟组件接口。
+新增端到端测试用例时，在`test/e2e/cases/`下创建目录，提供完整的`config.yaml`和`test.sh`，测试运行器会自动发现该用例。公共网络搭建和`start_cgtproxy`、`probe`、`wait_until`等辅助函数见[common.sh](../test/e2e/common.sh)，测试客户端和透明代理实现见[fixture](../test/e2e/fixture/main.go)。用例无需导入内部包或模拟组件。
 
 新增或修复路由行为时，使用真实流量验证预期结果，并为修复的问题添加回归场景。现有用例覆盖配置校验、本地cgroup路由与动态更新、网关转发、DNS劫持、协议和地址排除，以及退出时的规则清理。提交前运行普通构建和`debug`构建的测试；如有无法运行的检查，请在提交说明或PR中记录原因和已完成的验证。

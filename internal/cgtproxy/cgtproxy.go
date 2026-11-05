@@ -7,9 +7,10 @@ package cgtproxy
 import (
 	"context"
 
+	"github.com/black-desk/cgtproxy/internal/cgfsmon"
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/errwrap"
-	"github.com/black-desk/cgtproxy/internal/interfaces"
+	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/sourcegraph/conc/pool"
 	"go.uber.org/zap"
 )
@@ -20,13 +21,11 @@ type CGTProxy struct {
 	pool *pool.ContextPool
 	log  *zap.SugaredLogger
 
-	cgMonitor interfaces.CGroupMonitor
-	rtManager interfaces.RouteManager
+	cgMonitor *cgfsmon.CGroupFSMonitor
+	rtManager *routeman.RouteManager
 }
 
 type Opt = (func(*CGTProxy) (*CGTProxy, error))
-
-//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/internal/cgtproxy.CGTProxy -as interfaces.CGTProxy -o ../interfaces/cgtproxy.go
 
 func New(opts ...Opt) (ret *CGTProxy, err error) {
 	defer errwrap.Wrap(&err, "create new cgtproxy core")
@@ -93,7 +92,7 @@ func WithLogger(log *zap.SugaredLogger) Opt {
 	}
 }
 
-func WithCGroupMonitor(mon interfaces.CGroupMonitor) Opt {
+func WithCGroupMonitor(mon *cgfsmon.CGroupFSMonitor) Opt {
 	return func(core *CGTProxy) (ret *CGTProxy, err error) {
 		if mon == nil {
 			err = ErrCGroupMonitorMissing
@@ -106,7 +105,7 @@ func WithCGroupMonitor(mon interfaces.CGroupMonitor) Opt {
 	}
 }
 
-func WithRouteManager(rman interfaces.RouteManager) Opt {
+func WithRouteManager(rman *routeman.RouteManager) Opt {
 	return func(core *CGTProxy) (ret *CGTProxy, err error) {
 		if rman == nil {
 			err = ErrRouteManagerMissing
@@ -119,7 +118,7 @@ func WithRouteManager(rman interfaces.RouteManager) Opt {
 	}
 }
 
-func (c *CGTProxy) RunCGTProxy(ctx context.Context) (err error) {
+func (c *CGTProxy) Run(ctx context.Context) (err error) {
 	c.log.Debug("CGTProxy starting.")
 	defer c.log.Debug("CGTProxy exiting.")
 
@@ -134,11 +133,10 @@ func (c *CGTProxy) RunCGTProxy(ctx context.Context) (err error) {
 }
 
 func (c *CGTProxy) runRouteManager(ctx context.Context) (err error) {
+	c.log.Debug("Start route manager.")
 	defer c.log.Debug("Route manager exited.")
 
-	c.log.Debug("Start route manager.")
-
-	err = c.rtManager.RunRouteManager(ctx)
+	err = c.rtManager.Run(ctx)
 	if err != nil {
 		return
 	}
@@ -147,11 +145,10 @@ func (c *CGTProxy) runRouteManager(ctx context.Context) (err error) {
 }
 
 func (c *CGTProxy) runCGroupMonitor(ctx context.Context) (err error) {
+	c.log.Debug("Start filesystem watcher.")
 	defer c.log.Debug("Filesystem watcher exited.")
 
-	c.log.Debug("Start filesystem watcher.")
-
-	err = c.cgMonitor.RunCGroupMonitor(ctx)
+	err = c.cgMonitor.Run(ctx)
 	if err != nil {
 		return
 	}

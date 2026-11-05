@@ -15,22 +15,7 @@ en | [zh_CN](./development.zh_CN.md)
 > This English documentation is translated from the Chinese version using LLM
 > and may contain errors.
 
-## Building and Testing
-
-See the [build guide](./build.md) for compilation, debug builds, test
-environment requirements, commands, logs, and coverage.
-
-## Project Structure
-
-This project uses [wire] to practice [dependency injection]. You need to check
-the [wire.go] file to figure out how this application is constructed.
-
-[wire]: https://github.com/google/wire
-[dependency injection]: https://en.wikipedia.org/wiki/Dependency_injection
-[wire.go]: ../internal/cmd/wire.go
-
-Implementation packages live in `internal/` and are private to cgtproxy.
-Internal interfaces organize components and do not form a public library API.
+## Workflow
 
 The basic workflow of cgtproxy:
 
@@ -110,7 +95,7 @@ containing a complete `config.yaml` and a `test.sh` script; the runner discovers
 it automatically. Shared network setup and helpers such as `start_cgtproxy`,
 `probe`, and `wait_until` are in [common.sh](../test/e2e/common.sh); the test
 clients and transparent servers are in [fixture](../test/e2e/fixture/main.go).
-Cases do not import internal packages or mock component interfaces.
+Cases do not import internal packages or mock components.
 
 When adding or fixing routing behavior, verify the expected result with real
 traffic and add a regression scenario for the problem being fixed. Existing
