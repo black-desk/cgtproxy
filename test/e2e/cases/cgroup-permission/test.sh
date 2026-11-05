@@ -11,6 +11,22 @@ exec setpriv --bounding-set=-dac_override,-dac_read_search "$CGTPROXY_REAL_BIN" 
 SH
 chmod 700 "$CASE_WORK/restricted-caps"
 CGTPROXY_BIN=$CASE_WORK/restricted-caps
+
+# A failed initial scan must abort startup and leave no network rules behind.
+mkdir /sys/fs/cgroup/unreadable
+chmod 000 /sys/fs/cgroup/unreadable
+status=0
+(LOG_LEVEL=debug in_group manager "$CGTPROXY_BIN" --config "$CASE_DIR/config.yaml" \
+	--log-file "$CASE_WORK/initial-scan.log") || status=$?
+chmod 755 /sys/fs/cgroup/unreadable
+rmdir /sys/fs/cgroup/unreadable
+if [[ $status != 1 ]]; then
+	echo "Expected initial scan permission failure, got exit status $status" >&2
+	exit 1
+fi
+grep -q 'running filesystem watcher: watch cgroup.*\/sys\/fs\/cgroup\/unreadable.*permission denied' "$CASE_WORK/initial-scan.log"
+assert_network_cleanup
+
 start_cgtproxy
 probe proxied tcp4 198.51.100.10:18080 proxy
 

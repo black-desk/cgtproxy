@@ -6,7 +6,6 @@ package routeman
 
 import (
 	"context"
-	"errors"
 
 	"github.com/black-desk/cgtproxy/internal/errwrap"
 	"github.com/black-desk/cgtproxy/internal/types"
@@ -23,31 +22,7 @@ func (m *RouteManager) Run(ctx context.Context) (err error) {
 	}
 
 	defer m.removeNftableRules()
-	var initial types.CGroupEvents
-	select {
-	case <-ctx.Done():
-		return context.Cause(ctx)
-	case events, ok := <-m.cgroupEventsChan:
-		if !ok {
-			return errors.New("cgroup monitor closed before the initial scan")
-		}
-		initial = events
-	}
-	if !initial.Initial {
-		return errors.New("expected the initial cgroup scan before incremental events")
-	}
-	paths := make([]string, 0, len(initial.Events))
-	for _, event := range initial.Events {
-		paths = append(paths, event.Path)
-	}
-	err = m.initializeNftableRules(paths)
-	if initial.Result != nil {
-		initial.Result <- err
-		close(initial.Result)
-	}
-	if err != nil {
-		return
-	}
+	initialized := false
 
 	for {
 		var events types.CGroupEvents
@@ -68,7 +43,16 @@ func (m *RouteManager) Run(ctx context.Context) (err error) {
 				paths = append(paths, event.Path)
 			}
 		}
-		eventsErr := m.nft.UpdateRoutes(m.routesForPaths(paths))
+		var eventsErr error
+		if !initialized {
+			// The first batch is the complete scan, including the
+			// root. Commit its routes together with the base rules
+			// in one transaction.
+			eventsErr = m.initializeNftableRules(paths)
+			initialized = eventsErr == nil
+		} else {
+			eventsErr = m.nft.UpdateRoutes(m.routesForPaths(paths))
+		}
 
 		if events.Result != nil {
 			events.Result <- eventsErr
@@ -105,8 +89,9 @@ func (m *RouteManager) removeNftableRules() {
 	m.removeRules()
 
 	err = m.nft.Release()
-	if err != nil {
-		m.log.Errorf("Failed to release the nftables connection: %v", err)
-		err = nil
+	if err == nil {
+		return
 	}
+
+	m.log.Errorf("Failed to release the nftables connection: %v", err)
 }
