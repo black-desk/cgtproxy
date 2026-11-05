@@ -69,6 +69,7 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 
 	for _, tp := range tps {
 		nft.log.Debugf("Generating nft chains and rules for proxy %q: %+v.", tp.Name, tp)
+		// nft: add element inet cgtproxy proxy-marks { <tp.Mark> }
 		if err = conn.SetAddElements(nft.proxyMarkSet, []nftables.SetElement{
 			{Key: binaryutil.NativeEndian.PutUint32(uint32(tp.Mark))},
 		}); err != nil {
@@ -113,6 +114,7 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
 	nft.log.Debug("Building nft table structure.")
 
+	// nft: create table inet cgtproxy
 	nft.table = conn.CreateTable(&nftables.Table{
 		Name:   NftTableName,
 		Family: nftables.TableFamilyINet,

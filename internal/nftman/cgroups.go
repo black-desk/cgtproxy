@@ -43,6 +43,7 @@ func (nft *NFTManager) UpdateRoutes(routes []types.Route) (err error) {
 }
 
 func (nft *NFTManager) initCgroupMap(conn *nftables.Conn) (err error) {
+	// nft: map cgroup-vmap { type cgroupsv2 : verdict; }
 	nft.cgroupMap = &nftables.Set{
 		Table:        nft.table,
 		Name:         "cgroup-vmap",
@@ -106,10 +107,12 @@ func (nft *NFTManager) updateCgroupElements(next map[string]nftables.SetElement)
 	if err != nil {
 		return err
 	}
+	// nft: delete element inet cgtproxy cgroup-vmap { <old cgroup IDs> }
 	err = queueSetElements(nft.cgroupMap, removed, conn.SetDeleteElements)
 	if err != nil {
 		return fmt.Errorf("delete cgroup map elements: %w", err)
 	}
+	// nft: add element inet cgtproxy cgroup-vmap { <ID> : <verdict>, ... }
 	err = queueSetElements(nft.cgroupMap, added, conn.SetAddElements)
 	if err != nil {
 		return fmt.Errorf("add cgroup map elements: %w", err)
@@ -203,11 +206,13 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 
 	switch target.Op {
 	case types.TargetDirect:
+		// nft map element: <cgroup ID> : return
 		setElement.VerdictData = &expr.Verdict{
 			Kind: expr.VerdictReturn,
 		}
 
 	case types.TargetTProxy:
+		// nft map element: <cgroup ID> : goto <target.Chain>
 		setElement.VerdictData = &expr.Verdict{
 			Kind:  expr.VerdictGoto,
 			Chain: target.Chain,
@@ -221,13 +226,17 @@ func (nft *NFTManager) genSetElement(route *types.Route) (ret nftables.SetElemen
 func (t *NFTManager) addCgroupRuleForLevel(
 	conn *nftables.Conn, level int,
 ) {
+	// nft: socket cgroupv2 level <level> vmap @cgroup-vmap
+	// The socket lookup loads the ancestor's cgroup ID, then the verdict map
+	// returns or goes to its MARK chain. A failed lookup falls through to the
+	// next rule; levels are queried deepest first, ending with root at level 0.
 	exprs := []expr.Any{
 		&expr.Socket{ // socket load cgroupv2 => reg 1
 			Key:      expr.SocketKeyCgroupv2,
 			Level:    uint32(level),
 			Register: 1,
 		},
-		&expr.Lookup{ // lookup reg 1 set cgroup-map dreg 0
+		&expr.Lookup{ // lookup reg 1 set cgroup-vmap dreg 0
 			SourceRegister: 1,
 			IsDestRegSet:   true,
 			SetName:        t.cgroupMap.Name,

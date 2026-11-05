@@ -18,6 +18,7 @@ import (
 func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 	defer errwrap.Wrap(&err, "prepare ipv4 bypass set")
 
+	// nft: set bypass { type ipv4_addr; flags interval; }
 	nft.ipv4BypassSet = &nftables.Set{
 		Table:        nft.table,
 		Name:         "bypass",
@@ -40,6 +41,7 @@ func (nft *NFTManager) initIPV4BypassSet(conn *nftables.Conn) (err error) {
 func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 	defer errwrap.Wrap(&err, "prepare ipv6 bypass set")
 
+	// nft: set bypass6 { type ipv6_addr; flags interval; }
 	nft.ipv6BypassSet = &nftables.Set{
 		Table:        nft.table,
 		Name:         "bypass6",
@@ -60,6 +62,7 @@ func (nft *NFTManager) initIPV6BypassSet(conn *nftables.Conn) (err error) {
 }
 
 func (nft *NFTManager) initProxyMarkSet(conn *nftables.Conn) error {
+	// nft: set proxy-marks { type mark; }
 	nft.proxyMarkSet = &nftables.Set{
 		Table: nft.table, Name: "proxy-marks", KeyType: nftables.TypeMark,
 	}
@@ -70,6 +73,7 @@ func (nft *NFTManager) initProxyMarkSet(conn *nftables.Conn) error {
 }
 
 func (nft *NFTManager) initOutputBypassChain(conn *nftables.Conn) {
+	// nft: type route hook output priority -99; policy accept;
 	priority := nftables.ChainPriority(*nftables.ChainPriorityNATDest + 1)
 	chain := conn.AddChain(&nftables.Chain{
 		Table: nft.table, Name: types.ChainOutputBypass, Type: nftables.ChainTypeRoute,
@@ -81,6 +85,12 @@ func (nft *NFTManager) initOutputBypassChain(conn *nftables.Conn) {
 }
 
 func (nft *NFTManager) addBypassRules(conn *nftables.Conn, chain *nftables.Chain, clearProxyMark bool) {
+	// nft with clearProxyMark=false (one rule per address family):
+	//   meta nfproto ipv4 ip daddr @bypass return
+	//   meta nfproto ipv6 ip6 daddr @bypass6 return
+	// With clearProxyMark=true, insert this before return in each rule:
+	//   meta mark @proxy-marks meta mark set 0
+	// Only matching proxy marks are cleared; both address and mark must match.
 	for _, family := range []struct {
 		protocol byte
 		offset   uint32

@@ -21,7 +21,7 @@ func (nft *NFTManager) addCommonFilters(
 ) {
 	nft.log.Debug("Refilling output chain.")
 
-	// ct direction == reply return
+	// nft: ct direction reply return
 	exprs := []expr.Any{
 		&expr.Ct{ // ct load direction => reg 1
 			Register: 1,
@@ -46,7 +46,7 @@ func (nft *NFTManager) addCommonFilters(
 
 	nft.addBypassRules(conn, chain, false)
 
-	// meta l4proto != { tcp, udp } return
+	// nft: meta l4proto != { tcp, udp } return
 
 	nft.protoSet.ID = 0
 	err = conn.AddSet(nft.protoSet, nft.protoSetElement)
@@ -82,6 +82,7 @@ func (nft *NFTManager) addCommonFilters(
 }
 
 func (nft *NFTManager) initProtoSet() {
+	// nft anonymous set literal: { tcp, udp } (type inet_proto).
 	nft.protoSet = &nftables.Set{
 		Table:     nft.table,
 		Anonymous: true,
