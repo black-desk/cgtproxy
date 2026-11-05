@@ -64,6 +64,35 @@ for invalid in wrong_type validation_fail undefined_proxy null_proxy invalid_reg
 	check_invalid_config "$invalid" "$repo/test/data/$invalid.yaml"
 done
 
+# Gateway targets use the same exclusive direct/proxy format as cgroup rules.
+for target in true false '{}' '{direct: false}' '{direct: true, tproxy: proxy}' \
+	'{tproxy: missing}' '[]' '{match: /, direct: true}'; do
+	path=$CASE_WORK/gateway-invalid.yaml
+	cat "$CASE_DIR/config.yaml" >"$path"
+	cat >>"$path" <<YAML
+gateway: $target
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+YAML
+	check_invalid_config gateway-invalid "$path"
+done
+for target in '{direct: true}' '{tproxy: proxy}'; do
+	path=$CASE_WORK/gateway-valid.yaml
+	cat >"$path" <<YAML
+version: 1
+cgroup-root: AUTO
+route-table: 31300
+gateway: $target
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+YAML
+	"$CGTPROXY_BIN" --config "$path" check config
+done
+
 # Reject the removed target even when another valid target is present.
 for value in true false; do
 	path=$CASE_WORK/removed-drop-$value.yaml

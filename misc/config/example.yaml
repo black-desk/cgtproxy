@@ -12,23 +12,18 @@ version: 1
 cgroup-root: AUTO # path to cgroupfs v2 mount point or "AUTO"
 route-table: 300
 
-# Apply the root cgroup target to traffic routed through this host, for example
-# from LAN devices, virtual machines, or Docker bridge containers.
-# Gateway mode is off by default; this daily-use example enables it.
-# Local cgroup rules are independent of this.
-# Forwarded traffic shares this target because the sending process's cgroup
-# cannot be determined. Without a root match, forwarding remains unchanged.
+# Select a target for traffic routed through this host, for example from LAN
+# devices, virtual machines, or Docker bridge containers. This is independent
+# of local cgroup rules, including the rule matching /.
+# Omit gateway to leave forwarding unchanged, or use gateway: {direct: true}.
+# Exactly one of tproxy or direct: true must be selected.
 # cgtproxy does not enable IP forwarding or configure interface settings,
 # firewall permissions, or NAT for direct forwarding; configure these separately.
 # Docker usually supplies these settings for its bridges.
-# For a minimal gateway setup, define a proxy named clash-meta and use:
-#   gateway: true
-#   rules:
-#     - match: "^/$"
-#       tproxy: clash-meta
 # For container DNS timeouts, see:
 # https://github.com/black-desk/cgtproxy/blob/master/docs/troubleshooting.md#docker-container-dns-times-out-in-gateway-mode
-gateway: true
+gateway:
+  tproxy: clash-meta
 
 # This means any traffic send to 127.0.0.1 and ::1 will be directly send
 # without influenced by the following configuration.
@@ -74,8 +69,10 @@ tproxies:
       port: 53
 
 # Rules are matched in order.
-# The target selected for `/` is used as the fallback for local cgroups.
-# With gateway: true, forwarded traffic also uses this target.
+# The target selected for `/` is inherited by descendant cgroups without a
+# more specific target. Local packets without a queryable socket cgroup keep
+# their normal routing.
+# Forwarded traffic uses the independent gateway target above.
 # An explicit `match: '^/$'` rule can select this target independently.
 # `match` is an regex to match the cgroup path.
 # `direct` means the traffic will not be redirect to any TPROXY server;

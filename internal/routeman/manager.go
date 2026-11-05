@@ -58,19 +58,7 @@ func New(opts ...Opt) (ret *RouteManager, err error) {
 			return
 		}
 
-		if m.cfg.Rules[i].Direct {
-			matcher.target.Op = types.TargetDirect
-		} else if m.cfg.Rules[i].TProxy != "" {
-			matcher.target.Op = types.TargetTProxy
-			matcher.target.Chain =
-				m.cfg.TProxies[m.cfg.Rules[i].TProxy].Name
-		} else {
-			panic("this should never happened.")
-		}
-
-		if matcher.target.Chain != "" {
-			matcher.target.Chain += "-MARK"
-		}
+		matcher.target = m.resolveTarget(&m.cfg.Rules[i].Target)
 
 		m.matchers = append(m.matchers, &matcher)
 	}

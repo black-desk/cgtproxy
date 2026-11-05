@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/types"
 )
 
@@ -51,4 +52,18 @@ func (m *RouteManager) targetForPath(path string) types.Target {
 		}
 	}
 	return types.Target{}
+}
+
+// resolveTarget translates a validated configuration target into an nft verdict.
+func (m *RouteManager) resolveTarget(target *config.Target) types.Target {
+	if target == nil {
+		return types.Target{}
+	}
+	if target.Direct {
+		return types.Target{Op: types.TargetDirect}
+	}
+	return types.Target{
+		Op:    types.TargetTProxy,
+		Chain: m.cfg.TProxies[target.TProxy].Name + "-MARK",
+	}
 }

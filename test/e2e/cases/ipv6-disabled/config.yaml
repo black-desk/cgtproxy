@@ -5,7 +5,8 @@
 version: 1
 cgroup-root: AUTO
 route-table: 31300
-gateway: true
+gateway:
+  tproxy: proxy
 tproxies:
   proxy:
     port: 17893

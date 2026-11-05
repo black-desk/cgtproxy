@@ -40,7 +40,7 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn, target types.Ta
 			&expr.Cmp{Op: filter.op, Register: 1, Data: binaryutil.NativeEndian.PutUint32(filter.typeID)},
 		)
 	}
-	if nft.gateway {
+	if target.Op != types.TargetNoop {
 		verdict := &expr.Verdict{Kind: expr.VerdictReturn}
 		if target.Op == types.TargetTProxy {
 			verdict.Kind, verdict.Chain = expr.VerdictGoto, target.Chain

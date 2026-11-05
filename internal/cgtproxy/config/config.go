@@ -24,36 +24,33 @@ type Config struct {
 
 	// CgroupRoot is the cgroup v2 mount path, or AUTO to discover it.
 	CgroupRoot CGroupRoot `yaml:"cgroup-root" validate:"required,dirpath|eq=AUTO"`
-	// Gateway applies the root cgroup target selected by Rules to traffic routed
-	// through this host, such as LAN, virtual machine, or Docker bridge traffic.
-	// It is a top-level switch, independent of individual TProxies.
-	// The default is false: forwarded traffic stays direct even when the root
-	// target selects a proxy. Local cgroup rules apply regardless of Gateway.
-	// With no rule matching the root path, forwarding is left unchanged.
-	// Forwarded traffic cannot be matched to the sending process's cgroup;
-	// all forwarding sources share the root target.
+	// Gateway selects a target for traffic routed through this host, such as
+	// LAN, virtual machine, or Docker bridge traffic. Omit it to leave forwarded
+	// traffic unchanged, use direct: true to explicitly leave it unproxied, or
+	// select a named tproxy. It is independent of local cgroup Rules, including /.
+	// All forwarding sources share this target because their process cgroups
+	// cannot be determined on this host.
 	//
 	// In PREROUTING, connection replies, local destinations, non-unicast traffic,
 	// and Bypass destinations are excluded before processing TCP/UDP.
-	// The root proxy's NoUDP and NoIPv6 settings apply, although configured IPv4
-	// DNS hijacking still handles UDP port 53. See TProxy.DNSHijack for details.
+	// The selected proxy's NoUDP, NoIPv6, and DNSHijack settings apply.
 	//
 	// cgtproxy does not change forwarding sysctls, interface settings, or other
 	// firewall rules. The administrator must provide IP forwarding, firewall
 	// permissions, and any NAT needed for direct forwarding. Docker usually
 	// configures these. See the example configuration for loopback DNS setup.
-	Gateway bool `yaml:"gateway"`
+	Gateway *Target `yaml:"gateway"`
 	// Bypass lists destinations excluded from all TPROXY targets. When DNAT
 	// changes a destination to one of these addresses, cgtproxy clears its proxy
 	// mark on every packet so it follows normal routing. Marks belonging to
 	// other network components are preserved.
 	Bypass Bypass `yaml:"bypass" validate:"dive,ipv4|cidrv4|ipv6|cidrv6"`
-	// TProxies defines the named transparent proxy servers available to Rules.
+	// TProxies defines the named transparent proxy servers available to Rules and Gateway.
 	TProxies map[string]*TProxy `yaml:"tproxies" validate:"dive"`
-	// Rules selects targets by matching cgroup paths in order.
+	// Rules selects targets for local traffic by matching socket cgroup paths
+	// in order. Packets without a queryable socket cgroup follow normal routing.
 	// The first rule matching / selects the root target, inherited by local
 	// descendant cgroups without a more specific target.
-	// Gateway also uses this target for forwarded traffic when enabled.
 	// Both direct and tproxy targets are supported for the root.
 	// A catch-all match such as /.* also matches /; use ^/$ to select the root
 	// independently, including an explicit direct root target.
@@ -79,10 +76,15 @@ type Rule struct {
 	// root of cgroupfs, including the leading slash.
 	Match string `yaml:"match" validate:"required"`
 
-	// TProxy means that the traffic comes from this cgroup
-	// should be redirected to a TPROXY server.
+	Target `yaml:",inline"`
+}
+
+// Target selects exactly one of direct: true or a named tproxy.
+// Cgroup rules and gateway traffic use the same target format.
+type Target struct {
+	// TProxy selects a transparent proxy server defined in Config.TProxies.
 	TProxy string `yaml:"tproxy" validate:"required_without=Direct,excluded_with=Direct"`
-	// Direct means that the traffic comes from this cgroup will not be touched.
+	// Direct leaves traffic on its normal route without proxying it.
 	Direct bool `yaml:"direct" validate:"required_without=TProxy,excluded_with=TProxy"`
 }
 
@@ -111,12 +113,12 @@ type TProxy struct {
 	// DNSHijack optionally redirects IPv4 DNS requests selected for this proxy
 	// to a DNS server, for example for fake-IP operation. UDP destination port 53
 	// is hijacked even with NoUDP; TCP port 53 is included when DNSHijack.TCP is
-	// enabled. This also applies to the root target in gateway mode.
+	// enabled. This applies to both cgroup and gateway targets.
 	//
 	// DNS DNAT runs before TPROXY and clears the proxy mark so packets are routed
 	// to the DNS destination. Later packets skip marking only if their original
 	// destination port is 53 and the translated destination matches this DNS
-	// configuration. Other DNAT connections follow their cgroup or root target,
+	// configuration. Other DNAT connections follow their cgroup or gateway target,
 	// subject to Bypass.
 	DNSHijack *DNSHijack `yaml:"dns-hijack"`
 }

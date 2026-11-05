@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT
 
 start_cgtproxy
-# An explicit false keeps forwarding direct even when the root target proxies.
+# An explicit direct gateway target keeps forwarding direct even when the root target proxies.
 for network in tcp4 udp4; do
 	probe forwarded "$network" 198.51.100.10:18080 origin
 	probe forwarded "$network" 198.51.100.10:53 origin

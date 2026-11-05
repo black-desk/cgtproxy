@@ -3,12 +3,15 @@
 # SPDX-License-Identifier: MIT
 
 version: 1
-gateway: false
+gateway:
+  tproxy: proxy
 cgroup-root: AUTO
 route-table: 31300
 bypass:
   - 127.0.0.0/8
   - ::1
+  - 198.51.100.20
+  - 2001:db8::20/128
 tproxies:
   proxy:
     port: 17893
@@ -17,12 +20,17 @@ tproxies:
       ip: 172.31.254.1
       port: 15353
       tcp: true
+  second:
+    port: 17894
+    mark: 42043
 rules:
   - match: "/servers$"
     direct: true
   - match: "/manager$"
     direct: true
-  - match: "/proxied$"
-    tproxy: proxy
-  - match: "^/$"
+  - match: "/direct$"
+    direct: true
+  - match: "/proxied/second$"
+    tproxy: second
+  - match: "/proxied(/.*)?$"
     tproxy: proxy
