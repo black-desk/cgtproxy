@@ -51,8 +51,8 @@ type Config struct {
 	// TProxies defines the named transparent proxy servers available to Rules.
 	TProxies map[string]*TProxy `yaml:"tproxies" validate:"dive"`
 	// Rules selects targets by matching cgroup paths in order.
-	// The first rule matching / selects the root target, which is the fallback
-	// for local traffic. Explicit local cgroup decisions take precedence.
+	// The first rule matching / selects the root target, inherited by local
+	// descendant cgroups without a more specific target.
 	// Gateway also uses this target for forwarded traffic when enabled.
 	// Both direct and tproxy targets are supported for the root.
 	// A catch-all match such as /.* also matches /; use ^/$ to select the root

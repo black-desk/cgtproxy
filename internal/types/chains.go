@@ -6,7 +6,6 @@ package types
 
 // Shared with configuration validation so proxy chains cannot reuse these names.
 const (
-	ChainCgroupRoot    = "cgroup-root"
 	ChainOutputMangle  = "output-mangle"
 	ChainOutputNAT     = "output-nat"
 	ChainOutputBypass  = "output-bypass"

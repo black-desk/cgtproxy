@@ -27,7 +27,6 @@ func (c *Config) check() (err error) {
 
 	marks := make(map[FireWallMark]string, len(c.TProxies))
 	chains := map[string]string{
-		types.ChainCgroupRoot:    "internal chain",
 		types.ChainOutputMangle:  "internal chain",
 		types.ChainOutputNAT:     "internal chain",
 		types.ChainOutputBypass:  "internal chain",
@@ -93,7 +92,7 @@ func (c *Config) check() (err error) {
 	c.CgroupRoot = CGroupRoot(filepath.Clean(string(c.CgroupRoot)))
 
 	if c.Rules == nil {
-		c.log.Warn("No cgroup routing rules configured; all cgroups use the root fallback target.")
+		c.log.Warn("No cgroup routing rules configured; unmatched cgroups follow normal routing.")
 	}
 
 	if c.TProxies == nil {

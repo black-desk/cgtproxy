@@ -13,12 +13,11 @@ import (
 	"github.com/black-desk/cgtproxy/internal/types"
 	"github.com/google/nftables"
 	"github.com/google/nftables/binaryutil"
-	"github.com/google/nftables/expr"
 )
 
 // Initialize installs the complete ruleset, including the first cgroup scan,
 // in one transaction. Policy routes must be ready before calling it.
-func (nft *NFTManager) Initialize(tps []*config.TProxy, rootTarget types.Target, routes []types.Route) (err error) {
+func (nft *NFTManager) Initialize(tps []*config.TProxy, gatewayTarget types.Target, routes []types.Route) (err error) {
 	defer errwrap.Wrap(&err, "initialize nftable rules")
 
 	conn, err := nft.connector.Connect()
@@ -36,7 +35,9 @@ func (nft *NFTManager) Initialize(tps []*config.TProxy, rootTarget types.Target,
 	if err = next.addChainAndRulesForTProxies(conn, tps); err != nil {
 		return err
 	}
-	next.setRootTarget(conn, rootTarget)
+	if err = next.initForwardingChains(conn, gatewayTarget); err != nil {
+		return err
+	}
 	next.cgroupMapElement, err = next.cgroupElementsForRoutes(routes)
 	if err != nil {
 		return err
@@ -57,7 +58,7 @@ func (nft *NFTManager) Initialize(tps []*config.TProxy, rootTarget types.Target,
 		return fmt.Errorf("commit initial ruleset: %w", err)
 	}
 	*nft = next
-	nft.log.Infof("Initial nft rules committed: table=%q, cgroup routes=%d, root target=%s, root chain=%q.", NftTableName, len(nft.cgroupMapElement), rootTarget.Op, rootTarget.Chain)
+	nft.log.Infof("Initial nft rules committed: table=%q, cgroup routes=%d, gateway target=%s, gateway chain=%q.", NftTableName, len(nft.cgroupMapElement), gatewayTarget.Op, gatewayTarget.Chain)
 	paths := make([]string, 0, len(nft.cgroupMapElement))
 	for path := range nft.cgroupMapElement {
 		paths = append(paths, path)
@@ -162,7 +163,6 @@ func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
 	}
 
 	nft.policy = nftables.ChainPolicyAccept
-	nft.rootChain = conn.AddChain(&nftables.Chain{Table: nft.table, Name: types.ChainCgroupRoot})
 
 	err = nft.initOutputMangleChain(conn)
 	if err != nil {
@@ -180,26 +180,5 @@ func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
 		return
 	}
 
-	err = nft.initForwardingChains(conn)
-	if err != nil {
-		return
-	}
-
 	return
-}
-
-// setRootTarget sets the shared fallback for local and forwarded traffic.
-func (nft *NFTManager) setRootTarget(conn *nftables.Conn, target types.Target) {
-	verdict := &expr.Verdict{Kind: expr.VerdictReturn}
-	switch target.Op {
-	case types.TargetTProxy:
-		verdict.Kind, verdict.Chain = expr.VerdictGoto, target.Chain
-	}
-	conn.AddRule(&nftables.Rule{Table: nft.table, Chain: nft.rootChain,
-		Exprs: addDebugCounter([]expr.Any{verdict})})
-}
-
-func (nft *NFTManager) addRootFallback(conn *nftables.Conn, chain *nftables.Chain) {
-	conn.AddRule(&nftables.Rule{Table: nft.table, Chain: chain,
-		Exprs: addDebugCounter([]expr.Any{&expr.Verdict{Kind: expr.VerdictGoto, Chain: nft.rootChain.Name}})})
 }
