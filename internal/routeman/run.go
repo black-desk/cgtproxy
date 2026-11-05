@@ -13,7 +13,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (m *RouteManager) RunRouteManager(ctx context.Context) (err error) {
+func (m *RouteManager) Run(ctx context.Context) (err error) {
 	defer errwrap.Wrap(&err, "running route manager")
 
 	defer m.removeRoute()

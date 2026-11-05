@@ -23,8 +23,6 @@ type CGroupFSMonitor struct {
 	log       *zap.SugaredLogger
 }
 
-//go:generate go run github.com/rjeczalik/interfaces/cmd/interfacer@v0.3.0 -for github.com/black-desk/cgtproxy/internal/cgfsmon.CGroupFSMonitor -as interfaces.CGroupMonitor -o ../interfaces/cgmon.go
-
 func New(opts ...Opt) (ret *CGroupFSMonitor, err error) {
 	defer errwrap.Wrap(&err, "create filesystem watcher")
 
@@ -88,7 +86,7 @@ func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvents {
 	return w.eventsOut
 }
 
-func (w *CGroupFSMonitor) RunCGroupMonitor(ctx context.Context) (err error) {
+func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 	defer errwrap.Wrap(&err, "running filesystem watcher")
 	defer close(w.eventsOut)
 

@@ -18,8 +18,11 @@ import (
 	"syscall"
 	"text/template"
 
+	"github.com/black-desk/cgtproxy/internal/cgfsmon"
+	"github.com/black-desk/cgtproxy/internal/cgtproxy"
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
-	"github.com/black-desk/cgtproxy/internal/interfaces"
+	"github.com/black-desk/cgtproxy/internal/nftman"
+	"github.com/black-desk/cgtproxy/internal/routeman"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 )
@@ -165,9 +168,40 @@ func rootCmdRun() (err error) {
 		return
 	}
 
-	var c interfaces.CGTProxy
-	c, err = injectedCGTProxy(cfg, log)
+	monitor, err := cgfsmon.New(
+		cgfsmon.WithCgroupRoot(cfg.CgroupRoot),
+		cgfsmon.WithLogger(log),
+	)
+	if err != nil {
+		return err
+	}
 
+	nft, err := nftman.New(
+		nftman.WithCgroupRoot(cfg.CgroupRoot),
+		nftman.WithBypass(cfg.Bypass),
+		nftman.WithGateway(cfg.Gateway),
+		nftman.WithLogger(log),
+	)
+	if err != nil {
+		return err
+	}
+
+	routes, err := routeman.New(
+		routeman.WithNFTMan(nft),
+		routeman.WithConfig(cfg),
+		routeman.WithCGroupEventChan(monitor.Events()),
+		routeman.WithLogger(log),
+	)
+	if err != nil {
+		return err
+	}
+
+	c, err := cgtproxy.New(
+		cgtproxy.WithConfig(cfg),
+		cgtproxy.WithLogger(log),
+		cgtproxy.WithCGroupMonitor(monitor),
+		cgtproxy.WithRouteManager(routes),
+	)
 	if err != nil {
 		return
 	}
@@ -182,7 +216,7 @@ func rootCmdRun() (err error) {
 		cancel(&ErrCancelBySignal{sig})
 	}()
 
-	err = c.RunCGTProxy(ctx)
+	err = c.Run(ctx)
 	if err == nil {
 		return
 	}
