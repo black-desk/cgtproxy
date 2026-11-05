@@ -146,8 +146,9 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 			path = event.Name
 		}
 
-		// Events can be stale: scan the current subtree even on removal, so
-		// deleting and recreating a path cannot leave its children unwatched.
+		// Events can be stale: scan the current subtree even on
+		// removal, so deleting and recreating a path cannot leave its
+		// children unwatched.
 		events, err := w.reconcile(ctx, watcher, path, known)
 		if err != nil {
 			return err
@@ -155,7 +156,8 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 		if len(events) == 0 {
 			continue
 		}
-		if err = w.send(ctx, types.CGroupEvents{Events: events}); err != nil {
+		err = w.send(ctx, types.CGroupEvents{Events: events})
+		if err != nil {
 			return err
 		}
 	}
