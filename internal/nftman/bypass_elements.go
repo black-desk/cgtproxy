@@ -14,6 +14,8 @@ import (
 // bypassSetElements follows nft's src/intervals.c: convert addresses and
 // prefixes to closed ranges, sort and merge, then encode interval boundaries.
 // All entries must already be validated and belong to the same address family.
+// nft equivalent: add element inet cgtproxy bypass { <IPv4 addresses/CIDRs> }
+// (or bypass6 for IPv6). Interval endpoints encode the set literal, not rules.
 func bypassSetElements(entries []string) []nftables.SetElement {
 	type ipRange struct{ low, high netip.Addr }
 	ranges := make([]ipRange, 0, len(entries))

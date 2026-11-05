@@ -20,6 +20,7 @@ func (t *NFTManager) addMarkChainForTProxy(
 ) (
 	ret *nftables.Chain, err error,
 ) {
+	// nft: chain <tp.Name>-MARK { ... }
 	chain := &nftables.Chain{
 		Table: t.table,
 		Name:  tp.Name + "-MARK",
@@ -29,7 +30,7 @@ func (t *NFTManager) addMarkChainForTProxy(
 	t.addProxyProtocolGuards(conn, chain, tp)
 	t.addDNSHijackGuard(conn, chain, tp)
 
-	// meta mark set ...
+	// nft: meta mark set <tp.Mark>
 
 	exprs := []expr.Any{
 		&expr.Immediate{ // immediate reg 1 ...
@@ -63,6 +64,7 @@ func (t *NFTManager) addTproxyChainForTProxy(
 ) (
 	ret *nftables.Chain, err error,
 ) {
+	// nft: chain <tp.Name> { ... }
 	chain := &nftables.Chain{
 		Table: t.table,
 		Name:  tp.Name,
@@ -70,6 +72,9 @@ func (t *NFTManager) addTproxyChainForTProxy(
 
 	conn.AddChain(chain)
 
+	// nft: meta l4proto tcp tproxy to :<tp.Port>
+	// With UDP enabled: meta l4proto { tcp, udp } tproxy to :<tp.Port>
+	// NoIPv6 selects the IPv4-only form: tproxy ip to :<tp.Port>.
 	tproxy := &expr.TProxy{ // tproxy port reg 1
 		Family:  byte(nftables.TableFamilyUnspecified),
 		RegPort: 1,
@@ -118,7 +123,6 @@ func (t *NFTManager) addTproxyChainForTProxy(
 	exprs = addDebugCounter(exprs)
 
 	rule := &nftables.Rule{
-		// meta l4proto { tcp, udp } tproxy to ...
 		Table: t.table,
 		Chain: chain,
 		Exprs: exprs,
@@ -134,6 +138,7 @@ func (t *NFTManager) addTproxyChainForTProxy(
 // Excluded protocols must bypass marking as well as TPROXY dispatch.
 func (nft *NFTManager) addProxyProtocolGuards(conn *nftables.Conn, chain *nftables.Chain, tp *config.TProxy) {
 	if tp.NoIPv6 {
+		// nft: meta nfproto ipv6 return
 		nft.addReturnRule(conn, chain,
 			&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
 			&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.NFPROTO_IPV6}},
@@ -142,6 +147,7 @@ func (nft *NFTManager) addProxyProtocolGuards(conn *nftables.Conn, chain *nftabl
 	if tp.NoUDP {
 		if tp.DNSHijack != nil && !tp.NoIPv6 {
 			// DNSHijack only supports IPv4; IPv6 UDP must still bypass.
+			// nft: meta nfproto ipv6 meta l4proto udp return
 			nft.addReturnRule(conn, chain,
 				&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
 				&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.NFPROTO_IPV6}},
@@ -149,11 +155,15 @@ func (nft *NFTManager) addProxyProtocolGuards(conn *nftables.Conn, chain *nftabl
 				&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.IPPROTO_UDP}},
 			)
 		}
+		// nft without DNS hijacking: meta l4proto udp return
+		// With DNS hijacking, append the port condition below so IPv4
+		// UDP/53 can reach DNS DNAT despite NoUDP.
 		filters := []expr.Any{
 			&expr.Meta{Key: expr.MetaKeyL4PROTO, Register: 1},
 			&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.IPPROTO_UDP}},
 		}
 		if tp.DNSHijack != nil {
+			// nft: meta l4proto udp udp dport != 53 return
 			filters = append(filters,
 				&expr.Payload{DestRegister: 1, Base: expr.PayloadBaseTransportHeader, Offset: 2, Len: 2},
 				&expr.Cmp{Op: expr.CmpOpNeq, Register: 1, Data: binaryutil.BigEndian.PutUint16(53)},
@@ -164,6 +174,7 @@ func (nft *NFTManager) addProxyProtocolGuards(conn *nftables.Conn, chain *nftabl
 }
 
 func (nft *NFTManager) initMarkMap(conn *nftables.Conn) (err error) {
+	// nft: map mark-vmap { type mark : verdict; }
 	nft.markTproxyMap = &nftables.Set{
 		Table:        nft.table,
 		Name:         "mark-vmap",
@@ -186,6 +197,7 @@ func (t *NFTManager) updateMarkTproxyMap(
 ) (
 	err error,
 ) {
+	// nft: add element inet cgtproxy mark-vmap { <mark> : goto <chain> }
 	setElement := nftables.SetElement{
 		Key: binaryutil.NativeEndian.PutUint32(uint32(mark)),
 		VerdictData: &expr.Verdict{
@@ -207,6 +219,7 @@ func (t *NFTManager) updateMarkTproxyMap(
 func (nft *NFTManager) initPreroutingChain(conn *nftables.Conn) (err error) {
 	// Dispatch after destination NAT, including NAT hooks installed by Docker.
 	// NAT's shared kernel hooks can retain an earlier registration's priority.
+	// nft: type filter hook prerouting priority -99; policy accept;
 	priority := nftables.ChainPriority(*nftables.ChainPriorityNATDest + 1)
 	nft.preroutingChain = conn.AddChain(&nftables.Chain{
 		Table:    nft.table,

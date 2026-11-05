@@ -34,6 +34,7 @@ func (nft *NFTManager) rebuildOutputCgroupRules(
 	err error,
 ) {
 	if nft.initialized {
+		// nft: flush chain inet cgtproxy output-mangle
 		conn.FlushChain(nft.outputMangleChain)
 	}
 	err = nft.addCommonFilters(conn, nft.outputMangleChain)
@@ -73,13 +74,13 @@ func (nft *NFTManager) initOutputNATChain(conn *nftables.Conn) (err error) {
 		Policy:   &nft.policy,
 	})
 
-	// meta mark vmap @
+	// nft: meta mark vmap @mark-dns-vmap
 	exprs := []expr.Any{
 		&expr.Meta{
 			Key:      expr.MetaKeyMARK,
 			Register: 1,
 		},
-		&expr.Lookup{ // lookup reg 1 set mark-vmap dreg 0
+		&expr.Lookup{ // lookup reg 1 set mark-dns-vmap dreg 0
 			SourceRegister: 1,
 			IsDestRegSet:   true,
 			SetName:        nft.markDNSMap.Name,

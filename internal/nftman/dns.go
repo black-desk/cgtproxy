@@ -20,6 +20,7 @@ func (t *NFTManager) addDNSChainForTproxy(
 ) (
 	ret *nftables.Chain, err error,
 ) {
+	// nft: chain <tp.Name>-DNS { ... }
 	chain := &nftables.Chain{
 		Table: t.table,
 		Name:  tp.Name + "-DNS",
@@ -35,6 +36,9 @@ func (t *NFTManager) addDNSChainForTproxy(
 		ret = chain
 	}()
 
+	// nft: meta nfproto ipv4 udp dport 53 meta mark set 0
+	//      dnat ip to <tp.DNSHijack.IP>:<tp.DNSHijack.Port>
+	// The two lines describe one rule; placeholders are configuration values.
 	exprs := []expr.Any{
 		&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
 		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.NFPROTO_IPV4}},
@@ -54,7 +58,7 @@ func (t *NFTManager) addDNSChainForTproxy(
 			Offset:        2,
 			Len:           2,
 		},
-		&expr.Cmp{ // cmp eq reg 1 0x00003500
+		&expr.Cmp{ // compare destination port with 53 (network byte order)
 			Op:       expr.CmpOpEq,
 			Register: 1,
 			Data:     binaryutil.BigEndian.PutUint16(53),
@@ -89,6 +93,8 @@ func (t *NFTManager) addDNSChainForTproxy(
 		return
 	}
 
+	// nft: meta nfproto ipv4 tcp dport 53 meta mark set 0
+	//      dnat ip to <tp.DNSHijack.IP>:<tp.DNSHijack.Port>
 	exprs = []expr.Any{
 		&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
 		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.NFPROTO_IPV4}},
@@ -109,7 +115,7 @@ func (t *NFTManager) addDNSChainForTproxy(
 			Offset:         2,
 			Len:            2,
 		},
-		&expr.Cmp{ // cmp eq reg 1 0x00003500
+		&expr.Cmp{ // compare destination port with 53 (network byte order)
 			Op:       expr.CmpOpEq,
 			Register: 1,
 			Data:     binaryutil.BigEndian.PutUint16(53),
@@ -150,6 +156,13 @@ func (nft *NFTManager) addDNSHijackGuard(conn *nftables.Conn, chain *nftables.Ch
 	// packets only when the original port and translated resolver match this
 	// proxy's DNS hijack. Other DNAT connections must still be marked on every
 	// packet. Reading the conntrack tuples also avoids reserving a ct mark.
+	// nft (one rule, split here for readability):
+	//   meta nfproto ipv4 ct status dnat ct original proto-dst 53
+	//   ct reply ip saddr <tp.DNSHijack.IP>
+	//   ct reply proto-src <tp.DNSHijack.Port> return
+	// If TCP hijacking is disabled, also match meta l4proto udp before return.
+	// ct status dnat tests the IPS_DST_NAT bit; reply source address/port
+	// identify the translated destination, not the original DNS server.
 	filters := []expr.Any{
 		&expr.Meta{Key: expr.MetaKeyNFPROTO, Register: 1},
 		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: []byte{unix.NFPROTO_IPV4}},
@@ -175,6 +188,7 @@ func (nft *NFTManager) addDNSHijackGuard(conn *nftables.Conn, chain *nftables.Ch
 }
 
 func (nft *NFTManager) initMarkDNSMap(conn *nftables.Conn) (err error) {
+	// nft: map mark-dns-vmap { type mark : verdict; }
 	nft.markDNSMap = &nftables.Set{
 		Table:        nft.table,
 		Name:         "mark-dns-vmap",
@@ -197,6 +211,7 @@ func (t *NFTManager) updateMarkDNSMap(
 ) (
 	err error,
 ) {
+	// nft: add element inet cgtproxy mark-dns-vmap { <mark> : goto <chain> }
 	setElement := nftables.SetElement{
 		Key: binaryutil.NativeEndian.PutUint32(uint32(mark)),
 		VerdictData: &expr.Verdict{

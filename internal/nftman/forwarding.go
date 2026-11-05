@@ -15,6 +15,7 @@ import (
 func (nft *NFTManager) initForwardingChains(conn *nftables.Conn, target types.Target) error {
 	// Conntrack has already run at priority -200. Classify before destination
 	// NAT; TPROXY dispatch runs after NAT so the DNS mark can be cleared first.
+	// nft: type filter hook prerouting priority -152; policy accept;
 	markPriority := nftables.ChainPriority(*nftables.ChainPriorityMangle - 2)
 	chain := conn.AddChain(&nftables.Chain{
 		Table: nft.table, Name: types.ChainForwardMangle, Type: nftables.ChainTypeFilter,
@@ -25,6 +26,11 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn, target types.Ta
 	}
 	// These lookups intentionally ignore the packet mark: the TPROXY policy
 	// routing table itself has a local default route.
+	// nft (three separate rules):
+	//   fib daddr type local return
+	//   fib daddr type != unicast return
+	//   fib saddr type local return
+	// No "mark" flag is included in either FIB lookup.
 	for _, filter := range []struct {
 		source bool
 		op     expr.CmpOp
@@ -40,6 +46,9 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn, target types.Ta
 			&expr.Cmp{Op: filter.op, Register: 1, Data: binaryutil.NativeEndian.PutUint32(filter.typeID)},
 		)
 	}
+	// nft for a proxy gateway: goto <target.Chain>
+	// nft for an explicit direct gateway: return
+	// An omitted gateway adds no dispatch rule.
 	if target.Op != types.TargetNoop {
 		verdict := &expr.Verdict{Kind: expr.VerdictReturn}
 		if target.Op == types.TargetTProxy {
@@ -49,10 +58,12 @@ func (nft *NFTManager) initForwardingChains(conn *nftables.Conn, target types.Ta
 			Exprs: addDebugCounter([]expr.Any{verdict})})
 	}
 
+	// nft: type nat hook prerouting priority dstnat; policy accept;
 	dnsChain := conn.AddChain(&nftables.Chain{
 		Table: nft.table, Name: types.ChainPreroutingNAT, Type: nftables.ChainTypeNAT,
 		Hooknum: nftables.ChainHookPrerouting, Priority: nftables.ChainPriorityNATDest, Policy: &nft.policy,
 	})
+	// nft: meta mark vmap @mark-dns-vmap
 	conn.AddRule(&nftables.Rule{Table: nft.table, Chain: dnsChain,
 		Exprs: addDebugCounter([]expr.Any{
 			&expr.Meta{Key: expr.MetaKeyMARK, Register: 1},
