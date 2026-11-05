@@ -5,9 +5,6 @@
 package types
 
 type CGroupEvents struct {
-	// Initial marks the complete first scan, even when Events is empty.
-	// The monitor sends it before any incremental events.
-	Initial bool
-	Events  []CGroupEvent
-	Result  chan<- error
+	Events []CGroupEvent
+	Result chan<- error
 }

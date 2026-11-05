@@ -26,6 +26,9 @@ wait_until no_cgroup proxied/transient
 probe proxied/initial tcp4 198.51.100.10:18080 origin
 probe unmatched tcp4 198.51.100.10:18080 proxy
 probe forwarded udp4 198.51.100.10:18080 proxy
+# The scan includes the root, whose own traffic still uses the fallback.
+probe / tcp4 198.51.100.10:18080 proxy
+probe / udp4 198.51.100.10:18080 proxy
 
 # Queue a removal and recreation before the manager can consume either event.
 mkdir /sys/fs/cgroup/proxied/live

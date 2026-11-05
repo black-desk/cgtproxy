@@ -75,9 +75,7 @@ func (m *CGroupFSMonitor) walk(ctx context.Context, watcher *fsnotify.Watcher, r
 			}
 			return fmt.Errorf("watch cgroup %q: %w", path, err)
 		}
-		if path != string(m.root) {
-			events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeNew})
-		}
+		events = append(events, types.CGroupEvent{Path: path, EventType: types.CgroupEventTypeNew})
 		return nil
 	})
 	return events, err

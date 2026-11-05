@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
-	"strings"
 
 	"github.com/black-desk/cgtproxy/internal/cgtproxy/config"
 	"github.com/black-desk/cgtproxy/internal/errwrap"
@@ -86,6 +85,8 @@ func (w *CGroupFSMonitor) Events() <-chan types.CGroupEvents {
 	return w.eventsOut
 }
 
+// Run sends the complete first scan, including the root, before processing
+// subsequent filesystem changes. Watches stay active throughout both phases.
 func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 	defer errwrap.Wrap(&err, "running filesystem watcher")
 	defer close(w.eventsOut)
@@ -106,8 +107,8 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	w.log.Infof("Initial cgroup scan completed: found %d cgroups under %q.", len(events), w.root)
-	if err = w.send(ctx, types.CGroupEvents{Initial: true, Events: events}); err != nil {
+	w.log.Infof("Initial cgroup scan completed: found %d cgroups including root %q.", len(events), w.root)
+	if err = w.send(ctx, types.CGroupEvents{Events: events}); err != nil {
 		return err
 	}
 
@@ -147,7 +148,7 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 
 		// Events can be stale: scan the current subtree even on removal, so
 		// deleting and recreating a path cannot leave its children unwatched.
-		events, err = w.reconcile(ctx, watcher, path, known)
+		events, err := w.reconcile(ctx, watcher, path, known)
 		if err != nil {
 			return err
 		}
@@ -162,11 +163,10 @@ func (w *CGroupFSMonitor) Run(ctx context.Context) (err error) {
 
 func (m *CGroupFSMonitor) send(ctx context.Context, cgEvents types.CGroupEvents) (err error) {
 	for i := range cgEvents.Events {
-		path := strings.TrimRight(cgEvents.Events[i].Path, "/")
-		cgEvents.Events[i].Path = path
+		cgEvents.Events[i].Path = filepath.Clean(cgEvents.Events[i].Path)
 	}
 
-	m.log.Debugf("Sending %d cgroup events (initial scan: %t) to the route manager.", len(cgEvents.Events), cgEvents.Initial)
+	m.log.Debugf("Sending %d cgroup events to the route manager.", len(cgEvents.Events))
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
