@@ -12,7 +12,6 @@ SPDX-License-Identifier: MIT
 [![release date][badge-shields-io-release-date]][releases]
 ![commits since release][badge-shields-io-commits-since-release]
 [![codecov][badge-shields-io-codecov]][codecov]
-[![go report card][badge-go-report-card]][go-report-card]
 
 [badge-shields-io-checks]:
   https://img.shields.io/github/check-runs/black-desk/cgtproxy/master
@@ -31,9 +30,6 @@ SPDX-License-Identifier: MIT
 [badge-shields-io-codecov]:
   https://codecov.io/github/black-desk/cgtproxy/graph/badge.svg?token=6TSVGQ4L9X
 [codecov]: https://codecov.io/github/black-desk/cgtproxy
-[badge-go-report-card]:
-  https://goreportcard.com/badge/github.com/black-desk/cgtproxy
-[go-report-card]: https://goreportcard.com/report/github.com/black-desk/cgtproxy
 
 en | [zh_CN](README.zh_CN.md)
 
