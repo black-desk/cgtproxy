@@ -90,3 +90,10 @@ gateway forwarding, DNS hijacking, protocol and address exclusions, and rule
 cleanup on exit. Run tests for both regular and `debug` builds before
 submitting. If a check cannot be run, document the reason and the validation
 completed in the commit description or PR.
+
+## Releases
+
+Both stable releases and prereleases are driven by `PROJECT_VERSION` in
+`Makefile`. After a version change (for example, `0.3.4` or `0.3.4-rc.1`) is
+committed to `master`, the `.github/workflows/cd.yaml` workflow automatically
+handles the release process.

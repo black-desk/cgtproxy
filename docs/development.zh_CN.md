@@ -60,3 +60,7 @@ nftables实现不能像`nft -f ...`那样执行nft脚本，这使得我们必须
 新增端到端测试用例时，在`test/e2e/cases/`下创建目录，提供完整的`config.yaml`和`test.sh`，[运行器](../test/e2e/run.sh)会自动发现该用例。每个用例的初始化入口见[run-case.sh](../test/e2e/run-case.sh)，公共网络搭建和`start_cgtproxy`、`probe`、`wait_until`等辅助函数见[common.sh](../test/e2e/common.sh)，测试客户端和普通回显服务端见[fixture](../test/e2e/fixture/)。用例无需导入内部包或模拟组件。
 
 新增或修复路由行为时，使用真实流量验证预期结果，并为修复的问题添加回归场景。现有用例覆盖配置校验、本地cgroup路由与动态更新、网关转发、DNS劫持、协议和地址排除，以及退出时的规则清理。提交前运行普通构建和`debug`构建的测试；如有无法运行的检查，请在提交说明或PR中记录原因和已完成的验证。
+
+## 发布
+
+正式版和预发布版都由`Makefile`中的`PROJECT_VERSION`驱动。将版本修改（例如`0.3.4`或`0.3.4-rc.1`）提交到`master`后，`.github/workflows/cd.yaml`会自动完成release行为。
