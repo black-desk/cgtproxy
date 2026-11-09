@@ -70,6 +70,14 @@ netlink socket, which helps you find out which structure in
 See the [testing section of the build guide](./build.md#testing) for
 instructions on running tests.
 
+### CI Coverage Status
+
+CI runs tests in multiple modes, including regular and `debug` builds, and
+uploads their coverage reports separately. Codecov updates its status as these
+reports arrive and may temporarily report a failure before all results are
+available. Wait until all test jobs have finished and their coverage reports
+have been processed before assessing the Codecov status.
+
 ### Adding Cases
 
 This project does not use unit tests.
