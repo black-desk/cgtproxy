@@ -298,13 +298,6 @@ Netfilter documentation:
 
 If you need any of the above features, pull requests are welcome.
 
-## Releases
-
-Both stable releases and prereleases are driven by `PROJECT_VERSION` in
-`Makefile`. After a version change (for example, `0.3.4` or `0.3.4-rc.1`) is
-committed to `master`, the `.github/workflows/cd.yaml` workflow automatically
-handles the release process.
-
 ## License
 
 Unless otherwise stated, the code in this project is open source under the GNU
