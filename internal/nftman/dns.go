@@ -173,9 +173,9 @@ func (nft *NFTManager) addDNSHijackGuard(conn *nftables.Conn, chain *nftables.Ch
 		&expr.Cmp{Op: expr.CmpOpNeq, Register: 1, Data: binaryutil.NativeEndian.PutUint32(0)},
 		&expr.Ct{Register: 1, Key: expr.CtKeyPROTODST},
 		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: binaryutil.BigEndian.PutUint16(53)},
-		&expr.Ct{Register: 1, Key: expr.CtKeySRC, Direction: ctReplyDirection}, // reply source is the DNAT destination
+		&expr.Ct{Register: 1, Key: expr.CtKeySRC, Direction: expr.CtDirReply}, // reply source is the DNAT destination
 		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: net.ParseIP(*tp.DNSHijack.IP).To4()},
-		&expr.Ct{Register: 1, Key: expr.CtKeyPROTOSRC, Direction: ctReplyDirection},
+		&expr.Ct{Register: 1, Key: expr.CtKeyPROTOSRC, Direction: expr.CtDirReply},
 		&expr.Cmp{Op: expr.CmpOpEq, Register: 1, Data: binaryutil.BigEndian.PutUint16(tp.DNSHijack.Port)},
 	}
 	if !tp.DNSHijack.TCP {

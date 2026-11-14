@@ -10,7 +10,7 @@ require (
 	github.com/black-desk/zap-journal v0.0.0-20261028072115-204df47d5efc
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-playground/validator/v10 v10.30.6
-	github.com/google/nftables v0.3.0
+	github.com/google/nftables v0.3.1-0.20260430172505-f9b52ed2ba65
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.10.2
 	github.com/vishvananda/netlink v1.3.1
