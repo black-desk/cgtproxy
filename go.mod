@@ -45,3 +45,5 @@ require (
 )
 
 tool golang.org/x/tools/cmd/stringer
+
+replace github.com/google/nftables => github.com/black-desk/nftables v0.0.0-20261114155349-fa660a9145bc
