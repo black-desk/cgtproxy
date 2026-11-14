@@ -4,6 +4,8 @@
 
 # Reviewed snapshot of normalized nft list table output.
 table inet cgtproxy {
+	flags owner
+
 	chain forward-mangle {
 		type filter hook prerouting priority mangle - 2; policy accept;
 		ct direction reply return

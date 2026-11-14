@@ -4,10 +4,12 @@
 
 # Keep nft text and rule order. Normalize counter values, the root cgroup ID,
 # and the presentation order of independent objects and set/map elements.
+# Ignore the owner's process-name comment, but retain the table flags.
 # Rule/expression order and counter presence and position remain significant.
 function emit(line) { block = block line "\n" }
 /^#/ { next }
-/^table / { header = $0; next }
+/^table / { sub(/ # progname .*/, ""); header = $0; next }
+/^\tflags / && key == "" { table_flags = $0; next }
 /^\t(set|map|chain) / { key = $1 "/" $2; object = $2; block = "" }
 /^$/ || /^}$/ { next }
 {
@@ -61,6 +63,7 @@ END {
 		keys[j + 1] = key
 	}
 	print header
+	if (table_flags != "") print table_flags "\n"
 	for (i = 1; i <= count; i++) {
 		if (i > 1) print ""
 		printf "%s", objects[keys[i]]

@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Chen Linxuan <me@black-desk.cn>
+#
+# SPDX-License-Identifier: MIT
+
+version: 2
+cgroup-root: AUTO
+route-table: 31300
+gateway:
+  tproxy: proxy
+tproxies:
+  proxy:
+    port: 17893
+    mark: 42042
+    dns-hijack:
+      ip: 172.31.254.1
+      port: 15353
+rules:
+  - match: "^/proxied(/.*)?$"
+    tproxy: proxy
+  - match: "/.*"
+    direct: true
