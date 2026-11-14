@@ -114,10 +114,12 @@ func (nft *NFTManager) addChainAndRulesForTProxies(conn *nftables.Conn, tps []*c
 func (nft *NFTManager) initStructure(conn *nftables.Conn) (err error) {
 	nft.log.Debug("Building nft table structure.")
 
-	// nft: create table inet cgtproxy
+	// Bind the table to the lasting netlink connection so the kernel also
+	// removes it if the process exits without running shutdown cleanup.
 	nft.table = conn.CreateTable(&nftables.Table{
 		Name:   NftTableName,
 		Family: nftables.TableFamilyINet,
+		Flags:  nftables.TableFlagOwner,
 	})
 
 	err = nft.initIPV4BypassSet(conn)

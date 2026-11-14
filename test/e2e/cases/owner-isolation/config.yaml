@@ -10,6 +10,8 @@ tproxies:
     port: 17893
     mark: 42042
 rules:
+  - match: "^/proxied/gone$"
+    direct: true
   - match: "^/proxied(/.*)?$"
     tproxy: proxy
   - match: "/.*"
