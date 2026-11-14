@@ -121,20 +121,12 @@ func (nft *NFTManager) updateCgroupElements(
 		return err
 	}
 	// nft: delete element inet cgtproxy cgroup-vmap { <old cgroup IDs> }
-	err = queueSetElements(
-		nft.cgroupMap,
-		removed,
-		conn.SetDeleteElements,
-	)
+	err = conn.SetDeleteElements(nft.cgroupMap, removed)
 	if err != nil {
 		return fmt.Errorf("delete cgroup map elements: %w", err)
 	}
 	// nft: add element inet cgtproxy cgroup-vmap { <ID> : <verdict>, ... }
-	err = queueSetElements(
-		nft.cgroupMap,
-		added,
-		conn.SetAddElements,
-	)
+	err = conn.SetAddElements(nft.cgroupMap, added)
 	if err != nil {
 		return fmt.Errorf("add cgroup map elements: %w", err)
 	}
