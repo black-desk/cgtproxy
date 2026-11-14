@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+SPDX-FileCopyrightText: 2025-2026 Chen Linxuan <me@black-desk.cn>
 
 SPDX-License-Identifier: MIT
 -->
@@ -22,7 +22,7 @@ running filesystem watcher: context canceled
 
    尝试停止另一个cgtproxy。
 
-2. 之前的cgtproxy没有正常退出，可能被SIG_KILL信号杀死。
+2. 之前的cgtproxy没有正常退出，可能被SIGKILL信号杀死，留下了路由或策略路由规则。nft表会随进程退出由内核自动移除。
 
    系统重启应该能解决这个问题，如果你不想重启，请按照以下说明操作：
    1. 检查具体发生了什么：
@@ -33,28 +33,18 @@ running filesystem watcher: context canceled
       ip route list table 300
       # > local default dev lo scope host
 
-      # 列出cgtproxy创建的nft规则集。
-      sudo nft list table inet cgtproxy
-      # > table inet cgtproxy {
-      # >   set bypass {
-      # >           type ipv4_addr
-      # >           flags interval
-      # > ...
-
       # 确保cgtproxy没有运行。
       sudo lsof /usr/local/bin/cgtproxy 2>/dev/null
       # 无输出
       ```
 
-   2. 现在你可以简单地通过以下命令删除路由表和nftables规则集：
+   2. 清理残留的路由和策略路由规则：
 
       ```bash
       sudo ip route del table 300 local default dev lo scope host
       sudo ip -6 route del table 300 local default dev lo scope host
       sudo ip rule del fwmark 3000 lookup 300
       sudo ip -6 rule del fwmark 3000 lookup 300
-      sudo nft flush table inet cgtproxy
-      sudo nft delete table inet cgtproxy
       ```
 
 ## Docker容器在启用网关模式后DNS超时

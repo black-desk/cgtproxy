@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 Chen Linxuan <me@black-desk.cn>
+SPDX-FileCopyrightText: 2025-2026 Chen Linxuan <me@black-desk.cn>
 
 SPDX-License-Identifier: MIT
 -->
@@ -29,7 +29,9 @@ The "file exists" is error message of EEXIST, which means that:
 
    Try to stop another cgtproxy.
 
-2. Previous cgtproxy doesn't exit normally, perhaps killed with SIG_KILL.
+2. The previous cgtproxy exited abnormally, perhaps killed with SIGKILL, leaving
+   routes or policy routing rules behind. The kernel automatically removes the
+   nft table when the process exits.
 
    A system reboot should fix this issue, if you don't want to do so read the
    instructions below:
@@ -41,28 +43,18 @@ The "file exists" is error message of EEXIST, which means that:
       ip route list table 300
       # > local default dev lo scope host
 
-      # List nft ruleset created by cgtproxy.
-      sudo nft list table inet cgtproxy
-      # > table inet cgtproxy {
-      # >   set bypass {
-      # >           type ipv4_addr
-      # >           flags interval
-      # > ...
-
       # Make sure cgtproxy is not running.
       sudo lsof /usr/local/bin/cgtproxy 2>/dev/null
       # No output
       ```
 
-   2. Now you can just simply remove the route table and nftable ruleset by:
+   2. Remove the remaining routes and policy routing rules:
 
       ```bash
       sudo ip route del table 300 local default dev lo scope host
       sudo ip -6 route del table 300 local default dev lo scope host
       sudo ip rule del fwmark 3000 lookup 300
       sudo ip -6 rule del fwmark 3000 lookup 300
-      sudo nft flush table inet cgtproxy
-      sudo nft delete table inet cgtproxy
       ```
 
 ## Docker container DNS times out in gateway mode
