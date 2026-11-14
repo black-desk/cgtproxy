@@ -30,8 +30,7 @@ The "file exists" is error message of EEXIST, which means that:
    Try to stop another cgtproxy.
 
 2. The previous cgtproxy exited abnormally, perhaps killed with SIGKILL, leaving
-   routes or policy routing rules behind. The kernel automatically removes the
-   nft table when the process exits.
+   routes or policy routing rules behind.
 
    A system reboot should fix this issue, if you don't want to do so read the
    instructions below:

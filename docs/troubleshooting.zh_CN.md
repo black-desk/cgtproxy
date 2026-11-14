@@ -22,7 +22,7 @@ running filesystem watcher: context canceled
 
    尝试停止另一个cgtproxy。
 
-2. 之前的cgtproxy没有正常退出，可能被SIGKILL信号杀死，留下了路由或策略路由规则。nft表会随进程退出由内核自动移除。
+2. 之前的cgtproxy没有正常退出，可能被SIGKILL信号杀死，留下了路由或策略路由规则。
 
    系统重启应该能解决这个问题，如果你不想重启，请按照以下说明操作：
    1. 检查具体发生了什么：
